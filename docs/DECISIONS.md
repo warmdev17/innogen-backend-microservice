@@ -35,6 +35,17 @@
   - `shared/languageutil/` — File name resolution from language config
 - **Run service compatibility**: run_service re-exports status constants from shared/constants for backward compatibility.
 
+### Mock Commit Flow (STEP 7)
+
+- **Decision**: Use mock commit SHA (40-char random hex) generated via `crypto/rand` for MVP. No real GitHub API calls are made.
+- **Integration**: `submission_service` worker imports `repo_service` directly (same Go module, monorepo pattern — no HTTP overhead).
+- **Repository model**: One repository per `(user_id, subject_id)` pair, created/updated via `INSERT ... ON CONFLICT`.
+- **Path format**: `<subjectSlug>/Session-<NN>/Lesson-<NN>/Problem-<NN>-<problemSlug>/<fileName>` with zero-padded order indexes.
+- **Repo name format**: `<subjectSlug>-RinnoGen`
+- **Transaction safety**: Commit DML (upsert repo, update submission, insert commit) wrapped in a single `pgx` transaction.
+- **Idempotency**: `CommitSubmission` checks `commit_sha` before proceeding — safe to call multiple times.
+- **Packages**: `repo_service/repository/` and `repo_service/service/` are outside `internal/` to allow cross-service imports by `submission_service`. Pathbuilder remains in `internal/` as it's only used by repo_service.
+
 ### Time Limit Detection
 
 - **Decision**: Piston `run_timeout` field is set from `problems.time_limit_ms`. If a process is killed by signal AND a time limit was configured, it's classified as Time Limit Exceeded instead of Runtime Error. Without a configured limit, signals are treated as Runtime Error (backward compatible with run_service).

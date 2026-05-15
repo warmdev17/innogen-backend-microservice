@@ -108,6 +108,31 @@ type Tag struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
+// Repository represents a row in the repositories table.
+type Repository struct {
+	ID            int       `json:"id"`
+	UserID        int       `json:"userId"`
+	SubjectID     int       `json:"subjectId"`
+	RepoName      string    `json:"repoName"`
+	RepoFullName  *string   `json:"repoFullName"`
+	RepoURL       *string   `json:"repoUrl"`
+	GithubRepoID  *string   `json:"githubRepoId"`
+	DefaultBranch string    `json:"defaultBranch"`
+	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
+}
+
+// SubmissionCommit represents a row in the submission_commits table.
+type SubmissionCommit struct {
+	ID           string    `json:"id"`
+	SubmissionID string    `json:"submissionId"`
+	RepositoryID int       `json:"repositoryId"`
+	FilePath     string    `json:"filePath"`
+	CommitSha    string    `json:"commitSha"`
+	CommitURL    *string   `json:"commitUrl"`
+	CreatedAt    time.Time `json:"createdAt"`
+}
+
 // Submission represents a row in the submissions table.
 type Submission struct {
 	ID             string     `json:"id"`

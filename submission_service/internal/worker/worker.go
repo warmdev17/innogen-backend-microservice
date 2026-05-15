@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	reposervice "innogen-backend/repo_service/service"
 	"innogen-backend/shared/constants"
 	"innogen-backend/shared/judge"
 	"innogen-backend/shared/languageutil"
@@ -19,15 +20,17 @@ type Worker struct {
 	repo         *repository.SubmissionRepository
 	pistonClient *piston.Client
 	queue        *queue.Queue
+	repoService  *reposervice.RepoService
 }
 
 // New creates a new Worker.
-func New(log *slog.Logger, repo *repository.SubmissionRepository, pistonClient *piston.Client, q *queue.Queue) *Worker {
+func New(log *slog.Logger, repo *repository.SubmissionRepository, pistonClient *piston.Client, q *queue.Queue, repoService *reposervice.RepoService) *Worker {
 	return &Worker{
 		log:          log,
 		repo:         repo,
 		pistonClient: pistonClient,
 		queue:        q,
+		repoService:  repoService,
 	}
 }
 
@@ -226,6 +229,16 @@ func (w *Worker) processJob(ctx context.Context, submissionID string) error {
 		slog.Int("passed", passed),
 		slog.Int("total", len(testCases)),
 	)
+
+	// Trigger mock commit flow for Accepted submissions
+	if overallStatus == constants.StatusAccepted {
+		if err := w.repoService.CommitSubmission(ctx, sub.ID, sub.UserID, sub.ProblemID, sub.LanguageID); err != nil {
+			w.log.Error("commit submission failed (best-effort)",
+				slog.String("submissionId", submissionID),
+				slog.String("error", err.Error()),
+			)
+		}
+	}
 
 	return nil
 }

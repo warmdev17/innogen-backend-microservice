@@ -37,3 +37,18 @@
 - Deleted old run_service/internal/piston/ and run_service/internal/judge/ (moved to shared/)
 - Validated: go build, go vet, go test (18/18 pass) all clean
 - Commit: pending
+
+### 2026-05-15 — Repo Service Mock Commit (STEP 7)
+
+- Implemented `repo_service`: pathbuilder, repository, service, handler, route, dto
+- Implemented `BuildRepoName`, `BuildFilePath`, `GenerateCommitSHA` in pathbuilder
+- Implemented `CommitSubmission` flow: curriculum lookup → path building → repo upsert → submission update → commit insert
+- Added idempotency guard: skips if commit_sha already set
+- Wrapped commit DML in pgx transaction for atomicity
+- Added ownership check on ListCommits (verifies user owns repository)
+- Integrated submission worker: after Accepted, triggers `CommitSubmission` (best-effort)
+- Moved `repo_service/repository` and `repo_service/service` out of `internal/` for cross-service imports
+- Added `Repository` and `SubmissionCommit` models to shared/models
+- Added 4 unit tests for pathbuilder (BuildRepoName, BuildFilePath, zero-padding, GenerateCommitSHA)
+- Validated: go build, go vet, go test all pass
+- Commit: pending
