@@ -37,7 +37,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", healthHandler)
-	route.Register(mux, h, cfg.JWTSecret)
+	route.Register(mux, h)
 
 	addr := ":" + cfg.AuthServicePort
 	log.Info("auth-service listening on " + addr)

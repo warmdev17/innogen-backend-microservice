@@ -9,6 +9,6 @@
 - [x] STEP 6 — Redis queue and judge worker (async judging)
 - [x] STEP 7 — repo_service mock commit (path builder, repo upsert, commit records)
 - [x] STEP 8 — GitHub App implementation (real commits, per-user installations)
+- [x] STEP 9 — api_gateway proxy/routing (single entrypoint, JWT auth passthrough)
 
-### 🟡 Pending
-- [ ] STEP 9 — api_gateway routing/proxy
+### 🎉 All steps complete

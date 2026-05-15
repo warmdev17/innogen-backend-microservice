@@ -8,7 +8,7 @@ import (
 )
 
 // Register registers all auth service routes on the given ServeMux.
-func Register(mux *http.ServeMux, h *handler.Handler, jwtSecret string) {
+func Register(mux *http.ServeMux, h *handler.Handler) {
 	mux.HandleFunc("POST /auth/login", h.Login)
-	mux.Handle("GET /auth/me", middleware.Auth(jwtSecret)(http.HandlerFunc(h.CurrentUser)))
+	mux.Handle("GET /auth/me", middleware.XUserID()(http.HandlerFunc(h.CurrentUser)))
 }

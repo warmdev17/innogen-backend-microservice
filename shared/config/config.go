@@ -18,6 +18,10 @@ type Config struct {
 	GitHubPrivateKeyPath  string
 	GitHubDefaultBranch   string
 	GitHubAPIBaseURL      string
+	AuthServiceURL        string
+	RunServiceURL         string
+	SubmissionServiceURL  string
+	RepoServiceURL        string
 }
 
 // defaults defines the fallback values for configuration keys.
@@ -36,6 +40,10 @@ var defaults = map[string]string{
 	"GITHUB_PRIVATE_KEY_PATH": "",
 	"GITHUB_DEFAULT_BRANCH":   "main",
 	"GITHUB_API_BASE_URL":     "https://api.github.com",
+	"AUTH_SERVICE_URL":        "http://localhost:8081",
+	"RUN_SERVICE_URL":         "http://localhost:8082",
+	"SUBMISSION_SERVICE_URL":  "http://localhost:8083",
+	"REPO_SERVICE_URL":        "http://localhost:8084",
 }
 
 // getEnv returns the value of the environment variable named by key, or the
@@ -65,5 +73,9 @@ func Load() *Config {
 		GitHubPrivateKeyPath:  getEnv("GITHUB_PRIVATE_KEY_PATH"),
 		GitHubDefaultBranch:   getEnv("GITHUB_DEFAULT_BRANCH"),
 		GitHubAPIBaseURL:      getEnv("GITHUB_API_BASE_URL"),
+		AuthServiceURL:        getEnv("AUTH_SERVICE_URL"),
+		RunServiceURL:         getEnv("RUN_SERVICE_URL"),
+		SubmissionServiceURL:  getEnv("SUBMISSION_SERVICE_URL"),
+		RepoServiceURL:        getEnv("REPO_SERVICE_URL"),
 	}
 }

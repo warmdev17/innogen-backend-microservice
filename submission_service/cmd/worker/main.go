@@ -42,7 +42,7 @@ func main() {
 	repo := repository.New(pool)
 	pistonClient := piston.NewClient(cfg.PistonBaseURL)
 	httpClient := &http.Client{Timeout: 30 * time.Second}
-	repoServiceURL := "http://localhost:" + cfg.RepoServicePort
+	repoServiceURL := cfg.RepoServiceURL
 	w := worker.New(log, repo, pistonClient, q, repoServiceURL, httpClient)
 
 	log.Info("submission-worker started")

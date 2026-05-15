@@ -64,3 +64,13 @@
 ### Time Limit Detection
 
 - **Decision**: Piston `run_timeout` field is set from `problems.time_limit_ms`. If a process is killed by signal AND a time limit was configured, it's classified as Time Limit Exceeded instead of Runtime Error. Without a configured limit, signals are treated as Runtime Error (backward compatible with run_service).
+
+### API Gateway as Single Entrypoint (STEP 9)
+
+- **Decision**: The API Gateway (:8080) is the single public entrypoint. All browser/frontend requests go through it.
+- **JWT validation at edge**: Gateway validates JWT Bearer tokens and injects `X-User-ID`, `X-User-Email`, `X-User-Role` headers before forwarding to backend services.
+- **Backend auth simplification**: Backend services use `XUserID()` middleware (reads headers), not JWT validation. The gateway is the sole JWT validator.
+- **Header stripping**: Incoming `X-User-*` and `Authorization` headers are stripped from public requests to prevent header injection.
+- **Internal routes**: `/internal/*` routes (e.g., repo_service commit endpoint) are NOT registered in the gateway — accessible only via direct service-to-service communication.
+- **Proxy timeout**: 30-second `ResponseHeaderTimeout` on all reverse proxies to prevent goroutine leaks.
+- **Service URLs**: Configurable via `*_SERVICE_URL` env vars for flexible deployment (localhost, Docker, K8s).

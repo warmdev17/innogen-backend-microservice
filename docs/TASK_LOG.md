@@ -72,3 +72,21 @@
 - Security: `.gitignore` covers `*.pem`, `*.key`, `secrets/`; secrets never logged
 - Validated: go build, go vet, go test (22/22 pass) all clean
 - Commit: pending
+
+### 2026-05-15 — API Gateway Proxy (STEP 9)
+
+- Implemented reverse proxy for all backend services using `net/http/httputil`
+- Added JWT validation at the gateway edge for all protected routes
+- Gateway injects `X-User-ID`, `X-User-Email`, `X-User-Role` from JWT claims into backend requests
+- Strips incoming `X-User-*` and `Authorization` headers from public requests (security)
+- Kept existing curriculum/problem direct-DB routes working
+- Public routes: curriculum, /auth/login (no auth required)
+- Protected routes: /auth/me, /run, /submit, /submissions/*, /me/*, /repositories/*
+- Internal routes NOT exposed through gateway
+- Added proxy Transport timeout (30s ResponseHeaderTimeout)
+- auth_service switched from JWT auth to X-User-ID (gateway validates JWT)
+- run_service added XUserID middleware
+- Added `*_SERVICE_URL` config variables for flexible deployments
+- Worker now uses `REPO_SERVICE_URL` config (fixes Docker/K8s deployment)
+- Validated: go build, go vet, go test (22/22 pass)
+- Commit: pending

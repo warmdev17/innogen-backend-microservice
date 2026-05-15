@@ -8,6 +8,8 @@ import (
 
 	"innogen-backend/api_gateway/internal/curriculum"
 	"innogen-backend/api_gateway/internal/problem"
+	"innogen-backend/api_gateway/internal/proxy"
+	"innogen-backend/api_gateway/internal/route"
 	"innogen-backend/shared/config"
 	"innogen-backend/shared/database"
 	"innogen-backend/shared/logger"
@@ -33,6 +35,41 @@ func main() {
 	problemRepo := problem.NewProblemRepository(pool)
 	problemHandler := problem.NewHandler(problemRepo, log)
 
+	// Create proxies for backend services
+	authPublicProxy, err := proxy.NewProxy(cfg.AuthServiceURL, log)
+	if err != nil {
+		log.Error("failed to create auth public proxy", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+	authProxy, err := proxy.NewAuthenticatedProxy(cfg.AuthServiceURL, log)
+	if err != nil {
+		log.Error("failed to create auth proxy", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+	runProxy, err := proxy.NewAuthenticatedProxy(cfg.RunServiceURL, log)
+	if err != nil {
+		log.Error("failed to create run proxy", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+	submissionProxy, err := proxy.NewAuthenticatedProxy(cfg.SubmissionServiceURL, log)
+	if err != nil {
+		log.Error("failed to create submission proxy", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+	repoProxy, err := proxy.NewAuthenticatedProxy(cfg.RepoServiceURL, log)
+	if err != nil {
+		log.Error("failed to create repo proxy", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+
+	proxySet := route.ProxySet{
+		AuthPublic: authPublicProxy,
+		Auth:       authProxy,
+		Run:        runProxy,
+		Submission: submissionProxy,
+		Repo:       repoProxy,
+	}
+
 	mux := http.NewServeMux()
 
 	// Health
@@ -49,6 +86,9 @@ func main() {
 	// Problem routes
 	mux.HandleFunc("GET /problems/{slug}", problemHandler.GetProblem)
 	mux.HandleFunc("GET /problems/{id}/test-cases", problemHandler.ListTestCases)
+
+	// Proxy routes to backend services
+	route.RegisterProxyRoutes(mux, &proxySet, log, cfg.JWTSecret)
 
 	addr := ":" + cfg.APIGatewayPort
 	log.Info("api-gateway listening on " + addr)
