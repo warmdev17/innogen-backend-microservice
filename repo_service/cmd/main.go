@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"innogen-backend/repo_service/internal/githubapp"
 	"innogen-backend/repo_service/internal/handler"
 	"innogen-backend/repo_service/internal/route"
 	"innogen-backend/repo_service/repository"
@@ -29,8 +30,21 @@ func main() {
 	}
 	defer pool.Close()
 
+	var githubClient githubapp.GitHubClient
+	if cfg.GitHubAppID != "" && cfg.GitHubPrivateKeyPath != "" {
+		realClient, err := githubapp.NewRealClient(cfg.GitHubAppID, cfg.GitHubPrivateKeyPath, cfg.GitHubAPIBaseURL)
+		if err != nil {
+			log.Error("failed to create github client", slog.String("error", err.Error()))
+			os.Exit(1)
+		}
+		githubClient = realClient
+	} else {
+		log.Warn("github app not configured, commit endpoint will fail")
+		githubClient = nil // service will handle nil
+	}
+
 	repoRepo := repository.New(pool)
-	svc := service.New(repoRepo, log)
+	svc := service.New(repoRepo, githubClient, cfg, log)
 	h := handler.New(svc, log)
 
 	mux := http.NewServeMux()

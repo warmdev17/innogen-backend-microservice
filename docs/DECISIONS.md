@@ -48,4 +48,19 @@
 
 ### Time Limit Detection
 
+### Per-User GitHub App Installations (STEP 8)
+
+- **Decision**: Each user installs the GitHub App into their personal account or an organization. The owner information is stored in `github_accounts.github_owner` and `github_accounts.github_owner_type`.
+- **Owner selection**:
+  - `User` → POST `/user/repos` to create repos
+  - `Organization` → POST `/orgs/{owner}/repos` to create repos
+- **No global org**: `GITHUB_ORG_NAME` is completely removed. All owner data comes from the database.
+- **Installation token**: Generated per-request via GitHub App JWT (RS256, 10-min expiry) exchanged for installation access token.
+- **Unchanged file behavior**: Before committing, the service fetches the existing file from GitHub. If content is identical, the commit is skipped.
+- **Secret handling**: Private key is read from file path (`GITHUB_PRIVATE_KEY_PATH`), never stored in env vars. All secrets are excluded from `.gitignore`. No private key, JWT, or token is ever logged.
+- **Interface**: `GitHubClient` interface enables mock injection for tests without real GitHub credentials.
+- **Worker integration**: Submission worker calls repo_service via HTTP POST to `/internal/commits/accepted-submission` (decoupled, no direct package dependency).
+
+### Time Limit Detection
+
 - **Decision**: Piston `run_timeout` field is set from `problems.time_limit_ms`. If a process is killed by signal AND a time limit was configured, it's classified as Time Limit Exceeded instead of Runtime Error. Without a configured limit, signals are treated as Runtime Error (backward compatible with run_service).

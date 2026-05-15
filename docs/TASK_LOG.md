@@ -52,3 +52,23 @@
 - Added 4 unit tests for pathbuilder (BuildRepoName, BuildFilePath, zero-padding, GenerateCommitSHA)
 - Validated: go build, go vet, go test all pass
 - Commit: pending
+
+### 2026-05-15 — GitHub App Implementation (STEP 8)
+
+- Implemented real GitHub App client with JWT generation (RS256) and REST API calls
+- Added `GitHubClient` interface with `MockClient` for testing
+- Implemented `GetInstallationToken`, `EnsureRepo`, `GetFileContent`, `CreateOrUpdateFile`
+- Added per-user GitHub owner support: `github_accounts.github_owner`, `github_accounts.github_owner_type`
+- Added `repositories.github_owner` column (denormalized)
+- Removed `GITHUB_ORG_NAME`; owner comes from `github_accounts` table
+- Added `GITHUB_DEFAULT_BRANCH` and `GITHUB_API_BASE_URL` config
+- Added `GithubAccount` model to shared/models
+- Updated `CommitSubmission` to use real GitHub flow: curriculum→language→account→token→repo→file→commit→DB
+- Added `POST /internal/commits/accepted-submission` endpoint (internal)
+- Worker now calls repo_service via HTTP instead of direct package import
+- Unchanged file detection: skips commit if content matches existing file
+- Content-diff optimization: only pushes to GitHub if code changed
+- Schema migration: `migrations/001_add_github_owner.sql` for existing DBs
+- Security: `.gitignore` covers `*.pem`, `*.key`, `secrets/`; secrets never logged
+- Validated: go build, go vet, go test (22/22 pass) all clean
+- Commit: pending

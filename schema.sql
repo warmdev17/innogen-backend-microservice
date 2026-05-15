@@ -172,11 +172,14 @@ CREATE TABLE github_accounts (
     github_user_id varchar(255),
     github_username varchar(255),
     github_avatar_url text,
+    github_owner varchar(255) NOT NULL,
+    github_owner_type varchar(20) NOT NULL,
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_github_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT uq_github_user UNIQUE (user_id),
-    CONSTRAINT uq_github_installation UNIQUE (installation_id)
+    CONSTRAINT uq_github_installation UNIQUE (installation_id),
+    CONSTRAINT chk_github_owner_type CHECK (github_owner_type IN ('User', 'Organization'))
 );
 
 CREATE TRIGGER trg_github_accounts_updated_at
@@ -214,6 +217,7 @@ CREATE TABLE repositories (
     repo_full_name varchar(255),
     repo_url text,
     github_repo_id varchar(255),
+    github_owner varchar(255),
     default_branch varchar(100) NOT NULL DEFAULT 'main',
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,

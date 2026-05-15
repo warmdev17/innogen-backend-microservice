@@ -1,11 +1,13 @@
 package worker
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
+	"net/http"
 
-	reposervice "innogen-backend/repo_service/service"
 	"innogen-backend/shared/constants"
 	"innogen-backend/shared/judge"
 	"innogen-backend/shared/languageutil"
@@ -16,21 +18,23 @@ import (
 
 // Worker processes submission jobs from the Redis queue.
 type Worker struct {
-	log          *slog.Logger
-	repo         *repository.SubmissionRepository
-	pistonClient *piston.Client
-	queue        *queue.Queue
-	repoService  *reposervice.RepoService
+	log            *slog.Logger
+	repo           *repository.SubmissionRepository
+	pistonClient   *piston.Client
+	queue          *queue.Queue
+	repoServiceURL string
+	httpClient     *http.Client
 }
 
 // New creates a new Worker.
-func New(log *slog.Logger, repo *repository.SubmissionRepository, pistonClient *piston.Client, q *queue.Queue, repoService *reposervice.RepoService) *Worker {
+func New(log *slog.Logger, repo *repository.SubmissionRepository, pistonClient *piston.Client, q *queue.Queue, repoServiceURL string, httpClient *http.Client) *Worker {
 	return &Worker{
-		log:          log,
-		repo:         repo,
-		pistonClient: pistonClient,
-		queue:        q,
-		repoService:  repoService,
+		log:            log,
+		repo:           repo,
+		pistonClient:   pistonClient,
+		queue:          q,
+		repoServiceURL: repoServiceURL,
+		httpClient:     httpClient,
 	}
 }
 
@@ -230,13 +234,26 @@ func (w *Worker) processJob(ctx context.Context, submissionID string) error {
 		slog.Int("total", len(testCases)),
 	)
 
-	// Trigger mock commit flow for Accepted submissions
+	// Trigger real commit flow for Accepted submissions via HTTP
 	if overallStatus == constants.StatusAccepted {
-		if err := w.repoService.CommitSubmission(ctx, sub.ID, sub.UserID, sub.ProblemID, sub.LanguageID); err != nil {
-			w.log.Error("commit submission failed (best-effort)",
-				slog.String("submissionId", submissionID),
-				slog.String("error", err.Error()),
-			)
+		commitReq := map[string]interface{}{
+			"submissionId": sub.ID,
+			"userId":       sub.UserID,
+			"problemId":    sub.ProblemID,
+			"languageId":   sub.LanguageID,
+			"code":         sub.Code,
+		}
+		body, _ := json.Marshal(commitReq)
+		httpReq, _ := http.NewRequestWithContext(ctx, http.MethodPost, w.repoServiceURL+"/internal/commits/accepted-submission", bytes.NewReader(body))
+		httpReq.Header.Set("Content-Type", "application/json")
+		resp, err := w.httpClient.Do(httpReq)
+		if err != nil {
+			w.log.Error("commit request failed (best-effort)", slog.String("submissionId", submissionID), slog.String("error", err.Error()))
+		} else {
+			resp.Body.Close()
+			if resp.StatusCode != http.StatusOK {
+				w.log.Error("commit request returned non-OK", slog.String("submissionId", submissionID), slog.Int("status", resp.StatusCode))
+			}
 		}
 	}
 

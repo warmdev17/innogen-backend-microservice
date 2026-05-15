@@ -11,3 +11,8 @@ AGENTS.md
 /bin/
 /dist/
 /build/
+
+# secrets
+*.pem
+*.key
+secrets/

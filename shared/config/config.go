@@ -16,7 +16,8 @@ type Config struct {
 	PistonBaseURL         string
 	GitHubAppID           string
 	GitHubPrivateKeyPath  string
-	GitHubOrgName         string
+	GitHubDefaultBranch   string
+	GitHubAPIBaseURL      string
 }
 
 // defaults defines the fallback values for configuration keys.
@@ -33,7 +34,8 @@ var defaults = map[string]string{
 	"PISTON_BASE_URL":         "http://localhost:2000",
 	"GITHUB_APP_ID":           "",
 	"GITHUB_PRIVATE_KEY_PATH": "",
-	"GITHUB_ORG_NAME":         "",
+	"GITHUB_DEFAULT_BRANCH":   "main",
+	"GITHUB_API_BASE_URL":     "https://api.github.com",
 }
 
 // getEnv returns the value of the environment variable named by key, or the
@@ -61,6 +63,7 @@ func Load() *Config {
 		PistonBaseURL:         getEnv("PISTON_BASE_URL"),
 		GitHubAppID:           getEnv("GITHUB_APP_ID"),
 		GitHubPrivateKeyPath:  getEnv("GITHUB_PRIVATE_KEY_PATH"),
-		GitHubOrgName:         getEnv("GITHUB_ORG_NAME"),
+		GitHubDefaultBranch:   getEnv("GITHUB_DEFAULT_BRANCH"),
+		GitHubAPIBaseURL:      getEnv("GITHUB_API_BASE_URL"),
 	}
 }

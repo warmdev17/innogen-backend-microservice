@@ -111,10 +111,10 @@ func (r *RepoRepository) InsertSubmissionCommit(ctx context.Context, submissionI
 func (r *RepoRepository) FindRepositoryByID(ctx context.Context, id int) (*models.Repository, error) {
 	repo := &models.Repository{}
 	err := r.pool.QueryRow(ctx,
-		`SELECT id, user_id, subject_id, repo_name, repo_full_name, repo_url, github_repo_id, default_branch, created_at, updated_at
+		`SELECT id, user_id, subject_id, repo_name, repo_full_name, repo_url, github_repo_id, github_owner, default_branch, created_at, updated_at
 		 FROM repositories WHERE id = $1`, id,
 	).Scan(&repo.ID, &repo.UserID, &repo.SubjectID, &repo.RepoName,
-		&repo.RepoFullName, &repo.RepoURL, &repo.GithubRepoID, &repo.DefaultBranch,
+		&repo.RepoFullName, &repo.RepoURL, &repo.GithubRepoID, &repo.GithubOwner, &repo.DefaultBranch,
 		&repo.CreatedAt, &repo.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
@@ -198,7 +198,7 @@ func (r *RepoRepository) InsertSubmissionCommitTx(ctx context.Context, tx pgx.Tx
 // FindRepositoriesByUserID returns all repositories for a user.
 func (r *RepoRepository) FindRepositoriesByUserID(ctx context.Context, userID int) ([]models.Repository, error) {
 	rows, err := r.pool.Query(ctx,
-		`SELECT id, user_id, subject_id, repo_name, repo_full_name, repo_url, github_repo_id, default_branch, created_at, updated_at
+		`SELECT id, user_id, subject_id, repo_name, repo_full_name, repo_url, github_repo_id, github_owner, default_branch, created_at, updated_at
 		 FROM repositories WHERE user_id = $1 ORDER BY created_at DESC`, userID,
 	)
 	if err != nil {
@@ -210,7 +210,7 @@ func (r *RepoRepository) FindRepositoriesByUserID(ctx context.Context, userID in
 	for rows.Next() {
 		var repo models.Repository
 		if err := rows.Scan(&repo.ID, &repo.UserID, &repo.SubjectID, &repo.RepoName,
-			&repo.RepoFullName, &repo.RepoURL, &repo.GithubRepoID, &repo.DefaultBranch,
+			&repo.RepoFullName, &repo.RepoURL, &repo.GithubRepoID, &repo.GithubOwner, &repo.DefaultBranch,
 			&repo.CreatedAt, &repo.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("repository.FindRepositoriesByUserID: %w", err)
 		}
@@ -240,4 +240,57 @@ func (r *RepoRepository) FindCommitsByRepositoryID(ctx context.Context, reposito
 		commits = append(commits, commit)
 	}
 	return commits, rows.Err()
+}
+
+// GetGithubAccountByUserID retrieves the GitHub account for a user.
+// Returns nil, nil if not found.
+func (r *RepoRepository) GetGithubAccountByUserID(ctx context.Context, userID int) (*models.GithubAccount, error) {
+	a := &models.GithubAccount{}
+	err := r.pool.QueryRow(ctx,
+		`SELECT id, user_id, installation_id, github_user_id, github_username, github_avatar_url,
+                github_owner, github_owner_type, created_at, updated_at
+         FROM github_accounts WHERE user_id = $1`, userID,
+	).Scan(&a.ID, &a.UserID, &a.InstallationID, &a.GithubUserID, &a.GithubUsername,
+		&a.GithubAvatarURL, &a.GithubOwner, &a.GithubOwnerType, &a.CreatedAt, &a.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("repository.GetGithubAccountByUserID: %w", err)
+	}
+	return a, nil
+}
+
+// UpsertRepositoryWithOwnerTx creates or updates a repository including GitHub owner info.
+func (r *RepoRepository) UpsertRepositoryWithOwnerTx(ctx context.Context, tx pgx.Tx, userID, subjectID int, repoName, repoFullName, repoURL, githubRepoID, githubOwner, defaultBranch string) (int, error) {
+	var repoID int
+	err := tx.QueryRow(ctx,
+		`INSERT INTO repositories (user_id, subject_id, repo_name, repo_full_name, repo_url, github_repo_id, github_owner, default_branch)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         ON CONFLICT (user_id, subject_id) DO UPDATE SET
+             repo_full_name = EXCLUDED.repo_full_name,
+             repo_url = EXCLUDED.repo_url,
+             github_repo_id = EXCLUDED.github_repo_id,
+             github_owner = EXCLUDED.github_owner,
+             updated_at = CURRENT_TIMESTAMP
+         RETURNING id`,
+		userID, subjectID, repoName, repoFullName, repoURL, githubRepoID, githubOwner, defaultBranch,
+	).Scan(&repoID)
+	if err != nil {
+		return 0, fmt.Errorf("repository.UpsertRepositoryWithOwnerTx: %w", err)
+	}
+	return repoID, nil
+}
+
+// InsertSubmissionCommitWithURLTx inserts a commit record with URL.
+func (r *RepoRepository) InsertSubmissionCommitWithURLTx(ctx context.Context, tx pgx.Tx, submissionID string, repositoryID int, filePath, commitSHA, commitURL string) error {
+	_, err := tx.Exec(ctx,
+		`INSERT INTO submission_commits (submission_id, repository_id, file_path, commit_sha, commit_url)
+         VALUES ($1, $2, $3, $4, $5)`,
+		submissionID, repositoryID, filePath, commitSHA, commitURL,
+	)
+	if err != nil {
+		return fmt.Errorf("repository.InsertSubmissionCommitWithURLTx: %w", err)
+	}
+	return nil
 }

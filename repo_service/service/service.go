@@ -6,23 +6,40 @@ import (
 	"fmt"
 	"log/slog"
 
+	"innogen-backend/repo_service/internal/dto"
+	"innogen-backend/repo_service/internal/githubapp"
 	"innogen-backend/repo_service/internal/pathbuilder"
 	"innogen-backend/repo_service/repository"
+	"innogen-backend/shared/config"
 	"innogen-backend/shared/languageutil"
 	"innogen-backend/shared/models"
 )
 
-var ErrRepositoryNotFound = errors.New("repository not found")
+var (
+	ErrRepositoryNotFound    = errors.New("repository not found")
+	ErrGithubAccountNotFound = errors.New("github account not found")
+)
+
+// CommitAcceptedSubmissionRequest is the internal request for committing an accepted submission.
+type CommitAcceptedSubmissionRequest struct {
+	SubmissionID string
+	UserID       int
+	ProblemID    int
+	LanguageID   int
+	Code         string
+}
 
 // RepoService handles repository and commit business logic.
 type RepoService struct {
-	repo *repository.RepoRepository
-	log  *slog.Logger
+	repo         *repository.RepoRepository
+	githubClient githubapp.GitHubClient
+	cfg          *config.Config
+	log          *slog.Logger
 }
 
 // New creates a new RepoService.
-func New(repo *repository.RepoRepository, log *slog.Logger) *RepoService {
-	return &RepoService{repo: repo, log: log}
+func New(repo *repository.RepoRepository, githubClient githubapp.GitHubClient, cfg *config.Config, log *slog.Logger) *RepoService {
+	return &RepoService{repo: repo, githubClient: githubClient, cfg: cfg, log: log}
 }
 
 // CommitSubmission triggers the mock commit flow for an Accepted submission.
@@ -90,6 +107,126 @@ func (s *RepoService) CommitSubmission(ctx context.Context, submissionID string,
 	)
 
 	return nil
+}
+
+// CommitAcceptedSubmission performs the real GitHub commit flow for an Accepted submission.
+func (s *RepoService) CommitAcceptedSubmission(ctx context.Context, req CommitAcceptedSubmissionRequest) (*dto.CommitAcceptedSubmissionResponse, error) {
+	// Idempotency guard: if already committed, skip
+	_, commitSHA, err := s.repo.GetSubmissionRepoInfo(ctx, req.SubmissionID)
+	if err != nil {
+		return nil, err
+	}
+	if commitSHA != "" {
+		s.log.Info("submission already committed, skipping",
+			slog.String("submissionId", req.SubmissionID),
+		)
+		return &dto.CommitAcceptedSubmissionResponse{
+			SubmissionID: req.SubmissionID,
+			Skipped:      true,
+		}, nil
+	}
+
+	// 1. Get GitHub account
+	githubAccount, err := s.repo.GetGithubAccountByUserID(ctx, req.UserID)
+	if err != nil {
+		return nil, err
+	}
+	if githubAccount == nil {
+		return nil, ErrGithubAccountNotFound
+	}
+
+	// 2. Load curriculum context
+	curriculum, err := s.repo.GetCurriculumContext(ctx, req.ProblemID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. Load language info
+	lang, err := s.repo.GetLanguageByID(ctx, req.LanguageID)
+	if err != nil {
+		return nil, err
+	}
+	if lang == nil {
+		return nil, fmt.Errorf("language %d not found", req.LanguageID)
+	}
+
+	// 4. Build paths
+	fileName := languageutil.DetermineFileName(lang)
+	newRepoPath := pathbuilder.BuildFilePath(*curriculum, fileName)
+	repoName := pathbuilder.BuildRepoName(curriculum.SubjectSlug)
+
+	// 5. Check GitHub client availability
+	if s.githubClient == nil {
+		return nil, fmt.Errorf("github client not configured")
+	}
+
+	// 6. Get installation token
+	token, err := s.githubClient.GetInstallationToken(ctx, githubAccount.InstallationID)
+	if err != nil {
+		return nil, fmt.Errorf("get installation token: %w", err)
+	}
+
+	// 7. Ensure repo exists on GitHub
+	repoInfo, err := s.githubClient.EnsureRepo(ctx, token, githubAccount.GithubOwner, repoName, githubAccount.GithubOwnerType, s.cfg.GitHubDefaultBranch)
+	if err != nil {
+		return nil, fmt.Errorf("ensure repo: %w", err)
+	}
+
+	// 8. Check if file already exists on GitHub
+	fileInfo, err := s.githubClient.GetFileContent(ctx, token, githubAccount.GithubOwner, repoName, newRepoPath, s.cfg.GitHubDefaultBranch)
+	if err != nil {
+		return nil, fmt.Errorf("get file content: %w", err)
+	}
+
+	var existingSHA *string
+	if fileInfo != nil {
+		existingSHA = &fileInfo.SHA
+	}
+
+	// 9. Commit the file to GitHub
+	commitMessage := fmt.Sprintf("Solve %s", curriculum.ProblemSlug)
+	commitResult, err := s.githubClient.CreateOrUpdateFile(ctx, token, githubAccount.GithubOwner, repoName, newRepoPath, s.cfg.GitHubDefaultBranch, req.Code, commitMessage, existingSHA)
+	if err != nil {
+		return nil, fmt.Errorf("create or update file: %w", err)
+	}
+
+	// 10. Persist in database transaction
+	tx, err := s.repo.BeginTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	repoID, err := s.repo.UpsertRepositoryWithOwnerTx(ctx, tx, req.UserID, curriculum.SubjectID, repoName, repoInfo.FullName, repoInfo.URL, repoInfo.GithubRepoID, githubAccount.GithubOwner, s.cfg.GitHubDefaultBranch)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.repo.UpdateSubmissionRepoInfoTx(ctx, tx, req.SubmissionID, newRepoPath, commitResult.CommitSHA); err != nil {
+		return nil, err
+	}
+	if err := s.repo.InsertSubmissionCommitWithURLTx(ctx, tx, req.SubmissionID, repoID, newRepoPath, commitResult.CommitSHA, commitResult.CommitURL); err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+
+	s.log.Info("accepted submission committed to GitHub",
+		slog.String("submissionId", req.SubmissionID),
+		slog.String("repoFullName", repoInfo.FullName),
+		slog.String("filePath", newRepoPath),
+		slog.String("commitSha", commitResult.CommitSHA),
+		slog.Int("repoId", repoID),
+	)
+
+	return &dto.CommitAcceptedSubmissionResponse{
+		SubmissionID: req.SubmissionID,
+		RepositoryID: repoID,
+		FilePath:     newRepoPath,
+		CommitSha:    commitResult.CommitSHA,
+		CommitURL:    commitResult.CommitURL,
+		RepoFullName: repoInfo.FullName,
+	}, nil
 }
 
 // ListRepositories returns all repositories for a user.

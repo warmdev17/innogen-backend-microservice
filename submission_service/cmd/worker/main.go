@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
-	reporepo "innogen-backend/repo_service/repository"
-	reposervice "innogen-backend/repo_service/service"
 	"innogen-backend/shared/config"
 	"innogen-backend/shared/database"
 	"innogen-backend/shared/logger"
@@ -40,10 +40,10 @@ func main() {
 	defer q.Close()
 
 	repo := repository.New(pool)
-	repoRepo := reporepo.New(pool)
-	repoSvc := reposervice.New(repoRepo, log)
 	pistonClient := piston.NewClient(cfg.PistonBaseURL)
-	w := worker.New(log, repo, pistonClient, q, repoSvc)
+	httpClient := &http.Client{Timeout: 30 * time.Second}
+	repoServiceURL := "http://localhost:" + cfg.RepoServicePort
+	w := worker.New(log, repo, pistonClient, q, repoServiceURL, httpClient)
 
 	log.Info("submission-worker started")
 	w.Run(ctx)

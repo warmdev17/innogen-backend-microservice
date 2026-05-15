@@ -108,6 +108,20 @@ type Tag struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
+// GithubAccount represents a row in the github_accounts table.
+type GithubAccount struct {
+	ID              int       `json:"id"`
+	UserID          int       `json:"userId"`
+	InstallationID  string    `json:"installationId"`
+	GithubUserID    *string   `json:"githubUserId"`
+	GithubUsername  *string   `json:"githubUsername"`
+	GithubAvatarURL *string   `json:"githubAvatarUrl"`
+	GithubOwner     string    `json:"githubOwner"`
+	GithubOwnerType string    `json:"githubOwnerType"`
+	CreatedAt       time.Time `json:"createdAt"`
+	UpdatedAt       time.Time `json:"updatedAt"`
+}
+
 // Repository represents a row in the repositories table.
 type Repository struct {
 	ID            int       `json:"id"`
@@ -117,6 +131,7 @@ type Repository struct {
 	RepoFullName  *string   `json:"repoFullName"`
 	RepoURL       *string   `json:"repoUrl"`
 	GithubRepoID  *string   `json:"githubRepoId"`
+	GithubOwner   *string   `json:"githubOwner"`
 	DefaultBranch string    `json:"defaultBranch"`
 	CreatedAt     time.Time `json:"createdAt"`
 	UpdatedAt     time.Time `json:"updatedAt"`
