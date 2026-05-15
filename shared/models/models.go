@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 // User represents a row in the users table.
 // Password is tagged json:"-" to prevent accidental serialization in API responses.
@@ -14,4 +17,93 @@ type User struct {
 	IsActive  bool      `json:"isActive"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// Subject represents a row in the subjects table.
+type Subject struct {
+	ID          int       `json:"id"`
+	Title       string    `json:"title"`
+	Slug        string    `json:"slug"`
+	Color       *string   `json:"color"`
+	IsPublished bool      `json:"isPublished"`
+	LanguageID  *int      `json:"languageId"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
+
+// SubjectSession represents a row in the subject_sessions table.
+type SubjectSession struct {
+	ID          int       `json:"id"`
+	SubjectID   int       `json:"subjectId"`
+	Title       string    `json:"title"`
+	Description *string   `json:"description"`
+	OrderIndex  int       `json:"orderIndex"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
+
+// Lesson represents a row in the lessons table.
+type Lesson struct {
+	ID               int       `json:"id"`
+	SubjectSessionID int       `json:"subjectSessionId"`
+	Title            string    `json:"title"`
+	ContentMD        *string   `json:"contentMd"`
+	OrderIndex       int       `json:"orderIndex"`
+	CreatedAt        time.Time `json:"createdAt"`
+	UpdatedAt        time.Time `json:"updatedAt"`
+}
+
+// Problem represents a row in the problems table.
+type Problem struct {
+	ID              int             `json:"id"`
+	Slug            string          `json:"slug"`
+	Title           string          `json:"title"`
+	Difficulty      string          `json:"difficulty"`
+	ProblemMD       string          `json:"problemMd"`
+	TimeLimitMs     int             `json:"timeLimitMs"`
+	MemoryLimitMb   int             `json:"memoryLimitMb"`
+	AcceptanceRate  float64         `json:"acceptanceRate"`
+	IsPublished     bool            `json:"isPublished"`
+	SampleTestCases json.RawMessage `json:"sampleTestCases"`
+	CreatedAt       time.Time       `json:"createdAt"`
+	UpdatedAt       time.Time       `json:"updatedAt"`
+}
+
+// TestCase represents a row in the test_cases table.
+type TestCase struct {
+	ID             int       `json:"id"`
+	ProblemID      int       `json:"problemId"`
+	Visibility     string    `json:"visibility"`
+	InputData      *string   `json:"inputData"`
+	ExpectedOutput string    `json:"expectedOutput"`
+	ExecuteCode    *string   `json:"executeCode"`
+	OrderIndex     int       `json:"orderIndex"`
+	CreatedAt      time.Time `json:"createdAt"`
+}
+
+// LessonProblem represents a row in the lesson_problems join table.
+type LessonProblem struct {
+	LessonID   int `json:"lessonId"`
+	ProblemID  int `json:"problemId"`
+	OrderIndex int `json:"orderIndex"`
+}
+
+// Language represents a row in the languages table.
+type Language struct {
+	ID              int       `json:"id"`
+	Name            string    `json:"name"`
+	PistonAlias     string    `json:"pistonAlias"`
+	PistonVersion   string    `json:"pistonVersion"`
+	FileExtension   *string   `json:"fileExtension"`
+	DefaultFileName *string   `json:"defaultFileName"`
+	IsActive        bool      `json:"isActive"`
+	CreatedAt       time.Time `json:"createdAt"`
+	UpdatedAt       time.Time `json:"updatedAt"`
+}
+
+// Tag represents a row in the tags table.
+type Tag struct {
+	ID        int       `json:"id"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"createdAt"`
 }

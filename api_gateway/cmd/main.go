@@ -1,10 +1,15 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
+	"os"
 
+	"innogen-backend/api_gateway/internal/curriculum"
+	"innogen-backend/api_gateway/internal/problem"
 	"innogen-backend/shared/config"
+	"innogen-backend/shared/database"
 	"innogen-backend/shared/logger"
 	"innogen-backend/shared/response"
 )
@@ -13,27 +18,51 @@ func main() {
 	cfg := config.Load()
 	log := logger.New("api-gateway")
 
+	ctx := context.Background()
+
+	pool, err := database.NewPostgresPool(ctx, cfg.DatabaseURL)
+	if err != nil {
+		log.Error("failed to connect to database", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+	defer pool.Close()
+
+	curriculumRepo := curriculum.NewCurriculumRepository(pool)
+	curriculumHandler := curriculum.NewHandler(curriculumRepo, log)
+
+	problemRepo := problem.NewProblemRepository(pool)
+	problemHandler := problem.NewHandler(problemRepo, log)
+
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /health", healthHandler(log))
+	// Health
+	mux.HandleFunc("GET /health", healthHandler)
+
+	// Curriculum routes
+	mux.HandleFunc("GET /subjects", curriculumHandler.ListSubjects)
+	mux.HandleFunc("GET /subjects/{slug}", curriculumHandler.GetSubject)
+	mux.HandleFunc("GET /subjects/{slug}/sessions", curriculumHandler.ListSessions)
+	mux.HandleFunc("GET /sessions/{id}/lessons", curriculumHandler.ListLessons)
+	mux.HandleFunc("GET /lessons/{id}", curriculumHandler.GetLesson)
+	mux.HandleFunc("GET /lessons/{id}/problems", curriculumHandler.ListLessonProblems)
+
+	// Problem routes
+	mux.HandleFunc("GET /problems/{slug}", problemHandler.GetProblem)
+	mux.HandleFunc("GET /problems/{id}/test-cases", problemHandler.ListTestCases)
 
 	addr := ":" + cfg.APIGatewayPort
 	log.Info("api-gateway listening on " + addr)
 
 	if err := http.ListenAndServe(addr, mux); err != nil {
 		log.Error("server failed", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 }
 
-// healthHandler returns an http.HandlerFunc that responds with a JSON health
-// check payload.
-func healthHandler(log *slog.Logger) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		log.Debug("health check received")
-
-		response.JSON(w, http.StatusOK, map[string]string{
-			"status":  "ok",
-			"service": "api-gateway",
-		})
-	}
+// healthHandler responds with the service health status.
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	response.JSON(w, http.StatusOK, map[string]string{
+		"status":  "ok",
+		"service": "api-gateway",
+	})
 }

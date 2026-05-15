@@ -1,1 +1,56 @@
 package dto
+
+import "strings"
+
+// Status constants for run results.
+const (
+	StatusAccepted          = "Accepted"
+	StatusWrongAnswer       = "Wrong Answer"
+	StatusCompilationError  = "Compilation Error"
+	StatusRuntimeError      = "Runtime Error"
+	StatusTimeLimitExceeded = "Time Limit Exceeded"
+	StatusInternalError     = "Internal Error"
+)
+
+// RunRequest is the JSON body for POST /run.
+type RunRequest struct {
+	ProblemID  int    `json:"problemId"`
+	LanguageID int    `json:"languageId"`
+	Code       string `json:"code"`
+}
+
+// Validate returns an error message string if the request is invalid, or empty string if valid.
+func (r *RunRequest) Validate() string {
+	if r.ProblemID <= 0 {
+		return "problemId must be greater than 0"
+	}
+	if r.LanguageID <= 0 {
+		return "languageId must be greater than 0"
+	}
+	if strings.TrimSpace(r.Code) == "" {
+		return "code must not be empty"
+	}
+	if len(r.Code) > 100*1024 {
+		return "code exceeds maximum allowed length (100KB)"
+	}
+	return ""
+}
+
+// TestResult represents the result of a single test case execution.
+type TestResult struct {
+	TestCaseID     int     `json:"testCaseId"`
+	Status         string  `json:"status"`
+	InputData      string  `json:"inputData"`
+	ExpectedOutput string  `json:"expectedOutput"`
+	ActualOutput   string  `json:"actualOutput"`
+	RuntimeMs      *int    `json:"runtimeMs"`
+	ErrorMessage   *string `json:"errorMessage"`
+}
+
+// RunResponse is the JSON body returned by POST /run.
+type RunResponse struct {
+	Status  string       `json:"status"`
+	Passed  int          `json:"passed"`
+	Total   int          `json:"total"`
+	Results []TestResult `json:"results"`
+}
