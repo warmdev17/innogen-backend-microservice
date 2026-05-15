@@ -90,3 +90,14 @@
 - Worker now uses `REPO_SERVICE_URL` config (fixes Docker/K8s deployment)
 - Validated: go build, go vet, go test (22/22 pass)
 - Commit: pending
+
+### 2026-05-15 — Local Seed Data and E2E Validation (STEP 10)
+
+- Created `seeds/dev_seed.sql` with admin user, JavaScript language, subject, session, lesson, problem, test cases
+- Created `scripts/hash_password.go` for bcrypt hash generation
+- Created `scripts/e2e_mvp.sh` — full end-to-end validation: health → login → subjects → run → submit → poll → verify
+- Added `make seed-dev` (apply schema + seed) and `make e2e` (run E2E script)
+- Updated `README.md` with quick start, architecture overview, and API table
+- Updated project memory docs
+- Validated: go build, go vet, go test (22/22 pass)
+- Commit: pending

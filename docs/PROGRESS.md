@@ -10,5 +10,6 @@
 - [x] STEP 7 — repo_service mock commit (path builder, repo upsert, commit records)
 - [x] STEP 8 — GitHub App implementation (real commits, per-user installations)
 - [x] STEP 9 — api_gateway proxy/routing (single entrypoint, JWT auth passthrough)
+- [x] STEP 10 — Local seed data and E2E MVP validation
 
 ### 🎉 All steps complete

@@ -74,3 +74,11 @@
 - **Internal routes**: `/internal/*` routes (e.g., repo_service commit endpoint) are NOT registered in the gateway — accessible only via direct service-to-service communication.
 - **Proxy timeout**: 30-second `ResponseHeaderTimeout` on all reverse proxies to prevent goroutine leaks.
 - **Service URLs**: Configurable via `*_SERVICE_URL` env vars for flexible deployment (localhost, Docker, K8s).
+
+### Dev Seed Data and E2E Validation (STEP 10)
+
+- **Decision**: Use a standalone Go script (`scripts/hash_password.go`) with build tag `ignore` for bcrypt hash generation. The hash is baked into `seeds/dev_seed.sql` so no runtime Go dependency is needed for seeding.
+- **Seed strategy**: All INSERTs use `ON CONFLICT DO NOTHING` so the seed is idempotent — safe to run multiple times.
+- **Test cases**: One sample (visible to users) and one hidden (not exposed) to validate both paths.
+- **E2E script**: Bash-based using curl + jq. Validates the full flow: login → curriculum → run → submit → poll → verify Accepted.
+- **GitHub seed**: Commented out by default. Real GitHub App installation data must be filled in manually.

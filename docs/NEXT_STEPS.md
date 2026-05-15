@@ -1,44 +1,23 @@
-## Project Complete — All 9 steps implemented
+## Project Complete
 
-### Running the full system
+All 10 implementation steps are finished. The MVP backend is functional.
+
+### Quick validation
 
 ```bash
 make compose-up
-psql postgres://innogen:innogen@localhost:5432/innogen < schema.sql
-
-# If upgrading: psql ... < migrations/001_add_github_owner.sql
-
-# Start all services:
-make run-gateway          # :8080 (single entrypoint)
-make run-auth             # :8081
-make run-runner           # :8082
-make run-submission       # :8083
-make run-submission-worker
-make run-repo             # :8084
+make seed-dev
+# Start services in separate terminals
+make run-gateway && make run-auth && make run-runner && make run-submission && make run-submission-worker && make run-repo
+# Run E2E
+make e2e
 ```
 
-### Quick test through gateway
+### Production readiness
 
-```bash
-# Health
-curl http://localhost:8080/health
-
-# Login
-TOKEN=$(curl -s -X POST http://localhost:8080/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"admin@example.com","password":"password"}' | jq -r .accessToken)
-
-# Protected endpoints
-curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/auth/me
-curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/me/submissions
-curl http://localhost:8080/subjects
-```
-
-### Future Enhancements
-
-- Rate limiting middleware at gateway level
-- Request/response logging middleware
-- CORS middleware
-- Replace X-User-ID temporary auth with full JWT in all services
-- Webhook handling for GitHub App events
-- Frontend integration
+- Add rate limiting at gateway
+- Replace X-User-ID with full JWT in all services
+- Add CORS middleware
+- Implement GitHub App webhook handling
+- Build frontend
+- Add CI/CD pipeline
