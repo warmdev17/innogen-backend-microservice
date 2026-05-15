@@ -1,15 +1,19 @@
 package dto
 
-import "strings"
+import (
+	"strings"
+
+	"innogen-backend/shared/constants"
+)
 
 // Status constants for run results.
 const (
-	StatusAccepted          = "Accepted"
-	StatusWrongAnswer       = "Wrong Answer"
-	StatusCompilationError  = "Compilation Error"
-	StatusRuntimeError      = "Runtime Error"
-	StatusTimeLimitExceeded = "Time Limit Exceeded"
-	StatusInternalError     = "Internal Error"
+	StatusAccepted          = constants.StatusAccepted
+	StatusWrongAnswer       = constants.StatusWrongAnswer
+	StatusCompilationError  = constants.StatusCompilationError
+	StatusRuntimeError      = constants.StatusRuntimeError
+	StatusTimeLimitExceeded = constants.StatusTimeLimitExceeded
+	StatusInternalError     = constants.StatusInternalError
 )
 
 // RunRequest is the JSON body for POST /run.

@@ -145,3 +145,90 @@ func (r *SubmissionRepository) LanguageExists(ctx context.Context, id int) (bool
 	}
 	return exists, nil
 }
+
+// GetProblemByID retrieves a full problem by ID.
+// Returns nil, nil if not found.
+func (r *SubmissionRepository) GetProblemByID(ctx context.Context, id int) (*models.Problem, error) {
+	p := &models.Problem{}
+	err := r.pool.QueryRow(ctx,
+		`SELECT id, slug, title, difficulty, problem_md, time_limit_ms, memory_limit_mb, acceptance_rate, is_published, sample_test_cases, created_at, updated_at
+         FROM problems WHERE id = $1`, id,
+	).Scan(&p.ID, &p.Slug, &p.Title, &p.Difficulty, &p.ProblemMD, &p.TimeLimitMs, &p.MemoryLimitMb,
+		&p.AcceptanceRate, &p.IsPublished, &p.SampleTestCases, &p.CreatedAt, &p.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("repository.GetProblemByID: %w", err)
+	}
+	return p, nil
+}
+
+// GetLanguageByID retrieves an active language by ID.
+// Returns nil, nil if not found.
+func (r *SubmissionRepository) GetLanguageByID(ctx context.Context, id int) (*models.Language, error) {
+	l := &models.Language{}
+	err := r.pool.QueryRow(ctx,
+		`SELECT id, name, piston_alias, piston_version, file_extension, default_file_name, is_active, created_at, updated_at
+         FROM languages WHERE id = $1 AND is_active = true`, id,
+	).Scan(&l.ID, &l.Name, &l.PistonAlias, &l.PistonVersion, &l.FileExtension, &l.DefaultFileName,
+		&l.IsActive, &l.CreatedAt, &l.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("repository.GetLanguageByID: %w", err)
+	}
+	return l, nil
+}
+
+// GetTestCasesByProblemID retrieves all test cases for a problem, ordered by order_index.
+// Returns an empty slice if none found.
+func (r *SubmissionRepository) GetTestCasesByProblemID(ctx context.Context, problemID int) ([]models.TestCase, error) {
+	rows, err := r.pool.Query(ctx,
+		`SELECT id, problem_id, visibility, input_data, expected_output, execute_code, order_index, created_at
+         FROM test_cases WHERE problem_id = $1 ORDER BY order_index ASC`, problemID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("repository.GetTestCasesByProblemID: %w", err)
+	}
+	defer rows.Close()
+
+	var testCases []models.TestCase
+	for rows.Next() {
+		var tc models.TestCase
+		if err := rows.Scan(&tc.ID, &tc.ProblemID, &tc.Visibility, &tc.InputData, &tc.ExpectedOutput,
+			&tc.ExecuteCode, &tc.OrderIndex, &tc.CreatedAt); err != nil {
+			return nil, fmt.Errorf("repository.GetTestCasesByProblemID: %w", err)
+		}
+		testCases = append(testCases, tc)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("repository.GetTestCasesByProblemID: %w", err)
+	}
+	return testCases, nil
+}
+
+// UpdateSubmissionStatus updates the status of a submission.
+func (r *SubmissionRepository) UpdateSubmissionStatus(ctx context.Context, id string, status string) error {
+	_, err := r.pool.Exec(ctx, `UPDATE submissions SET status = $2 WHERE id = $1`, id, status)
+	if err != nil {
+		return fmt.Errorf("repository.UpdateSubmissionStatus: %w", err)
+	}
+	return nil
+}
+
+// UpdateSubmissionResult updates the final result of a judged submission.
+func (r *SubmissionRepository) UpdateSubmissionResult(ctx context.Context, id string, status string, runtimeMs *int, memoryKb *int, errorMessage *string, passCount int, totalTestcases int) error {
+	_, err := r.pool.Exec(ctx,
+		`UPDATE submissions
+         SET status = $2, runtime_ms = $3, memory_kb = $4, error_message = $5,
+             pass_count = $6, total_testcases = $7, judged_at = CURRENT_TIMESTAMP
+         WHERE id = $1`,
+		id, status, runtimeMs, memoryKb, errorMessage, passCount, totalTestcases,
+	)
+	if err != nil {
+		return fmt.Errorf("repository.UpdateSubmissionResult: %w", err)
+	}
+	return nil
+}

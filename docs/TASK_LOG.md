@@ -21,3 +21,19 @@
 - Files: dto.go, repository.go, service.go, handler.go, route.go, cmd/api/main.go
 - Validated: go build, go vet, go test all pass
 - Commit: pending
+
+### 2026-05-15 — Redis Queue and Judge Worker (STEP 6)
+
+- Extracted shared packages: `shared/piston/`, `shared/judge/`, `shared/constants/`, `shared/languageutil/`
+- Migrated run_service to use shared packages
+- Created Redis-backed job queue (`submission_service/internal/queue/`) using `go-redis/v9`
+- Implemented async worker (`submission_service/internal/worker/`) with full judging flow:
+  - Dequeue from Redis → load submission → mark Running → execute all test cases via Piston → judge results → update submission
+  - Status priority: CompilationError > InternalError > TLE > RuntimeError > WrongAnswer > Accepted
+  - Per-test TLE detection via problem's time_limit_ms + Piston run_timeout
+- Updated POST /submit to enqueue submission for async judging
+- Added `UpdateSubmissionStatus` and `UpdateSubmissionResult` repository methods
+- Updated handler to use proper sentinel error for spam cooldown
+- Deleted old run_service/internal/piston/ and run_service/internal/judge/ (moved to shared/)
+- Validated: go build, go vet, go test (18/18 pass) all clean
+- Commit: pending

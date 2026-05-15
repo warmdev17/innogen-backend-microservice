@@ -11,6 +11,7 @@ import (
 	"innogen-backend/shared/logger"
 	"innogen-backend/shared/response"
 	"innogen-backend/submission_service/internal/handler"
+	"innogen-backend/submission_service/internal/queue"
 	"innogen-backend/submission_service/internal/repository"
 	"innogen-backend/submission_service/internal/route"
 	"innogen-backend/submission_service/internal/service"
@@ -29,8 +30,15 @@ func main() {
 	}
 	defer pool.Close()
 
+	q, err := queue.New(cfg.RedisAddr)
+	if err != nil {
+		log.Error("failed to connect to redis", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+	defer q.Close()
+
 	repo := repository.New(pool)
-	svc := service.New(repo)
+	svc := service.New(repo, q, log)
 	h := handler.New(svc, log)
 
 	mux := http.NewServeMux()

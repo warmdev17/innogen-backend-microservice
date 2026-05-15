@@ -5,11 +5,11 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"innogen-backend/shared/middleware"
 	"innogen-backend/shared/response"
 	"innogen-backend/submission_service/internal/dto"
+	"innogen-backend/submission_service/internal/repository"
 	"innogen-backend/submission_service/internal/service"
 )
 
@@ -48,7 +48,7 @@ func (h *Handler) Submit(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, service.ErrLanguageNotFound):
 			response.Error(w, http.StatusBadRequest, "Language not found")
 		default:
-			if strings.Contains(err.Error(), "Please wait 10 seconds") {
+			if errors.Is(err, repository.ErrSpamCooldown) {
 				response.Error(w, http.StatusTooManyRequests, "Please wait 10 seconds before submitting again")
 				return
 			}

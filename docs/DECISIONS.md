@@ -15,3 +15,26 @@
 - **Implementation**: `shared/middleware/auth.go` provides `XUserID()` middleware that reads the integer user ID from the header and injects it into the request context using the same `UserIDKey` used by JWT `Auth()`.
 - **Production**: Replace with JWT Bearer token authentication via `middleware.Auth(jwtSecret)` before deploying.
 - **Routes using X-User-ID**: POST /submit, GET /submissions/{id}, GET /me/submissions, GET /me/submissions/{problemId}/latest
+
+### Redis Queue for Async Judging
+
+- **Decision**: Use Redis list-based queue (LPUSH/BRPOP) for submission job distribution.
+- **Queue name**: `submission_jobs`
+- **Payload**: `{"submissionId":"<uuid>"}` (JSON)
+- **Delivery semantics**: At-most-once. Jobs removed from Redis on dequeue before processing.
+- **Crash recovery**: MVP uses a placeholder reconciliation sweep. Production should implement periodic re-enqueue of stale Pending/Running submissions.
+- **Library**: `github.com/redis/go-redis/v9`
+
+### Shared Packages Extraction
+
+- **Decision**: Extracted `piston` client, `judge` logic, status `constants`, and `languageutil` into `shared/` to avoid code duplication between run_service and submission_service worker.
+- **Affected packages**:
+  - `shared/piston/` — Piston API v2 HTTP client (exported types: Request, Response, Stage, Client)
+  - `shared/judge/` — Output evaluation with TLE detection via timeLimitMs
+  - `shared/constants/` — Status string constants (Accepted, WrongAnswer, etc.)
+  - `shared/languageutil/` — File name resolution from language config
+- **Run service compatibility**: run_service re-exports status constants from shared/constants for backward compatibility.
+
+### Time Limit Detection
+
+- **Decision**: Piston `run_timeout` field is set from `problems.time_limit_ms`. If a process is killed by signal AND a time limit was configured, it's classified as Time Limit Exceeded instead of Runtime Error. Without a configured limit, signals are treated as Runtime Error (backward compatible with run_service).

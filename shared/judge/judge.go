@@ -1,10 +1,11 @@
+// Package judge provides output comparison and test result evaluation logic.
 package judge
 
 import (
 	"math"
 	"strings"
 
-	"innogen-backend/run_service/internal/dto"
+	"innogen-backend/shared/constants"
 )
 
 // EvaluateResult holds the outcome of evaluating a single Piston execution.
@@ -24,13 +25,14 @@ func trimOutput(s string) string {
 //
 // Parameters:
 //   - expectedOutput: the expected output from the test case
-//   - compileStderr: non-empty if compilation failed (passed when compile code != 0)
+//   - compileStderr: non-empty if compilation failed
 //   - runStdout: stdout from the Piston run stage
 //   - runStderr: stderr from the Piston run stage
 //   - runCode: exit code from the Piston run stage (0 = success)
-//   - runSignal: signal that killed the process, if any (nil if no signal)
+//   - runSignal: signal that killed the process (nil if no signal)
 //   - runTime: execution time in seconds (0 if not measured)
-func Evaluate(expectedOutput, compileStderr, runStdout, runStderr string, runCode int, runSignal *string, runTime float64) EvaluateResult {
+//   - timeLimitMs: the problem's time limit in ms (0 if no explicit limit)
+func Evaluate(expectedOutput, compileStderr, runStdout, runStderr string, runCode int, runSignal *string, runTime float64, timeLimitMs int) EvaluateResult {
 	// Compilation error
 	if compileStderr != "" {
 		msg := trimOutput(compileStderr)
@@ -38,17 +40,22 @@ func Evaluate(expectedOutput, compileStderr, runStdout, runStderr string, runCod
 			msg = "Compilation error"
 		}
 		return EvaluateResult{
-			Status:       dto.StatusCompilationError,
+			Status:       constants.StatusCompilationError,
 			ErrorMessage: &msg,
 		}
 	}
 
-	// Killed by signal
+	// Killed by signal — distinguish TLE from RTE based on timeLimitMs
 	if runSignal != nil && *runSignal != "" {
 		msg := "Killed by signal: " + *runSignal
+		status := constants.StatusRuntimeError
+		if timeLimitMs > 0 {
+			status = constants.StatusTimeLimitExceeded
+			msg = "Time Limit Exceeded"
+		}
 		actual := trimOutput(runStdout)
 		return EvaluateResult{
-			Status:       dto.StatusRuntimeError,
+			Status:       status,
 			ActualOutput: actual,
 			ErrorMessage: &msg,
 		}
@@ -62,7 +69,7 @@ func Evaluate(expectedOutput, compileStderr, runStdout, runStderr string, runCod
 		}
 		actual := trimOutput(runStdout)
 		return EvaluateResult{
-			Status:       dto.StatusRuntimeError,
+			Status:       constants.StatusRuntimeError,
 			ActualOutput: actual,
 			ErrorMessage: &msg,
 		}
@@ -73,9 +80,9 @@ func Evaluate(expectedOutput, compileStderr, runStdout, runStderr string, runCod
 	expected := trimOutput(expectedOutput)
 	rtMs := runtimeToMs(runTime)
 
-	status := dto.StatusWrongAnswer
+	status := constants.StatusWrongAnswer
 	if actual == expected {
-		status = dto.StatusAccepted
+		status = constants.StatusAccepted
 	}
 
 	return EvaluateResult{

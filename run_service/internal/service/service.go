@@ -5,10 +5,11 @@ import (
 	"errors"
 
 	"innogen-backend/run_service/internal/dto"
-	"innogen-backend/run_service/internal/judge"
-	"innogen-backend/run_service/internal/piston"
 	"innogen-backend/run_service/internal/repository"
+	"innogen-backend/shared/judge"
+	"innogen-backend/shared/languageutil"
 	"innogen-backend/shared/models"
+	"innogen-backend/shared/piston"
 )
 
 // Sentinel errors for the service layer.
@@ -60,7 +61,7 @@ func (s *RunService) Run(ctx context.Context, req dto.RunRequest) (*dto.RunRespo
 	}
 
 	// Determine the file name for code submission
-	fileName := determineFileName(lang)
+	fileName := languageutil.DetermineFileName(lang)
 
 	// Execute each test case
 	results := make([]dto.TestResult, 0, len(testCases))
@@ -85,7 +86,7 @@ func (s *RunService) Run(ctx context.Context, req dto.RunRequest) (*dto.RunRespo
 		}
 
 		// Call Piston
-		pistonResp, err := s.pistonClient.Execute(ctx, lang.PistonAlias, lang.PistonVersion, fileName, req.Code, stdin)
+		pistonResp, err := s.pistonClient.Execute(ctx, lang.PistonAlias, lang.PistonVersion, fileName, req.Code, stdin, 0)
 		if err != nil {
 			internalError = true
 			msg := err.Error()
@@ -117,7 +118,7 @@ func (s *RunService) Run(ctx context.Context, req dto.RunRequest) (*dto.RunRespo
 		}
 
 		// Judge the result
-		jr := judge.Evaluate(tc.ExpectedOutput, compileStderr, runStdout, runStderr, runCode, runSignal, runTime)
+		jr := judge.Evaluate(tc.ExpectedOutput, compileStderr, runStdout, runStderr, runCode, runSignal, runTime, 0)
 
 		tr := dto.TestResult{
 			TestCaseID:     tc.ID,
@@ -149,18 +150,6 @@ func (s *RunService) Run(ctx context.Context, req dto.RunRequest) (*dto.RunRespo
 		Total:   len(testCases),
 		Results: results,
 	}, nil
-}
-
-// determineFileName returns the file name to use for code execution.
-// Uses language.default_file_name, or "solution" + extension, or "main.txt".
-func determineFileName(lang *models.Language) string {
-	if lang.DefaultFileName != nil && *lang.DefaultFileName != "" {
-		return *lang.DefaultFileName
-	}
-	if lang.FileExtension != nil && *lang.FileExtension != "" {
-		return "solution" + *lang.FileExtension
-	}
-	return "main.txt"
 }
 
 // inputData returns the input data string from a test case, or empty string if nil.

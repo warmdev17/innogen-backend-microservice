@@ -4,13 +4,14 @@ import (
 	"testing"
 
 	"innogen-backend/run_service/internal/dto"
+	"innogen-backend/shared/judge"
 )
 
 func intPtr(v int) *int       { return &v }
 func strPtr(v string) *string { return &v }
 
 func TestEvaluate_Accepted(t *testing.T) {
-	result := Evaluate("hello\n", "", "hello\n", "", 0, nil, 0.5)
+	result := judge.Evaluate("hello\n", "", "hello\n", "", 0, nil, 0.5, 0)
 
 	if result.Status != dto.StatusAccepted {
 		t.Errorf("expected Status=%q, got %q", dto.StatusAccepted, result.Status)
@@ -30,7 +31,7 @@ func TestEvaluate_Accepted(t *testing.T) {
 }
 
 func TestEvaluate_WrongAnswer(t *testing.T) {
-	result := Evaluate("expected output", "", "actual output", "", 0, nil, 0.123)
+	result := judge.Evaluate("expected output", "", "actual output", "", 0, nil, 0.123, 0)
 
 	if result.Status != dto.StatusWrongAnswer {
 		t.Errorf("expected Status=%q, got %q", dto.StatusWrongAnswer, result.Status)
@@ -50,7 +51,7 @@ func TestEvaluate_WrongAnswer(t *testing.T) {
 }
 
 func TestEvaluate_CompilationError(t *testing.T) {
-	result := Evaluate("expected", "some compile error", "run stdout", "run stderr", 0, nil, 0.5)
+	result := judge.Evaluate("expected", "some compile error", "run stdout", "run stderr", 0, nil, 0.5, 0)
 
 	if result.Status != dto.StatusCompilationError {
 		t.Errorf("expected Status=%q, got %q", dto.StatusCompilationError, result.Status)
@@ -70,7 +71,7 @@ func TestEvaluate_CompilationError(t *testing.T) {
 }
 
 func TestEvaluate_CompilationError_EmptyStderr(t *testing.T) {
-	result := Evaluate("expected", "   ", "run stdout", "run stderr", 0, nil, 0.5)
+	result := judge.Evaluate("expected", "   ", "run stdout", "run stderr", 0, nil, 0.5, 0)
 
 	if result.Status != dto.StatusCompilationError {
 		t.Errorf("expected Status=%q, got %q", dto.StatusCompilationError, result.Status)
@@ -84,7 +85,7 @@ func TestEvaluate_CompilationError_EmptyStderr(t *testing.T) {
 }
 
 func TestEvaluate_RuntimeError_ExitCode(t *testing.T) {
-	result := Evaluate("expected", "", "some stdout", "segmentation fault", 1, nil, 0.5)
+	result := judge.Evaluate("expected", "", "some stdout", "segmentation fault", 1, nil, 0.5, 0)
 
 	if result.Status != dto.StatusRuntimeError {
 		t.Errorf("expected Status=%q, got %q", dto.StatusRuntimeError, result.Status)
@@ -104,7 +105,7 @@ func TestEvaluate_RuntimeError_ExitCode(t *testing.T) {
 }
 
 func TestEvaluate_RuntimeError_ExitCode_EmptyStderr(t *testing.T) {
-	result := Evaluate("expected", "", "some stdout", "", 1, nil, 0.5)
+	result := judge.Evaluate("expected", "", "some stdout", "", 1, nil, 0.5, 0)
 
 	if result.Status != dto.StatusRuntimeError {
 		t.Errorf("expected Status=%q, got %q", dto.StatusRuntimeError, result.Status)
@@ -122,7 +123,7 @@ func TestEvaluate_RuntimeError_ExitCode_EmptyStderr(t *testing.T) {
 
 func TestEvaluate_RuntimeError_Signal(t *testing.T) {
 	signal := "SIGKILL"
-	result := Evaluate("expected", "", "partial stdout", "", 0, &signal, 0.5)
+	result := judge.Evaluate("expected", "", "partial stdout", "", 0, &signal, 0.5, 0)
 
 	if result.Status != dto.StatusRuntimeError {
 		t.Errorf("expected Status=%q, got %q", dto.StatusRuntimeError, result.Status)
@@ -143,7 +144,7 @@ func TestEvaluate_RuntimeError_Signal(t *testing.T) {
 
 func TestEvaluate_RuntimeError_Signal_WinsOverExitCode(t *testing.T) {
 	signal := "SIGTERM"
-	result := Evaluate("expected", "", "stdout", "stderr", 1, &signal, 0.5)
+	result := judge.Evaluate("expected", "", "stdout", "stderr", 1, &signal, 0.5, 0)
 
 	if result.Status != dto.StatusRuntimeError {
 		t.Errorf("expected Status=%q, got %q", dto.StatusRuntimeError, result.Status)
@@ -157,7 +158,7 @@ func TestEvaluate_RuntimeError_Signal_WinsOverExitCode(t *testing.T) {
 }
 
 func TestEvaluate_OutputTrimming(t *testing.T) {
-	result := Evaluate("hello", "", "  hello  \n\n  ", "", 0, nil, 0.5)
+	result := judge.Evaluate("hello", "", "  hello  \n\n  ", "", 0, nil, 0.5, 0)
 
 	if result.Status != dto.StatusAccepted {
 		t.Errorf("expected Status=%q, got %q", dto.StatusAccepted, result.Status)
@@ -168,7 +169,7 @@ func TestEvaluate_OutputTrimming(t *testing.T) {
 }
 
 func TestEvaluate_OutputTrimming_ExpectedTrailingSpaces(t *testing.T) {
-	result := Evaluate("  world  \n", "", "world", "", 0, nil, 0.5)
+	result := judge.Evaluate("  world  \n", "", "world", "", 0, nil, 0.5, 0)
 
 	if result.Status != dto.StatusAccepted {
 		t.Errorf("expected Status=%q, got %q", dto.StatusAccepted, result.Status)
@@ -192,7 +193,7 @@ func TestEvaluate_RuntimeMs_Positive(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := Evaluate("a", "", "a", "", 0, nil, tt.runTime)
+			result := judge.Evaluate("a", "", "a", "", 0, nil, tt.runTime, 0)
 			if result.RuntimeMs == nil {
 				t.Fatal("expected RuntimeMs to be non-nil")
 			}
@@ -215,7 +216,7 @@ func TestEvaluate_RuntimeMs_ZeroOrNegative(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := Evaluate("a", "", "a", "", 0, nil, tt.runTime)
+			result := judge.Evaluate("a", "", "a", "", 0, nil, tt.runTime, 0)
 			if result.RuntimeMs != nil {
 				t.Errorf("expected RuntimeMs to be nil, got %d", *result.RuntimeMs)
 			}
@@ -225,7 +226,7 @@ func TestEvaluate_RuntimeMs_ZeroOrNegative(t *testing.T) {
 
 func TestEvaluate_CompilationError_PrecedesAll(t *testing.T) {
 	signal := "SIGINT"
-	result := Evaluate("expected", "compile failed", "stdout", "stderr", 1, &signal, 0.5)
+	result := judge.Evaluate("expected", "compile failed", "stdout", "stderr", 1, &signal, 0.5, 0)
 
 	if result.Status != dto.StatusCompilationError {
 		t.Errorf("expected Status=%q, got %q", dto.StatusCompilationError, result.Status)
@@ -239,7 +240,7 @@ func TestEvaluate_CompilationError_PrecedesAll(t *testing.T) {
 }
 
 func TestEvaluate_EmptyOutput_Accepted(t *testing.T) {
-	result := Evaluate("", "", "", "", 0, nil, 0)
+	result := judge.Evaluate("", "", "", "", 0, nil, 0, 0)
 
 	if result.Status != dto.StatusAccepted {
 		t.Errorf("expected Status=%q, got %q", dto.StatusAccepted, result.Status)
@@ -254,7 +255,7 @@ func TestEvaluate_EmptyOutput_Accepted(t *testing.T) {
 
 func TestEvaluate_NilSignal(t *testing.T) {
 	// nil signal with exit code 0 and matching output = Accepted
-	result := Evaluate("output", "", "output", "", 0, nil, 0.5)
+	result := judge.Evaluate("output", "", "output", "", 0, nil, 0.5, 0)
 
 	if result.Status != dto.StatusAccepted {
 		t.Errorf("expected Status=%q, got %q", dto.StatusAccepted, result.Status)
@@ -264,7 +265,7 @@ func TestEvaluate_NilSignal(t *testing.T) {
 func TestEvaluate_EmptySignalString(t *testing.T) {
 	// empty string signal with exit code 0 and matching output = Accepted
 	empty := ""
-	result := Evaluate("output", "", "output", "", 0, &empty, 0.5)
+	result := judge.Evaluate("output", "", "output", "", 0, &empty, 0.5, 0)
 
 	if result.Status != dto.StatusAccepted {
 		t.Errorf("expected Status=%q, got %q", dto.StatusAccepted, result.Status)

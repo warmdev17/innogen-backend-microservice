@@ -1,3 +1,4 @@
+// Package piston provides an HTTP client for the Piston code execution API (v2).
 package piston
 
 import (
@@ -11,30 +12,31 @@ import (
 	"time"
 )
 
-// pistonRequest is the JSON body sent to the Piston execute endpoint.
-type pistonRequest struct {
-	Language string       `json:"language"`
-	Version  string       `json:"version"`
-	Files    []pistonFile `json:"files"`
-	Stdin    string       `json:"stdin"`
+// Request is the JSON body sent to the Piston execute endpoint.
+type Request struct {
+	Language     string `json:"language"`
+	Version      string `json:"version"`
+	Files        []File `json:"files"`
+	Stdin        string `json:"stdin"`
+	RunTimeoutMs *int   `json:"run_timeout,omitempty"`
 }
 
-// pistonFile represents a single source file in a Piston request.
-type pistonFile struct {
+// File represents a single source file in a Piston request.
+type File struct {
 	Name    string `json:"name"`
 	Content string `json:"content"`
 }
 
-// pistonResponse is the top-level JSON response from the Piston execute endpoint.
-type pistonResponse struct {
-	Language string       `json:"language"`
-	Version  string       `json:"version"`
-	Run      *pistonStage `json:"run"`
-	Compile  *pistonStage `json:"compile"`
+// Response is the top-level JSON response from the Piston execute endpoint.
+type Response struct {
+	Language string `json:"language"`
+	Version  string `json:"version"`
+	Run      *Stage `json:"run"`
+	Compile  *Stage `json:"compile"`
 }
 
-// pistonStage represents a single stage (compile or run) in a Piston response.
-type pistonStage struct {
+// Stage represents a single stage (compile or run) in a Piston response.
+type Stage struct {
 	Stdout   string  `json:"stdout"`
 	Stderr   string  `json:"stderr"`
 	Code     int     `json:"code"`
@@ -51,7 +53,6 @@ type Client struct {
 }
 
 // NewClient creates a new Piston API client with the given base URL.
-// The base URL trailing slash is trimmed.
 func NewClient(baseURL string) *Client {
 	baseURL = strings.TrimRight(baseURL, "/")
 	return &Client{
@@ -63,14 +64,18 @@ func NewClient(baseURL string) *Client {
 }
 
 // Execute sends a code execution request to the Piston API.
-func (c *Client) Execute(ctx context.Context, language, version, fileName, code, stdin string) (*pistonResponse, error) {
-	req := pistonRequest{
+// If runTimeoutMs > 0, the run_timeout field is set in the request.
+func (c *Client) Execute(ctx context.Context, language, version, fileName, code, stdin string, runTimeoutMs int) (*Response, error) {
+	req := Request{
 		Language: language,
 		Version:  version,
-		Files: []pistonFile{
+		Files: []File{
 			{Name: fileName, Content: code},
 		},
 		Stdin: stdin,
+	}
+	if runTimeoutMs > 0 {
+		req.RunTimeoutMs = &runTimeoutMs
 	}
 
 	body, err := json.Marshal(req)
@@ -99,7 +104,7 @@ func (c *Client) Execute(ctx context.Context, language, version, fileName, code,
 		return nil, fmt.Errorf("piston: unexpected status %d: %s", resp.StatusCode, string(respBody))
 	}
 
-	var result pistonResponse
+	var result Response
 	if err := json.Unmarshal(respBody, &result); err != nil {
 		return nil, fmt.Errorf("piston: failed to decode response: %w", err)
 	}

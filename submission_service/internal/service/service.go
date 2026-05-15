@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 
 	"innogen-backend/shared/models"
 
 	"innogen-backend/submission_service/internal/dto"
+	"innogen-backend/submission_service/internal/queue"
 	"innogen-backend/submission_service/internal/repository"
 )
 
@@ -22,12 +24,14 @@ var (
 
 // SubmissionService handles submission business logic.
 type SubmissionService struct {
-	repo *repository.SubmissionRepository
+	repo  *repository.SubmissionRepository
+	queue *queue.Queue
+	log   *slog.Logger
 }
 
 // New creates a new SubmissionService.
-func New(repo *repository.SubmissionRepository) *SubmissionService {
-	return &SubmissionService{repo: repo}
+func New(repo *repository.SubmissionRepository, q *queue.Queue, log *slog.Logger) *SubmissionService {
+	return &SubmissionService{repo: repo, queue: q, log: log}
 }
 
 // CreateSubmission validates inputs and creates a new Pending submission.
@@ -56,6 +60,13 @@ func (s *SubmissionService) CreateSubmission(ctx context.Context, userID int, re
 	if err != nil {
 		return nil, err
 	}
+
+	// Enqueue for async judging (best effort — if enqueue fails, submission stays Pending)
+	if err := s.queue.Enqueue(ctx, submission.ID); err != nil {
+		s.log.Error("failed to enqueue submission", slog.String("submissionId", submission.ID), slog.String("error", err.Error()))
+		// Continue — submission is created with Pending status
+	}
+
 	return submission, nil
 }
 
