@@ -1,4 +1,13 @@
 .env
-cmd
-main
 AGENTS.md
+
+# binaries
+/main
+*.exe
+*.out
+*.bin
+
+# build output
+/bin/
+/dist/
+/build/
