@@ -1,4 +1,4 @@
-.PHONY: run-gateway run-auth run-runner run-submission run-submission-worker run-repo tidy fmt test
+.PHONY: run-gateway run-auth run-runner run-submission run-submission-worker run-repo tidy fmt test compose-up compose-down logs-piston
 
 run-gateway:
 	go run ./api_gateway/cmd/main.go
@@ -26,3 +26,12 @@ fmt:
 
 test:
 	go test ./...
+
+compose-up:
+	docker compose up -d postgres redis piston
+
+compose-down:
+	docker compose down
+
+logs-piston:
+	docker compose logs -f piston

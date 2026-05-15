@@ -21,6 +21,17 @@ services:
     volumes:
       - redisdata:/data
 
+  piston:
+    image: ghcr.io/engineer-man/piston:latest
+    container_name: innogen-piston
+    privileged: true
+    restart: unless-stopped
+    ports:
+      - "2000:2000"
+    volumes:
+      - pistondata:/piston
+
 volumes:
   pgdata:
   redisdata:
+  pistondata:
