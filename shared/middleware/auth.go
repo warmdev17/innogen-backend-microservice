@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"strings"
 
 	jwtlib "github.com/golang-jwt/jwt/v5"
@@ -82,4 +83,28 @@ func GetUserEmail(r *http.Request) (string, bool) {
 func GetUserRole(r *http.Request) (string, bool) {
 	role, ok := r.Context().Value(UserRoleKey).(string)
 	return role, ok
+}
+
+// XUserID returns middleware that extracts a user ID from the X-User-ID header.
+// This is a temporary authentication mechanism for development.
+// In production, use Auth() with JWT Bearer tokens instead.
+func XUserID() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			userIDStr := r.Header.Get("X-User-ID")
+			if userIDStr == "" {
+				response.Error(w, http.StatusUnauthorized, "Missing X-User-ID header")
+				return
+			}
+
+			userID, err := strconv.Atoi(userIDStr)
+			if err != nil || userID <= 0 {
+				response.Error(w, http.StatusUnauthorized, "Invalid X-User-ID")
+				return
+			}
+
+			ctx := context.WithValue(r.Context(), UserIDKey, userID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
 }

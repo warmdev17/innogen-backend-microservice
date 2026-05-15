@@ -107,3 +107,22 @@ type Tag struct {
 	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"createdAt"`
 }
+
+// Submission represents a row in the submissions table.
+type Submission struct {
+	ID             string     `json:"id"`
+	UserID         int        `json:"userId"`
+	ProblemID      int        `json:"problemId"`
+	LanguageID     int        `json:"languageId"`
+	Code           string     `json:"code"`
+	Status         string     `json:"status"`
+	RuntimeMs      *int       `json:"runtimeMs"`
+	MemoryKb       *int       `json:"memoryKb"`
+	ErrorMessage   *string    `json:"errorMessage"`
+	PassCount      int        `json:"passCount"`
+	TotalTestcases int        `json:"totalTestcases"`
+	RepoPath       *string    `json:"repoPath"`
+	CommitSha      *string    `json:"commitSha"`
+	CreatedAt      time.Time  `json:"createdAt"`
+	JudgedAt       *time.Time `json:"judgedAt"`
+}
