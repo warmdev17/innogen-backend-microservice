@@ -25,9 +25,13 @@ func New(pool *pgxpool.Pool) *SubmissionRepository {
 	return &SubmissionRepository{pool: pool}
 }
 
-const selectAllSubmissionColumns = `SELECT id, user_id, problem_id, language_id, code, status, runtime_ms, memory_kb, error_message, pass_count, total_testcases, repo_path, commit_sha, created_at, judged_at FROM submissions`
+const submissionColumnList = `id, user_id, problem_id, language_id, code, status, runtime_ms, memory_kb, error_message, pass_count, total_testcases, repo_path, commit_sha, created_at, judged_at`
 
-const selectSubmissionColumnsNoCode = `SELECT id, user_id, problem_id, language_id, status, runtime_ms, memory_kb, error_message, pass_count, total_testcases, repo_path, commit_sha, created_at, judged_at FROM submissions`
+const selectAllSubmissionColumns = `SELECT ` + submissionColumnList + ` FROM submissions`
+
+const submissionColumnListNoCode = `id, user_id, problem_id, language_id, status, runtime_ms, memory_kb, error_message, pass_count, total_testcases, repo_path, commit_sha, created_at, judged_at`
+
+const selectSubmissionColumnsNoCode = `SELECT ` + submissionColumnListNoCode + ` FROM submissions`
 
 // CreateSubmission inserts a new Pending submission and returns it.
 func (r *SubmissionRepository) CreateSubmission(ctx context.Context, userID, problemID, languageID int, code string) (*models.Submission, error) {
@@ -35,7 +39,7 @@ func (r *SubmissionRepository) CreateSubmission(ctx context.Context, userID, pro
 	err := r.pool.QueryRow(ctx,
 		`INSERT INTO submissions (user_id, problem_id, language_id, code)
          VALUES ($1, $2, $3, $4)
-         RETURNING `+selectAllSubmissionColumns,
+         RETURNING `+submissionColumnList,
 		userID, problemID, languageID, code,
 	).Scan(
 		&s.ID, &s.UserID, &s.ProblemID, &s.LanguageID, &s.Code,
