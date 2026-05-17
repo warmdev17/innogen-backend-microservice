@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"innogen-backend/api_gateway/internal/admin"
 	"innogen-backend/api_gateway/internal/curriculum"
 	"innogen-backend/api_gateway/internal/problem"
 	"innogen-backend/api_gateway/internal/proxy"
@@ -89,6 +90,11 @@ func main() {
 
 	// Proxy routes to backend services
 	route.RegisterProxyRoutes(mux, &proxySet, log, cfg.JWTSecret)
+
+	// Admin routes
+	adminRepo := admin.NewAdminRepository(pool)
+	adminHandler := admin.NewAdminHandler(adminRepo, log)
+	admin.RegisterAdminRoutes(mux, adminHandler, cfg.JWTSecret)
 
 	addr := ":" + cfg.APIGatewayPort
 	log.Info("api-gateway listening on " + addr)

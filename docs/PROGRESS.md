@@ -11,5 +11,6 @@
 - [x] STEP 8 — GitHub App implementation (real commits, per-user installations)
 - [x] STEP 9 — api_gateway proxy/routing (single entrypoint, JWT auth passthrough)
 - [x] STEP 10 — Local seed data and E2E MVP validation
+- [x] STEP 11 — Admin content management APIs (CRUD for languages, subjects, sessions, lessons, problems, test cases, tags)
 
 ### 🎉 All steps complete

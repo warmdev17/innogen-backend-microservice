@@ -82,3 +82,12 @@
 - **Test cases**: One sample (visible to users) and one hidden (not exposed) to validate both paths.
 - **E2E script**: Bash-based using curl + jq. Validates the full flow: login → curriculum → run → submit → poll → verify Accepted.
 - **GitHub seed**: Commented out by default. Real GitHub App installation data must be filled in manually.
+
+### Admin Content Management (STEP 11)
+
+- **Decision**: Admin APIs live in `api_gateway/internal/admin/` rather than a separate service. The gateway already owns curriculum/problem data access.
+- **Auth model**: JWT Bearer token with role=admin claim required. Non-admin tokens get 403.
+- **Route isolation**: Admin routes use `http.StripPrefix("/admin", ...)` + private sub-mux to prevent collisions with public curriculum/problem routes.
+- **Partial updates**: PUT endpoints use pointer types (`*string`, `*int`, `*bool`) to distinguish "not provided" from "set to zero/empty".
+- **Test case visibility**: Admin endpoints return all test cases (sample + hidden). Public endpoints hardcode `visibility=sample`.
+- **Tag immutability**: Tags support create and list only for MVP. Update/delete deferred.

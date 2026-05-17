@@ -101,3 +101,18 @@
 - Updated project memory docs
 - Validated: go build, go vet, go test (22/22 pass)
 - Commit: pending
+
+### 2026-05-17 — Admin Content Management APIs (STEP 11)
+
+- Implemented 30 admin CRUD endpoints under `/admin/*` prefix in api_gateway
+- Created `AdminRepository` with 31 methods for all curriculum/problem entities
+- Added `AdminAuth` middleware (JWT validation + admin role check)
+- Resources: languages, subjects, sessions, lessons, problems, lesson-problem links, test cases, tags, problem-tag links
+- Protected by JWT Bearer token + role=admin check (401/403)
+- Admin routes isolated via StripPrefix + sub-mux, no collision with public routes
+- Pagination support on problem list
+- PostgreSQL error mapping: 23505→409, 23503→404, 23514→400, 23502→400
+- Enum validation for difficulty (Easy/Medium/Hard) and visibility (sample/hidden)
+- Files: middleware.go, dto.go, repository.go, handler.go, route.go + main.go wiring
+- Validated: go build, go vet, go test (22/22 pass)
+- Commit: pending
