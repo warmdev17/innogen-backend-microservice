@@ -39,21 +39,17 @@ logs-piston:
 	docker compose logs -f piston
 
 piston-install:
-	@echo "Installing Node.js 18.15.0 runtime in Piston..."
-	curl -s -X POST http://localhost:2000/api/v2/packages \
+	@echo "Installing Node.js 18.15.0 runtime in Piston (timeout 120s)..."
+	@curl -s --max-time 120 -X POST http://localhost:2000/api/v2/packages \
 		-H "Content-Type: application/json" \
-		-d '{"language":"node","version":"18.15.0"}' || true
-	@echo "Waiting for runtime installation..."
-	@sleep 5
-	@echo "Verifying runtime..."
-	@curl -s http://localhost:2000/api/v2/runtimes | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f'  {r[\"language\"]} {r[\"version\"]}') for r in d if 'javascript' in r.get('language','').lower()]" || echo "  (verification skipped - python3 not available)"
+		-d '{"language":"node","version":"18.15.0"}' || echo "  (install skipped or failed - may already be installed)"
 	@echo "Done."
 
-seed-dev: piston-install
+seed-dev:
 	psql "$(DATABASE_URL)" -f schema.sql
 	psql "$(DATABASE_URL)" -f seeds/dev_seed.sql
 
-e2e:
+e2e: piston-install
 	bash scripts/e2e_mvp.sh
 
 run-all:
