@@ -27,3 +27,8 @@ curl -X POST http://localhost:8084/webhooks/github \
 - CI/CD pipeline
 - Dockerfiles for services
 - Frontend
+
+### Test UI
+```bash
+make test-ui-install && make test-ui   # http://localhost:5173
+```

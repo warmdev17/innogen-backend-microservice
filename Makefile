@@ -1,6 +1,6 @@
 DATABASE_URL ?= postgres://innogen:innogen@localhost:5432/innogen?sslmode=disable
 
-.PHONY: run-gateway run-auth run-runner run-submission run-submission-worker run-repo run-all stop-all tidy fmt test compose-up compose-down logs-piston piston-install seed-dev e2e
+.PHONY: run-gateway run-auth run-runner run-submission run-submission-worker run-repo run-all stop-all tidy fmt test compose-up compose-down logs-piston piston-install seed-dev e2e test-ui-install test-ui test-ui-build
 
 run-gateway:
 	go run ./api_gateway/cmd/main.go
@@ -91,3 +91,12 @@ stop-all:
 	@pkill -f "submission_service/cmd/worker" 2>/dev/null || true
 	@pkill -f "go run ./submission_service/cmd/worker/main.go" 2>/dev/null || true
 	@echo "All services stopped."
+
+test-ui-install:
+	cd tools/test_ui && npm install
+
+test-ui:
+	cd tools/test_ui && npm run dev
+
+test-ui-build:
+	cd tools/test_ui && npm run build

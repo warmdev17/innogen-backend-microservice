@@ -14,4 +14,6 @@
 - [x] STEP 11 — Admin content management APIs (CRUD for languages, subjects, sessions, lessons, problems, test cases, tags)
 - [x] STEP 12 — GitHub App webhook handling (installation, repo events, signature verification)
 
+- [x] STEP 13 — Local developer test UI (React + Vite + TypeScript)
+
 ### 🎉 All steps complete

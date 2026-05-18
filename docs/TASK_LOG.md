@@ -131,3 +131,13 @@
 - Added `GithubInstallation` model to shared/models
 - Validated: go build, go vet, go test (22/22 pass)
 - Commit: pending
+
+### 2026-05-17 — Local Test UI (STEP 13)
+
+- Created `tools/test_ui/` — Vite + React + TypeScript test UI
+- Features: Dashboard (health checks), Auth (login/logout), Curriculum browser, Runner, Submissions (submit + poll), Admin CRUD, GitHub webhook notes
+- API client with base URL config (localStorage) and Bearer token auto-attach
+- Created `scripts/send_github_webhook_test.sh` for HMAC-signed webhook testing
+- Added `make test-ui-install`, `make test-ui`, `make test-ui-build` targets
+- Validated: npm install + npm run build pass
+- Commit: pending

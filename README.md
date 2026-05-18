@@ -45,6 +45,18 @@ make tidy         # Clean up dependencies
 make test         # Run all tests
 ```
 
+## Local Test UI
+
+A lightweight React UI for manual backend testing:
+
+```bash
+make test-ui-install   # Install dependencies
+make test-ui           # Start dev server (http://localhost:5173)
+make test-ui-build     # Production build
+```
+
+Features: Dashboard, Auth, Curriculum browser, Runner, Submissions, Admin CRUD, GitHub webhook notes.
+
 ## API Endpoints (via API Gateway :8080)
 
 | Method | Path | Auth |
