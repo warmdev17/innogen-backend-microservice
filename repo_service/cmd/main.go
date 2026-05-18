@@ -18,19 +18,6 @@ import (
 	"innogen-backend/shared/response"
 )
 
-func corsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-User-ID, X-User-Email, X-User-Role")
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
-}
-
 func main() {
 	cfg := config.Load()
 	log := logger.New("repo-service")
@@ -76,8 +63,7 @@ func main() {
 	addr := ":" + cfg.RepoServicePort
 	log.Info("repo-service listening on " + addr)
 
-	handler := corsMiddleware(mux)
-	if err := http.ListenAndServe(addr, handler); err != nil {
+	if err := http.ListenAndServe(addr, mux); err != nil {
 		log.Error("server terminated with error", slog.String("error", err.Error()))
 		os.Exit(1)
 	}

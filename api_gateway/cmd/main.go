@@ -17,16 +17,33 @@ import (
 	"innogen-backend/shared/response"
 )
 
-// corsMiddleware adds CORS headers for local development.
+// allowedOrigins lists origins permitted for CORS requests.
+var allowedOrigins = map[string]bool{
+	"http://localhost:5173":               true,
+	"http://localhost:3000":               true,
+	"https://maiphuongtrunghieu.site":     true,
+	"https://www.maiphuongtrunghieu.site": true,
+}
+
+// corsMiddleware adds CORS headers for allowed origins.
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-User-ID, X-User-Email, X-User-Role")
+		origin := r.Header.Get("Origin")
 
 		if r.Method == http.MethodOptions {
+			if allowedOrigins[origin] {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				w.Header().Set("Vary", "Origin")
+				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+				w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-User-ID, X-User-Email, X-User-Role")
+			}
 			w.WriteHeader(http.StatusNoContent)
 			return
+		}
+
+		if allowedOrigins[origin] {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Vary", "Origin")
 		}
 
 		next.ServeHTTP(w, r)
