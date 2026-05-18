@@ -59,4 +59,10 @@ func RegisterProxyRoutes(mux *http.ServeMux, proxies *ProxySet, log *slog.Logger
 
 	mux.Handle("GET /repositories", authMW(stripAllAuth(proxies.Repo)))
 	mux.Handle("GET /repositories/{id}/commits", authMW(stripAllAuth(proxies.Repo)))
+
+	// Health checks proxied to backend services
+	mux.Handle("GET /health/auth", stripUserHeaders(proxies.AuthPublic))
+	mux.Handle("GET /health/run", stripUserHeaders(proxies.Run))
+	mux.Handle("GET /health/submission", stripUserHeaders(proxies.Submission))
+	mux.Handle("GET /health/repo", stripUserHeaders(proxies.Repo))
 }

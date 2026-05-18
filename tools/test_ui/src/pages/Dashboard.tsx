@@ -16,10 +16,9 @@ export default function Dashboard() {
     } catch { setStatus(s => ({ ...s, gateway: 'FAIL' })) }
   }
 
-  const checkDirect = async (name: string, url: string) => {
+  const checkDirect = async (name: string, path: string) => {
     try {
-      const res = await fetch(url)
-      const d = await res.json()
+      const d = await request<any>('GET', path)
       setDirectStatus(s => ({ ...s, [name]: `OK (${d.service || name})` }))
     } catch { setDirectStatus(s => ({ ...s, [name]: 'FAIL' })) }
   }
@@ -40,12 +39,12 @@ export default function Dashboard() {
         <h3>Direct Service Health</h3>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           {[
-            ['auth', 'http://localhost:8081/health'],
-            ['run', 'http://localhost:8082/health'],
-            ['submission', 'http://localhost:8083/health'],
-            ['repo', 'http://localhost:8084/health'],
-          ].map(([name, url]) => (
-            <button key={name} onClick={() => checkDirect(name, url)}>{name}</button>
+            ['auth', '/health/auth'],
+            ['run', '/health/run'],
+            ['submission', '/health/submission'],
+            ['repo', '/health/repo'],
+          ].map(([name, path]) => (
+            <button key={name} onClick={() => checkDirect(name, path)}>{name}</button>
           ))}
         </div>
         {Object.entries(directStatus).map(([k, v]) => (
