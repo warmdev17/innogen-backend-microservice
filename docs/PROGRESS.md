@@ -12,5 +12,6 @@
 - [x] STEP 9 — api_gateway proxy/routing (single entrypoint, JWT auth passthrough)
 - [x] STEP 10 — Local seed data and E2E MVP validation
 - [x] STEP 11 — Admin content management APIs (CRUD for languages, subjects, sessions, lessons, problems, test cases, tags)
+- [x] STEP 12 — GitHub App webhook handling (installation, repo events, signature verification)
 
 ### 🎉 All steps complete

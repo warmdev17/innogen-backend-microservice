@@ -174,6 +174,7 @@ CREATE TABLE github_accounts (
     github_avatar_url text,
     github_owner varchar(255) NOT NULL,
     github_owner_type varchar(20) NOT NULL,
+    status varchar(20) NOT NULL DEFAULT 'active',
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_github_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
@@ -184,6 +185,25 @@ CREATE TABLE github_accounts (
 
 CREATE TRIGGER trg_github_accounts_updated_at
     BEFORE UPDATE ON github_accounts
+    FOR EACH ROW
+    EXECUTE FUNCTION set_updated_at ();
+
+-- =========================================================================
+-- 6b. GITHUB INSTALLATIONS TABLE (webhook data)
+-- =========================================================================
+CREATE TABLE github_installations (
+    id serial PRIMARY KEY,
+    installation_id varchar(255) UNIQUE NOT NULL,
+    github_owner varchar(255) NOT NULL,
+    github_owner_type varchar(20) NOT NULL,
+    is_active boolean NOT NULL DEFAULT TRUE,
+    created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_github_installations_owner_type CHECK (github_owner_type IN ('User', 'Organization'))
+);
+
+CREATE TRIGGER trg_github_installations_updated_at
+    BEFORE UPDATE ON github_installations
     FOR EACH ROW
     EXECUTE FUNCTION set_updated_at ();
 
@@ -218,6 +238,7 @@ CREATE TABLE repositories (
     repo_url text,
     github_repo_id varchar(255),
     github_owner varchar(255),
+    status varchar(20) NOT NULL DEFAULT 'active',
     default_branch varchar(100) NOT NULL DEFAULT 'main',
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,

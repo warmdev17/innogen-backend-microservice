@@ -1,29 +1,29 @@
-## All 11 steps complete
+## All 12 steps complete
 
-### Run the system
+### Quick validation
 ```bash
 make compose-up && make seed-dev
 make run-gateway & make run-auth & make run-runner & make run-submission & make run-submission-worker & make run-repo &
 make e2e
 ```
 
-### Admin API usage
+### Manual webhook test
 ```bash
-TOKEN=$(curl -s -X POST http://localhost:8080/auth/login \
+SECRET="change-me"
+BODY='{"action":"created","installation":{"id":123,"account":{"login":"test","type":"User"}}}'
+SIG=$(echo -n "$BODY" | openssl dgst -sha256 -hmac "$SECRET" | sed 's/^.* //')
+curl -X POST http://localhost:8084/webhooks/github \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@example.com","password":"password"}' | jq -r .accessToken)
-
-# Create a language
-curl -X POST http://localhost:8080/admin/languages \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Python 3","pistonAlias":"python","pistonVersion":"3.10.0","fileExtension":".py","defaultFileName":"solution.py"}'
-
-# List subjects
-curl http://localhost:8080/admin/subjects -H "Authorization: Bearer $TOKEN"
-
-# Non-admin access → 403
+  -H "X-GitHub-Event: installation" \
+  -H "X-Hub-Signature-256: sha256=$SIG" \
+  -d "$BODY"
 ```
 
 ### Production readiness
-See docs/DECISIONS.md for full backlog.
+- CORS middleware at gateway
+- Request ID middleware
+- Panic recovery middleware
+- Rate limiting middleware
+- CI/CD pipeline
+- Dockerfiles for services
+- Frontend

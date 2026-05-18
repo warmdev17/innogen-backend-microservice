@@ -91,3 +91,11 @@
 - **Partial updates**: PUT endpoints use pointer types (`*string`, `*int`, `*bool`) to distinguish "not provided" from "set to zero/empty".
 - **Test case visibility**: Admin endpoints return all test cases (sample + hidden). Public endpoints hardcode `visibility=sample`.
 - **Tag immutability**: Tags support create and list only for MVP. Update/delete deferred.
+
+### GitHub App Webhook Handling (STEP 12)
+
+- **Decision**: Webhooks are handled by `repo_service` at `POST /webhooks/github` with HMAC-SHA256 signature verification. No JWT required.
+- **Signature verification**: Uses `X-Hub-Signature-256` header, constant-time `hmac.Equal` comparison. Empty secret → all requests rejected.
+- **Installation webhooks**: Stored in `github_installations` table before being linked to a local user. Allows webhook data to arrive before user connects their GitHub account.
+- **Soft deletes**: Installations, accounts, and repositories use `status` columns (`active`, `suspended`, `deleted`, `archived`) — never hard-deleted. Preserves history.
+- **Idempotency**: All writes use `INSERT ... ON CONFLICT DO UPDATE` or `UPDATE WHERE`. Re-delivered webhooks produce no side effects.

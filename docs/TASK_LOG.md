@@ -116,3 +116,18 @@
 - Files: middleware.go, dto.go, repository.go, handler.go, route.go + main.go wiring
 - Validated: go build, go vet, go test (22/22 pass)
 - Commit: pending
+
+### 2026-05-17 — GitHub App Webhook Handling (STEP 12)
+
+- Implemented `POST /webhooks/github` endpoint in repo_service (no JWT, HMAC-SHA256 verification)
+- Created `repo_service/internal/webhook/` package: verifier.go, dto.go, handler.go, service.go
+- Added `github_installations` table for webhook data (schema.sql + migration)
+- Added `status` columns to `github_accounts` and `repositories` tables
+- Handles events: installation (created/deleted/suspend/unsuspend), installation_repositories (added/removed), repository (renamed/deleted/archived)
+- Webhook signature verification using X-Hub-Signature-256 with constant-time HMAC comparison
+- Body size limit (1MB), 413 on overflow
+- Schema migration: `migrations/002_step12_github_webhooks.sql`
+- Added `GITHUB_WEBHOOK_SECRET` config
+- Added `GithubInstallation` model to shared/models
+- Validated: go build, go vet, go test (22/22 pass)
+- Commit: pending

@@ -9,6 +9,7 @@ import (
 	"innogen-backend/repo_service/internal/githubapp"
 	"innogen-backend/repo_service/internal/handler"
 	"innogen-backend/repo_service/internal/route"
+	"innogen-backend/repo_service/internal/webhook"
 	"innogen-backend/repo_service/repository"
 	"innogen-backend/repo_service/service"
 	"innogen-backend/shared/config"
@@ -44,12 +45,20 @@ func main() {
 	}
 
 	repoRepo := repository.New(pool)
+
+	// Webhook
+	webhookSvc := webhook.NewWebhookService(repoRepo, log)
+	webhookH := webhook.NewWebhookHandler(webhookSvc, cfg.GitHubWebhookSecret, log)
+	if cfg.GitHubWebhookSecret == "" {
+		log.Warn("GITHUB_WEBHOOK_SECRET is empty — all webhook requests will be rejected")
+	}
+
 	svc := service.New(repoRepo, githubClient, cfg, log)
 	h := handler.New(svc, log)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", healthHandler)
-	route.Register(mux, h)
+	route.Register(mux, h, webhookH)
 
 	addr := ":" + cfg.RepoServicePort
 	log.Info("repo-service listening on " + addr)

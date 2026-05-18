@@ -118,6 +118,18 @@ type GithubAccount struct {
 	GithubAvatarURL *string   `json:"githubAvatarUrl"`
 	GithubOwner     string    `json:"githubOwner"`
 	GithubOwnerType string    `json:"githubOwnerType"`
+	Status          string    `json:"status"`
+	CreatedAt       time.Time `json:"createdAt"`
+	UpdatedAt       time.Time `json:"updatedAt"`
+}
+
+// GithubInstallation represents a row in the github_installations table.
+type GithubInstallation struct {
+	ID              int       `json:"id"`
+	InstallationID  string    `json:"installationId"`
+	GithubOwner     string    `json:"githubOwner"`
+	GithubOwnerType string    `json:"githubOwnerType"`
+	IsActive        bool      `json:"isActive"`
 	CreatedAt       time.Time `json:"createdAt"`
 	UpdatedAt       time.Time `json:"updatedAt"`
 }
@@ -132,6 +144,7 @@ type Repository struct {
 	RepoURL       *string   `json:"repoUrl"`
 	GithubRepoID  *string   `json:"githubRepoId"`
 	GithubOwner   *string   `json:"githubOwner"`
+	Status        string    `json:"status"`
 	DefaultBranch string    `json:"defaultBranch"`
 	CreatedAt     time.Time `json:"createdAt"`
 	UpdatedAt     time.Time `json:"updatedAt"`

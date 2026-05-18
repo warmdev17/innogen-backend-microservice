@@ -111,10 +111,10 @@ func (r *RepoRepository) InsertSubmissionCommit(ctx context.Context, submissionI
 func (r *RepoRepository) FindRepositoryByID(ctx context.Context, id int) (*models.Repository, error) {
 	repo := &models.Repository{}
 	err := r.pool.QueryRow(ctx,
-		`SELECT id, user_id, subject_id, repo_name, repo_full_name, repo_url, github_repo_id, github_owner, default_branch, created_at, updated_at
+		`SELECT id, user_id, subject_id, repo_name, repo_full_name, repo_url, github_repo_id, github_owner, status, default_branch, created_at, updated_at
 		 FROM repositories WHERE id = $1`, id,
 	).Scan(&repo.ID, &repo.UserID, &repo.SubjectID, &repo.RepoName,
-		&repo.RepoFullName, &repo.RepoURL, &repo.GithubRepoID, &repo.GithubOwner, &repo.DefaultBranch,
+		&repo.RepoFullName, &repo.RepoURL, &repo.GithubRepoID, &repo.GithubOwner, &repo.Status, &repo.DefaultBranch,
 		&repo.CreatedAt, &repo.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
@@ -198,7 +198,7 @@ func (r *RepoRepository) InsertSubmissionCommitTx(ctx context.Context, tx pgx.Tx
 // FindRepositoriesByUserID returns all repositories for a user.
 func (r *RepoRepository) FindRepositoriesByUserID(ctx context.Context, userID int) ([]models.Repository, error) {
 	rows, err := r.pool.Query(ctx,
-		`SELECT id, user_id, subject_id, repo_name, repo_full_name, repo_url, github_repo_id, github_owner, default_branch, created_at, updated_at
+		`SELECT id, user_id, subject_id, repo_name, repo_full_name, repo_url, github_repo_id, github_owner, status, default_branch, created_at, updated_at
 		 FROM repositories WHERE user_id = $1 ORDER BY created_at DESC`, userID,
 	)
 	if err != nil {
@@ -210,7 +210,7 @@ func (r *RepoRepository) FindRepositoriesByUserID(ctx context.Context, userID in
 	for rows.Next() {
 		var repo models.Repository
 		if err := rows.Scan(&repo.ID, &repo.UserID, &repo.SubjectID, &repo.RepoName,
-			&repo.RepoFullName, &repo.RepoURL, &repo.GithubRepoID, &repo.GithubOwner, &repo.DefaultBranch,
+			&repo.RepoFullName, &repo.RepoURL, &repo.GithubRepoID, &repo.GithubOwner, &repo.Status, &repo.DefaultBranch,
 			&repo.CreatedAt, &repo.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("repository.FindRepositoriesByUserID: %w", err)
 		}
@@ -248,10 +248,10 @@ func (r *RepoRepository) GetGithubAccountByUserID(ctx context.Context, userID in
 	a := &models.GithubAccount{}
 	err := r.pool.QueryRow(ctx,
 		`SELECT id, user_id, installation_id, github_user_id, github_username, github_avatar_url,
-                github_owner, github_owner_type, created_at, updated_at
+                github_owner, github_owner_type, status, created_at, updated_at
          FROM github_accounts WHERE user_id = $1`, userID,
 	).Scan(&a.ID, &a.UserID, &a.InstallationID, &a.GithubUserID, &a.GithubUsername,
-		&a.GithubAvatarURL, &a.GithubOwner, &a.GithubOwnerType, &a.CreatedAt, &a.UpdatedAt)
+		&a.GithubAvatarURL, &a.GithubOwner, &a.GithubOwnerType, &a.Status, &a.CreatedAt, &a.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
@@ -291,6 +291,87 @@ func (r *RepoRepository) InsertSubmissionCommitWithURLTx(ctx context.Context, tx
 	)
 	if err != nil {
 		return fmt.Errorf("repository.InsertSubmissionCommitWithURLTx: %w", err)
+	}
+	return nil
+}
+
+// UpsertGithubInstallation creates or updates a GitHub installation record.
+func (r *RepoRepository) UpsertGithubInstallation(ctx context.Context, installationID, owner, ownerType string) error {
+	_, err := r.pool.Exec(ctx,
+		`INSERT INTO github_installations (installation_id, github_owner, github_owner_type)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (installation_id) DO UPDATE SET
+             github_owner = EXCLUDED.github_owner,
+             github_owner_type = EXCLUDED.github_owner_type,
+             is_active = true,
+             updated_at = CURRENT_TIMESTAMP`,
+		installationID, owner, ownerType,
+	)
+	if err != nil {
+		return fmt.Errorf("repository.UpsertGithubInstallation: %w", err)
+	}
+	return nil
+}
+
+// UpdateGithubInstallationStatus sets the active status of a GitHub installation.
+func (r *RepoRepository) UpdateGithubInstallationStatus(ctx context.Context, installationID string, isActive bool) error {
+	_, err := r.pool.Exec(ctx,
+		`UPDATE github_installations SET is_active = $2, updated_at = CURRENT_TIMESTAMP WHERE installation_id = $1`,
+		installationID, isActive,
+	)
+	if err != nil {
+		return fmt.Errorf("repository.UpdateGithubInstallationStatus: %w", err)
+	}
+	return nil
+}
+
+// UpdateGithubAccountStatusByInstallation updates the status of github_accounts linked to an installation.
+func (r *RepoRepository) UpdateGithubAccountStatusByInstallation(ctx context.Context, installationID, status string) error {
+	_, err := r.pool.Exec(ctx,
+		`UPDATE github_accounts SET status = $2, updated_at = CURRENT_TIMESTAMP WHERE installation_id = $1`,
+		installationID, status,
+	)
+	if err != nil {
+		return fmt.Errorf("repository.UpdateGithubAccountStatusByInstallation: %w", err)
+	}
+	return nil
+}
+
+// SetRepositoryStatusByGithubRepoID updates the status of all local repositories
+// that reference the given GitHub repo ID. If multiple users have linked the same
+// GitHub repo, all of their local records will be updated (intentional — the GitHub
+// repo was deleted/moved, so all references should be updated).
+func (r *RepoRepository) SetRepositoryStatusByGithubRepoID(ctx context.Context, githubRepoID, status string) error {
+	_, err := r.pool.Exec(ctx,
+		`UPDATE repositories SET status = $2, updated_at = CURRENT_TIMESTAMP WHERE github_repo_id = $1`,
+		githubRepoID, status,
+	)
+	if err != nil {
+		return fmt.Errorf("repository.SetRepositoryStatusByGithubRepoID: %w", err)
+	}
+	return nil
+}
+
+// UpdateRepositoryByGithubRepoID updates the full name and name of a renamed repository.
+func (r *RepoRepository) UpdateRepositoryByGithubRepoID(ctx context.Context, githubRepoID, repoFullName, repoName string) error {
+	_, err := r.pool.Exec(ctx,
+		`UPDATE repositories SET repo_full_name = $2, repo_name = $3, status = 'active', updated_at = CURRENT_TIMESTAMP WHERE github_repo_id = $1`,
+		githubRepoID, repoFullName, repoName,
+	)
+	if err != nil {
+		return fmt.Errorf("repository.UpdateRepositoryByGithubRepoID: %w", err)
+	}
+	return nil
+}
+
+// UpdateRepositoriesStatusByOwner bulk-updates repository statuses for all repos owned by a GitHub owner.
+func (r *RepoRepository) UpdateRepositoriesStatusByOwner(ctx context.Context, githubOwner, status string) error {
+	_, err := r.pool.Exec(ctx,
+		`UPDATE repositories SET status = $2, updated_at = CURRENT_TIMESTAMP WHERE github_owner = $1`,
+		githubOwner, status,
+	)
+	if err != nil {
+		return fmt.Errorf("repository.UpdateRepositoriesStatusByOwner: %w", err)
 	}
 	return nil
 }
