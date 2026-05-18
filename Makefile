@@ -58,28 +58,36 @@ e2e:
 
 run-all:
 	@echo "Starting all services in background..."
-	@echo "  api_gateway      :8080"
-	@echo "  auth_service     :8081"
-	@echo "  run_service      :8082"
-	@echo "  submission_service :8083"
-	@echo "  repo_service     :8084"
-	@echo "  submission_worker (background)"
+	@echo "  api_gateway         :8080"
+	@echo "  auth_service        :8081"
+	@echo "  run_service         :8082"
+	@echo "  submission_service  :8083"
+	@echo "  repo_service        :8084"
+	@echo "  submission_worker   (background)"
 	@echo ""
 	@echo "Press Ctrl+C to stop all services."
-	go run ./api_gateway/cmd/main.go &
-	go run ./auth_service/cmd/main.go &
-	go run ./run_service/cmd/main.go &
-	go run ./submission_service/cmd/api/main.go &
-	go run ./submission_service/cmd/worker/main.go &
-	go run ./repo_service/cmd/main.go &
-	wait
+	@bash -c '\
+		trap "echo; echo Stopping all services...; kill 0; exit 0" INT TERM EXIT; \
+		go run ./api_gateway/cmd/main.go & \
+		go run ./auth_service/cmd/main.go & \
+		go run ./run_service/cmd/main.go & \
+		go run ./submission_service/cmd/api/main.go & \
+		go run ./submission_service/cmd/worker/main.go & \
+		go run ./repo_service/cmd/main.go & \
+		wait \
+	'
 
 stop-all:
-	@echo "Stopping all services..."
-	@pkill -f "api_gateway/cmd/main.go" 2>/dev/null || true
-	@pkill -f "auth_service/cmd/main.go" 2>/dev/null || true
-	@pkill -f "run_service/cmd/main.go" 2>/dev/null || true
-	@pkill -f "submission_service/cmd/api/main.go" 2>/dev/null || true
-	@pkill -f "submission_service/cmd/worker/main.go" 2>/dev/null || true
-	@pkill -f "repo_service/cmd/main.go" 2>/dev/null || true
+	@echo "Stopping all services by ports..."
+	@for port in 8080 8081 8082 8083 8084; do \
+		pids=$$(lsof -ti tcp:$$port 2>/dev/null); \
+		if [ -n "$$pids" ]; then \
+			echo "  killing port $$port: $$pids"; \
+			kill $$pids 2>/dev/null || true; \
+		else \
+			echo "  port $$port: no process"; \
+		fi; \
+	done
+	@pkill -f "submission_service/cmd/worker" 2>/dev/null || true
+	@pkill -f "go run ./submission_service/cmd/worker/main.go" 2>/dev/null || true
 	@echo "All services stopped."
