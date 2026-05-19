@@ -63,6 +63,7 @@ run-all:
 	@echo ""
 	@echo "Press Ctrl+C to stop all services."
 	@bash -c '\
+		set -a; [ -f .env ] && source .env; set +a; \
 		trap "echo; echo Stopping all services...; kill 0; exit 0" INT TERM EXIT; \
 		go run ./api_gateway/cmd/main.go & \
 		go run ./auth_service/cmd/main.go & \
