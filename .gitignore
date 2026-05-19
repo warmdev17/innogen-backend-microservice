@@ -16,3 +16,4 @@ AGENTS.md
 *.pem
 *.key
 secrets/
+tools/test_ui/node_modules/
