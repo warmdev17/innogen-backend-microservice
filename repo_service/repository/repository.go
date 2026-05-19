@@ -261,6 +261,25 @@ func (r *RepoRepository) GetGithubAccountByUserID(ctx context.Context, userID in
 	return a, nil
 }
 
+// GetGithubAccountByInstallationID retrieves a github_account by installation_id.
+// Returns nil, nil if not found.
+func (r *RepoRepository) GetGithubAccountByInstallationID(ctx context.Context, installationID string) (*models.GithubAccount, error) {
+	a := &models.GithubAccount{}
+	err := r.pool.QueryRow(ctx,
+		`SELECT id, user_id, installation_id, github_user_id, github_username, github_avatar_url,
+                github_owner, github_owner_type, status, created_at, updated_at
+         FROM github_accounts WHERE installation_id = $1`, installationID,
+	).Scan(&a.ID, &a.UserID, &a.InstallationID, &a.GithubUserID, &a.GithubUsername,
+		&a.GithubAvatarURL, &a.GithubOwner, &a.GithubOwnerType, &a.Status, &a.CreatedAt, &a.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("repository.GetGithubAccountByInstallationID: %w", err)
+	}
+	return a, nil
+}
+
 // UpsertRepositoryWithOwnerTx creates or updates a repository including GitHub owner info.
 func (r *RepoRepository) UpsertRepositoryWithOwnerTx(ctx context.Context, tx pgx.Tx, userID, subjectID int, repoName, repoFullName, repoURL, githubRepoID, githubOwner, defaultBranch string) (int, error) {
 	var repoID int
@@ -372,6 +391,42 @@ func (r *RepoRepository) UpdateRepositoriesStatusByOwner(ctx context.Context, gi
 	)
 	if err != nil {
 		return fmt.Errorf("repository.UpdateRepositoriesStatusByOwner: %w", err)
+	}
+	return nil
+}
+
+// GetGithubInstallationByID retrieves a GitHub installation by its installation_id.
+// Returns nil, nil if not found.
+func (r *RepoRepository) GetGithubInstallationByID(ctx context.Context, installationID string) (*models.GithubInstallation, error) {
+	inst := &models.GithubInstallation{}
+	err := r.pool.QueryRow(ctx,
+		`SELECT id, installation_id, github_owner, github_owner_type, is_active, created_at, updated_at
+         FROM github_installations WHERE installation_id = $1`, installationID,
+	).Scan(&inst.ID, &inst.InstallationID, &inst.GithubOwner, &inst.GithubOwnerType, &inst.IsActive, &inst.CreatedAt, &inst.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("repository.GetGithubInstallationByID: %w", err)
+	}
+	return inst, nil
+}
+
+// UpsertGithubAccount creates or updates a github_accounts row for a user.
+func (r *RepoRepository) UpsertGithubAccount(ctx context.Context, userID int, installationID, githubOwner, githubOwnerType string) error {
+	_, err := r.pool.Exec(ctx,
+		`INSERT INTO github_accounts (user_id, installation_id, github_owner, github_owner_type, status)
+         VALUES ($1, $2, $3, $4, 'active')
+         ON CONFLICT (user_id) DO UPDATE SET
+             installation_id = EXCLUDED.installation_id,
+             github_owner = EXCLUDED.github_owner,
+             github_owner_type = EXCLUDED.github_owner_type,
+             status = 'active',
+             updated_at = CURRENT_TIMESTAMP`,
+		userID, installationID, githubOwner, githubOwnerType,
+	)
+	if err != nil {
+		return fmt.Errorf("repository.UpsertGithubAccount: %w", err)
 	}
 	return nil
 }

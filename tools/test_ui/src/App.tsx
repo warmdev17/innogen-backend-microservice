@@ -7,6 +7,7 @@ import Problem from './pages/Problem'
 import Runner from './pages/Runner'
 import Submissions from './pages/Submissions'
 import RepoNotes from './pages/RepoNotes'
+import GithubConnect from './pages/GithubConnect'
 import AdminLayout from './pages/admin/AdminLayout'
 import AdminLanguages from './pages/admin/Languages'
 import AdminSubjects from './pages/admin/Subjects'
@@ -33,6 +34,8 @@ export default function App() {
               <Route path="/runner" element={<Runner />} />
               <Route path="/submissions" element={<Submissions />} />
               <Route path="/repo-notes" element={<RepoNotes />} />
+              <Route path="/github/callback" element={<GithubConnect />} />
+              <Route path="/github/connect" element={<GithubConnect />} />
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminLanguages />} />
                 <Route path="languages" element={<AdminLanguages />} />

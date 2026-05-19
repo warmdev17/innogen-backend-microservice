@@ -36,3 +36,23 @@ type ListRepositoriesResponse struct {
 type ListCommitsResponse struct {
 	Commits []models.SubmissionCommit `json:"commits"`
 }
+
+type GithubConnectionResponse struct {
+	Connected       bool    `json:"connected"`
+	InstallationID  *string `json:"installationId,omitempty"`
+	GithubOwner     *string `json:"githubOwner,omitempty"`
+	GithubOwnerType *string `json:"githubOwnerType,omitempty"`
+	GithubUsername  *string `json:"githubUsername,omitempty"`
+	Status          *string `json:"status,omitempty"`
+}
+
+type LinkGithubInstallationRequest struct {
+	InstallationID string `json:"installationId"`
+}
+
+type LinkGithubInstallationResponse struct {
+	Linked          bool   `json:"linked"`
+	InstallationID  string `json:"installationId"`
+	GithubOwner     string `json:"githubOwner"`
+	GithubOwnerType string `json:"githubOwnerType"`
+}

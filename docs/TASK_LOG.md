@@ -141,3 +141,11 @@
 - Added `make test-ui-install`, `make test-ui`, `make test-ui-build` targets
 - Validated: npm install + npm run build pass
 - Commit: pending
+
+### 2026-05-19 — GitHub Connect UI Fix
+- Added GET /github/connection and POST /github/installations/link endpoints in repo_service
+- Added gateway proxy routes for both
+- Created GithubConnect.tsx page with connection check, callback handling, and re-linking
+- Fixed missing InstallationID in connection response
+- Added duplicate installation check before linking
+- Validated: go build, go test, npm build all pass

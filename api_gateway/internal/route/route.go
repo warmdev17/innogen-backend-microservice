@@ -73,6 +73,10 @@ func RegisterProxyRoutes(mux *http.ServeMux, proxies *ProxySet, log *slog.Logger
 	mux.Handle("GET /repositories", authMW(stripAllAuth(proxies.Repo)))
 	mux.Handle("GET /repositories/{id}/commits", authMW(stripAllAuth(proxies.Repo)))
 
+	// GitHub App connection routes
+	mux.Handle("GET /github/connection", authMW(stripAllAuth(proxies.Repo)))
+	mux.Handle("POST /github/installations/link", authMW(stripAllAuth(proxies.Repo)))
+
 	// Health checks proxied to backend services
 	mux.Handle("GET /health/auth", stripUserHeaders(stripHealthPath(proxies.AuthPublic)))
 	mux.Handle("GET /health/run", stripUserHeaders(stripHealthPath(proxies.Run)))

@@ -14,4 +14,6 @@ func Register(mux *http.ServeMux, h *handler.Handler, wh *webhook.WebhookHandler
 	mux.Handle("GET /repositories/{id}/commits", middleware.XUserID()(http.HandlerFunc(h.ListCommits)))
 	mux.HandleFunc("POST /internal/commits/accepted-submission", h.CommitAcceptedSubmission)
 	mux.HandleFunc("POST /webhooks/github", wh.HandleWebhook)
+	mux.Handle("GET /github/connection", middleware.XUserID()(http.HandlerFunc(h.GetGithubConnection)))
+	mux.Handle("POST /github/installations/link", middleware.XUserID()(http.HandlerFunc(h.LinkGithubInstallation)))
 }

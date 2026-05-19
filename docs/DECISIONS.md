@@ -99,3 +99,10 @@
 - **Installation webhooks**: Stored in `github_installations` table before being linked to a local user. Allows webhook data to arrive before user connects their GitHub account.
 - **Soft deletes**: Installations, accounts, and repositories use `status` columns (`active`, `suspended`, `deleted`, `archived`) — never hard-deleted. Preserves history.
 - **Idempotency**: All writes use `INSERT ... ON CONFLICT DO UPDATE` or `UPDATE WHERE`. Re-delivered webhooks produce no side effects.
+
+### GitHub App Connection State (Fix)
+
+- **Decision**: GitHub connected state source of truth is `github_accounts` table in PostgreSQL. Frontend never relies on localStorage for connection status.
+- **Callback flow**: GitHub redirects to `/github/callback?installation_id=XXX`. Frontend calls `POST /github/installations/link` to link the installation to the current user.
+- **Race handling**: Webhook may populate `github_installations` before or after the link API is called. If the installation doesn't exist yet, the API returns 404 with a retry message.
+- **Duplicate prevention**: `LinkGithubInstallation` checks if installation is already linked to another user before upserting.

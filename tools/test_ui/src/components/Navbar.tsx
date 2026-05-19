@@ -12,6 +12,7 @@ export default function Navbar() {
       <Link to="/submissions">Submissions</Link>
       {user?.role === 'admin' && <Link to="/admin">Admin</Link>}
       <Link to="/repo-notes">GitHub/Webhook</Link>
+      <Link to="/github/connect">GitHub</Link>
       {token ? <button onClick={() => { logout(); navigate('/') }}>Logout</button> : <Link to="/login">Login</Link>}
     </nav>
   )

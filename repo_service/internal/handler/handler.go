@@ -120,3 +120,48 @@ func (h *Handler) ListCommits(w http.ResponseWriter, r *http.Request) {
 
 	response.JSON(w, http.StatusOK, dto.ListCommitsResponse{Commits: commits})
 }
+
+// GetGithubConnection handles GET /github/connection
+func (h *Handler) GetGithubConnection(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserID(r)
+	if !ok {
+		response.Error(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+	resp, err := h.svc.GetGithubConnection(r.Context(), userID)
+	if err != nil {
+		h.log.Error("get github connection failed", slog.String("error", err.Error()))
+		response.Error(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+	response.JSON(w, http.StatusOK, resp)
+}
+
+// LinkGithubInstallation handles POST /github/installations/link
+func (h *Handler) LinkGithubInstallation(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserID(r)
+	if !ok {
+		response.Error(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+	var req dto.LinkGithubInstallationRequest
+	if err := response.DecodeJSON(r, &req); err != nil || req.InstallationID == "" {
+		response.Error(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	resp, err := h.svc.LinkGithubInstallation(r.Context(), userID, req.InstallationID)
+	if err != nil {
+		if errors.Is(err, service.ErrInstallationNotFound) {
+			response.Error(w, http.StatusNotFound, "Installation not yet registered. Wait for webhook or retry.")
+			return
+		}
+		if errors.Is(err, service.ErrInstallationAlreadyLinked) {
+			response.Error(w, http.StatusConflict, "Installation already linked to another user")
+			return
+		}
+		h.log.Error("link installation failed", slog.String("error", err.Error()))
+		response.Error(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+	response.JSON(w, http.StatusOK, resp)
+}

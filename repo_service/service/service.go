@@ -16,8 +16,10 @@ import (
 )
 
 var (
-	ErrRepositoryNotFound    = errors.New("repository not found")
-	ErrGithubAccountNotFound = errors.New("github account not found")
+	ErrRepositoryNotFound        = errors.New("repository not found")
+	ErrGithubAccountNotFound     = errors.New("github account not found")
+	ErrInstallationNotFound      = errors.New("installation not found")
+	ErrInstallationAlreadyLinked = errors.New("installation already linked to another user")
 )
 
 // CommitAcceptedSubmissionRequest is the internal request for committing an accepted submission.
@@ -245,3 +247,61 @@ func (s *RepoService) ListCommits(ctx context.Context, userID, repositoryID int)
 	}
 	return s.repo.FindCommitsByRepositoryID(ctx, repositoryID)
 }
+
+// GetGithubConnection returns the GitHub connection status for a user.
+func (s *RepoService) GetGithubConnection(ctx context.Context, userID int) (*dto.GithubConnectionResponse, error) {
+	account, err := s.repo.GetGithubAccountByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if account == nil {
+		return &dto.GithubConnectionResponse{Connected: false}, nil
+	}
+	return &dto.GithubConnectionResponse{
+		Connected:       true,
+		InstallationID:  strPtr(account.InstallationID),
+		GithubOwner:     strPtr(account.GithubOwner),
+		GithubOwnerType: strPtr(account.GithubOwnerType),
+		GithubUsername:  account.GithubUsername,
+		Status:          strPtr(account.Status),
+	}, nil
+}
+
+// LinkGithubInstallation links a GitHub App installation to a user.
+func (s *RepoService) LinkGithubInstallation(ctx context.Context, userID int, installationID string) (*dto.LinkGithubInstallationResponse, error) {
+	inst, err := s.repo.GetGithubInstallationByID(ctx, installationID)
+	if err != nil {
+		return nil, err
+	}
+	if inst == nil {
+		return nil, ErrInstallationNotFound
+	}
+
+	// Check if installation already linked to another user
+	existingAccount, err := s.repo.GetGithubAccountByInstallationID(ctx, installationID)
+	if err != nil {
+		return nil, err
+	}
+	if existingAccount != nil && existingAccount.UserID != userID {
+		return nil, ErrInstallationAlreadyLinked
+	}
+
+	if err := s.repo.UpsertGithubAccount(ctx, userID, installationID, inst.GithubOwner, inst.GithubOwnerType); err != nil {
+		return nil, err
+	}
+
+	s.log.Info("github installation linked",
+		slog.Int("userId", userID),
+		slog.String("installationId", installationID),
+		slog.String("owner", inst.GithubOwner),
+	)
+
+	return &dto.LinkGithubInstallationResponse{
+		Linked:          true,
+		InstallationID:  installationID,
+		GithubOwner:     inst.GithubOwner,
+		GithubOwnerType: inst.GithubOwnerType,
+	}, nil
+}
+
+func strPtr(s string) *string { return &s }
