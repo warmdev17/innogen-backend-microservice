@@ -375,3 +375,16 @@ func (r *RepoRepository) UpdateRepositoriesStatusByOwner(ctx context.Context, gi
 	}
 	return nil
 }
+
+// UpdateGithubAccountOwnerByInstallation updates the owner, owner_type, and status on github_accounts
+// linked to a given installation_id. Used by webhook handler to backfill data set by OAuth callback.
+func (r *RepoRepository) UpdateGithubAccountOwnerByInstallation(ctx context.Context, installationID, owner, ownerType, status string) error {
+	_, err := r.pool.Exec(ctx,
+		`UPDATE github_accounts SET github_owner = $2, github_owner_type = $3, status = $4, updated_at = CURRENT_TIMESTAMP WHERE installation_id = $1`,
+		installationID, owner, ownerType, status,
+	)
+	if err != nil {
+		return fmt.Errorf("repository.UpdateGithubAccountOwnerByInstallation: %w", err)
+	}
+	return nil
+}

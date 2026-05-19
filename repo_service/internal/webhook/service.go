@@ -57,9 +57,9 @@ func (s *WebhookService) handleInstallation(ctx context.Context, event Installat
 		if err := s.repo.UpsertGithubInstallation(ctx, instID, owner, ownerType); err != nil {
 			return err
 		}
-		// Secondary updates are best-effort
-		if err := s.repo.UpdateGithubAccountStatusByInstallation(ctx, instID, "active"); err != nil {
-			s.log.Error("failed to update account status on create", slog.String("error", err.Error()))
+		// Backfill owner info on linked github_accounts (from OAuth callback)
+		if err := s.repo.UpdateGithubAccountOwnerByInstallation(ctx, instID, owner, ownerType, "active"); err != nil {
+			s.log.Error("failed to backfill account owner on create", slog.String("error", err.Error()))
 		}
 		s.log.Info("installation created", slog.String("installationId", instID), slog.String("owner", owner))
 	case "deleted":

@@ -19,6 +19,9 @@ type Config struct {
 	GitHubDefaultBranch   string
 	GitHubAPIBaseURL      string
 	GitHubWebhookSecret   string
+	GitHubAppName         string
+	GitHubAppInstallURL   string
+	FrontendURL           string
 	AuthServiceURL        string
 	RunServiceURL         string
 	SubmissionServiceURL  string
@@ -42,6 +45,9 @@ var defaults = map[string]string{
 	"GITHUB_DEFAULT_BRANCH":   "main",
 	"GITHUB_API_BASE_URL":     "https://api.github.com",
 	"GITHUB_WEBHOOK_SECRET":   "",
+	"GITHUB_APP_NAME":         "rinnogen",
+	"GITHUB_APP_INSTALL_URL":  "https://github.com/apps/rinnogen/installations/new",
+	"FRONTEND_URL":            "http://localhost:5173",
 	"AUTH_SERVICE_URL":        "http://localhost:8081",
 	"RUN_SERVICE_URL":         "http://localhost:8082",
 	"SUBMISSION_SERVICE_URL":  "http://localhost:8083",
@@ -76,6 +82,9 @@ func Load() *Config {
 		GitHubDefaultBranch:   getEnv("GITHUB_DEFAULT_BRANCH"),
 		GitHubAPIBaseURL:      getEnv("GITHUB_API_BASE_URL"),
 		GitHubWebhookSecret:   getEnv("GITHUB_WEBHOOK_SECRET"),
+		GitHubAppName:         getEnv("GITHUB_APP_NAME"),
+		GitHubAppInstallURL:   getEnv("GITHUB_APP_INSTALL_URL"),
+		FrontendURL:           getEnv("FRONTEND_URL"),
 		AuthServiceURL:        getEnv("AUTH_SERVICE_URL"),
 		RunServiceURL:         getEnv("RUN_SERVICE_URL"),
 		SubmissionServiceURL:  getEnv("SUBMISSION_SERVICE_URL"),

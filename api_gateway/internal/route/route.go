@@ -17,6 +17,14 @@ type ProxySet struct {
 	Repo       *httputil.ReverseProxy
 }
 
+// stripHealthPath rewrites the incoming path to /health before forwarding.
+func stripHealthPath(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.URL.Path = "/health"
+		next.ServeHTTP(w, r)
+	})
+}
+
 // stripUserHeaders removes only X-User-* headers (keeps Authorization intact).
 // Used for public routes like /auth/login.
 func stripUserHeaders(next http.Handler) http.Handler {
@@ -50,6 +58,11 @@ func RegisterProxyRoutes(mux *http.ServeMux, proxies *ProxySet, log *slog.Logger
 	// Authenticated routes — validate JWT, strip all auth headers, inject from claims
 	mux.Handle("GET /auth/me", authMW(stripAllAuth(proxies.Auth)))
 
+	// GitHub App OAuth routes
+	mux.Handle("GET /auth/github/connect", authMW(stripAllAuth(proxies.Auth)))
+	mux.Handle("GET /auth/github/status", authMW(stripAllAuth(proxies.Auth)))
+	mux.Handle("GET /auth/github/callback", stripUserHeaders(proxies.AuthPublic))
+
 	mux.Handle("POST /run", authMW(stripAllAuth(proxies.Run)))
 
 	mux.Handle("POST /submit", authMW(stripAllAuth(proxies.Submission)))
@@ -61,8 +74,8 @@ func RegisterProxyRoutes(mux *http.ServeMux, proxies *ProxySet, log *slog.Logger
 	mux.Handle("GET /repositories/{id}/commits", authMW(stripAllAuth(proxies.Repo)))
 
 	// Health checks proxied to backend services
-	mux.Handle("GET /health/auth", stripUserHeaders(proxies.AuthPublic))
-	mux.Handle("GET /health/run", stripUserHeaders(proxies.Run))
-	mux.Handle("GET /health/submission", stripUserHeaders(proxies.Submission))
-	mux.Handle("GET /health/repo", stripUserHeaders(proxies.Repo))
+	mux.Handle("GET /health/auth", stripUserHeaders(stripHealthPath(proxies.AuthPublic)))
+	mux.Handle("GET /health/run", stripUserHeaders(stripHealthPath(proxies.Run)))
+	mux.Handle("GET /health/submission", stripUserHeaders(stripHealthPath(proxies.Submission)))
+	mux.Handle("GET /health/repo", stripUserHeaders(stripHealthPath(proxies.Repo)))
 }

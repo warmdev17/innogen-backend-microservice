@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
 	"innogen-backend/api_gateway/internal/admin"
 	"innogen-backend/api_gateway/internal/curriculum"
@@ -23,6 +24,19 @@ var allowedOrigins = map[string]bool{
 	"http://localhost:3000":               true,
 	"https://maiphuongtrunghieu.site":     true,
 	"https://www.maiphuongtrunghieu.site": true,
+}
+
+// requestLogger logs every HTTP request.
+func requestLogger(log *slog.Logger, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		next.ServeHTTP(w, r)
+		log.Info("request",
+			slog.String("method", r.Method),
+			slog.String("path", r.URL.Path),
+			slog.Duration("duration", time.Since(start)),
+		)
+	})
 }
 
 // corsMiddleware adds CORS headers for allowed origins.
@@ -132,7 +146,7 @@ func main() {
 	addr := ":" + cfg.APIGatewayPort
 	log.Info("api-gateway listening on " + addr)
 
-	handler := corsMiddleware(mux)
+	handler := requestLogger(log, corsMiddleware(mux))
 	if err := http.ListenAndServe(addr, handler); err != nil {
 		log.Error("server failed", slog.String("error", err.Error()))
 		os.Exit(1)

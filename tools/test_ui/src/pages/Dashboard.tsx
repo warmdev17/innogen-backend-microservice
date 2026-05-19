@@ -58,6 +58,21 @@ export default function Dashboard() {
           <pre>{JSON.stringify(user, null, 2)}</pre>
         </div>
       )}
+
+      {user && (
+        <div className="card">
+          <h3>GitHub App</h3>
+          <button onClick={async () => {
+            try {
+              const d = await request<any>('GET', '/auth/github/connect')
+              if (d.installUrl) window.location.href = d.installUrl
+            } catch(e: any) { alert('Failed: ' + e.message) }
+          }}>Connect GitHub App</button>
+          <p style={{fontSize:'0.85rem', marginTop:'0.5rem', color:'#666'}}>
+            Installs the RinnoGen GitHub App to your personal account or organization.
+          </p>
+        </div>
+      )}
     </div>
   )
 }

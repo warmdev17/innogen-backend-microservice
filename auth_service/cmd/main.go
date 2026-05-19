@@ -32,7 +32,7 @@ func main() {
 
 	repo := repository.New(pool)
 	jwtSvc := jwt.NewService(cfg.JWTSecret)
-	svc := service.New(repo, jwtSvc)
+	svc := service.New(repo, jwtSvc, cfg)
 	h := handler.New(svc, log)
 
 	mux := http.NewServeMux()
