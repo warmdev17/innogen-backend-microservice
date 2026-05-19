@@ -149,3 +149,12 @@
 - Fixed missing InstallationID in connection response
 - Added duplicate installation check before linking
 - Validated: go build, go test, npm build all pass
+
+### 2026-05-20 — GitHub Commit E2E Visibility (STEP 14)
+
+- Added `commitUrl` to submission read responses (LEFT JOIN submission_commits)
+- Updated Test UI Submissions page with structured commit metadata (repoPath, commitSha, clickable commitUrl)
+- Updated GitHub Connect page with Accepted-commit flow explanation
+- Created `scripts/e2e_github.sh` for E2E GitHub commit validation
+- Added `make e2e-github` target
+- Validated: go build, go test, npm build all pass

@@ -61,12 +61,17 @@ func (r *SubmissionRepository) CreateSubmission(ctx context.Context, userID, pro
 func (r *SubmissionRepository) FindByID(ctx context.Context, id string) (*models.Submission, error) {
 	s := &models.Submission{}
 	err := r.pool.QueryRow(ctx,
-		selectAllSubmissionColumns+" WHERE id = $1",
+		`SELECT s.id, s.user_id, s.problem_id, s.language_id, s.code, s.status, s.runtime_ms, s.memory_kb, s.error_message, s.pass_count, s.total_testcases, s.repo_path, s.commit_sha,
+			(SELECT commit_url FROM submission_commits WHERE submission_id = s.id ORDER BY created_at ASC LIMIT 1) AS commit_url,
+			s.created_at, s.judged_at
+		FROM submissions s
+		WHERE s.id = $1`,
 		id,
 	).Scan(
 		&s.ID, &s.UserID, &s.ProblemID, &s.LanguageID, &s.Code,
 		&s.Status, &s.RuntimeMs, &s.MemoryKb, &s.ErrorMessage,
 		&s.PassCount, &s.TotalTestcases, &s.RepoPath, &s.CommitSha,
+		&s.CommitURL,
 		&s.CreatedAt, &s.JudgedAt,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -81,7 +86,13 @@ func (r *SubmissionRepository) FindByID(ctx context.Context, id string) (*models
 // FindByUserID returns all submissions for a user, newest first, without code.
 func (r *SubmissionRepository) FindByUserID(ctx context.Context, userID int) ([]models.Submission, error) {
 	rows, err := r.pool.Query(ctx,
-		selectSubmissionColumnsNoCode+" WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50",
+		`SELECT s.id, s.user_id, s.problem_id, s.language_id, s.status, s.runtime_ms, s.memory_kb, s.error_message, s.pass_count, s.total_testcases, s.repo_path, s.commit_sha,
+			(SELECT commit_url FROM submission_commits WHERE submission_id = s.id ORDER BY created_at ASC LIMIT 1) AS commit_url,
+			s.created_at, s.judged_at
+		FROM submissions s
+		WHERE s.user_id = $1
+		ORDER BY s.created_at DESC
+		LIMIT 50`,
 		userID,
 	)
 	if err != nil {
@@ -96,6 +107,7 @@ func (r *SubmissionRepository) FindByUserID(ctx context.Context, userID int) ([]
 			&s.ID, &s.UserID, &s.ProblemID, &s.LanguageID,
 			&s.Status, &s.RuntimeMs, &s.MemoryKb, &s.ErrorMessage,
 			&s.PassCount, &s.TotalTestcases, &s.RepoPath, &s.CommitSha,
+			&s.CommitURL,
 			&s.CreatedAt, &s.JudgedAt,
 		); err != nil {
 			return nil, fmt.Errorf("repository.FindByUserID: %w", err)
@@ -113,12 +125,19 @@ func (r *SubmissionRepository) FindByUserID(ctx context.Context, userID int) ([]
 func (r *SubmissionRepository) FindLatestByUserAndProblem(ctx context.Context, userID, problemID int) (*models.Submission, error) {
 	s := &models.Submission{}
 	err := r.pool.QueryRow(ctx,
-		selectAllSubmissionColumns+" WHERE user_id = $1 AND problem_id = $2 ORDER BY created_at DESC LIMIT 1",
+		`SELECT s.id, s.user_id, s.problem_id, s.language_id, s.code, s.status, s.runtime_ms, s.memory_kb, s.error_message, s.pass_count, s.total_testcases, s.repo_path, s.commit_sha,
+			(SELECT commit_url FROM submission_commits WHERE submission_id = s.id ORDER BY created_at ASC LIMIT 1) AS commit_url,
+			s.created_at, s.judged_at
+		FROM submissions s
+		WHERE s.user_id = $1 AND s.problem_id = $2
+		ORDER BY s.created_at DESC
+		LIMIT 1`,
 		userID, problemID,
 	).Scan(
 		&s.ID, &s.UserID, &s.ProblemID, &s.LanguageID, &s.Code,
 		&s.Status, &s.RuntimeMs, &s.MemoryKb, &s.ErrorMessage,
 		&s.PassCount, &s.TotalTestcases, &s.RepoPath, &s.CommitSha,
+		&s.CommitURL,
 		&s.CreatedAt, &s.JudgedAt,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {

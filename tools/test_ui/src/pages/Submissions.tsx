@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { request } from '../api/client'
 import { usePolling } from '../hooks/usePolling'
 import CodeEditor from '../components/CodeEditor'
+import StatusBadge from '../components/StatusBadge'
 
 export default function Submissions() {
   const [problemId, setProblemId] = useState('1')
@@ -46,14 +47,48 @@ export default function Submissions() {
       {pollResult.data && (
         <div className="card">
           <h4>Poll Result</h4>
-          <span className={`status-badge status-${finalStatus?.replace(/ /g, '')}`}>{finalStatus}</span>
-          <pre>{JSON.stringify(pollResult.data, null, 2)}</pre>
+          <StatusBadge status={finalStatus} />
+          {pollResult.data?.submission && (
+            <div style={{ marginTop: '0.75rem' }}>
+              <p>Passed: {pollResult.data.submission.passCount} / {pollResult.data.submission.totalTestcases}</p>
+              {pollResult.data.submission.runtimeMs && <p>Runtime: {pollResult.data.submission.runtimeMs}ms</p>}
+              {pollResult.data.submission.repoPath && (
+                <div style={{ marginTop: '0.5rem' }}>
+                  <strong>Commit:</strong>
+                  <pre style={{ margin: '0.25rem 0' }}>{pollResult.data.submission.repoPath}</pre>
+                  {pollResult.data.submission.commitSha && <p>SHA: <code>{pollResult.data.submission.commitSha.substring(0, 7)}</code></p>}
+                  {pollResult.data.submission.commitUrl && (
+                    <p>🔗 <a href={pollResult.data.submission.commitUrl} target="_blank" rel="noopener">View on GitHub</a></p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          <pre style={{ marginTop: '0.75rem' }}>{JSON.stringify(pollResult.data, null, 2)}</pre>
         </div>
       )}
       {list.length > 0 && (
         <div className="card">
           <h4>My Submissions ({list.length})</h4>
-          <pre>{JSON.stringify(list.slice(0, 10), null, 2)}</pre>
+          {list.slice(0, 10).map((s: any, i: number) => (
+            <div key={s.id || i} style={{ padding: '0.5rem 0', borderBottom: i < list.slice(0, 10).length - 1 ? '1px solid #eee' : 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                <StatusBadge status={s.status} />
+                <strong>{s.problem?.title || `Problem #${s.problemId}`}</strong>
+              </div>
+              <p style={{ fontSize: '0.85rem', color: '#666' }}>
+                Passed: {s.passCount} / {s.totalTestcases}
+                {s.runtimeMs && <> · Runtime: {s.runtimeMs}ms</>}
+              </p>
+              {s.commitUrl && (
+                <p style={{ fontSize: '0.85rem' }}>
+                  🔗 <a href={s.commitUrl} target="_blank" rel="noopener">View commit on GitHub</a>
+                  {s.commitSha && <> (<code>{s.commitSha.substring(0, 7)}</code>)</>}
+                </p>
+              )}
+              {s.repoPath && <p style={{ fontSize: '0.8rem', color: '#999' }}>{s.repoPath}</p>}
+            </div>
+          ))}
         </div>
       )}
     </div>

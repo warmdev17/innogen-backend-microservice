@@ -35,14 +35,15 @@ export default function GithubConnect() {
   }
 
   const handleLink = useCallback(async (installationId: string) => {
+    setLoading(false)
     setLinking(true)
     setError('')
     try {
       await request('POST', '/github/installations/link', { installationId })
       await checkConnection()
-      navigate('/github/callback', { replace: true })
     } catch (e: any) {
-      setError('Failed to link: ' + e.message)
+      setError(e.message || 'Failed to link installation')
+      await checkConnection()
     } finally {
       setLinking(false)
     }
@@ -109,6 +110,17 @@ export default function GithubConnect() {
         <strong>Note:</strong> GitHub App connection is stored in the backend database.
         If you just installed the app and it still shows not connected, GitHub may need a moment to deliver the webhook.
         Click <b>Refresh Status</b> or revisit this page.
+      </div>
+
+      <div className="info" style={{ marginTop: '1rem' }}>
+        <strong>What happens after connecting?</strong>
+        <p style={{ marginTop: '0.25rem' }}>
+          When you submit a solution that passes all tests (<b>Accepted</b>), 
+          your code is automatically committed to a GitHub repository under your 
+          connected account. Each subject has its own repository named{' '}
+          <code>&lt;subject&gt;-RinnoGen</code>. You can view commits on GitHub 
+          and track your learning progress.
+        </p>
       </div>
     </div>
   )

@@ -32,3 +32,8 @@ curl -X POST http://localhost:8084/webhooks/github \
 ```bash
 make test-ui-install && make test-ui   # http://localhost:5173
 ```
+
+### GitHub E2E Test
+```bash
+make e2e-github   # Requires services + seed data running
+```

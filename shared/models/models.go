@@ -176,6 +176,7 @@ type Submission struct {
 	TotalTestcases int        `json:"totalTestcases"`
 	RepoPath       *string    `json:"repoPath"`
 	CommitSha      *string    `json:"commitSha"`
+	CommitURL      *string    `json:"commitUrl"`
 	CreatedAt      time.Time  `json:"createdAt"`
 	JudgedAt       *time.Time `json:"judgedAt"`
 }

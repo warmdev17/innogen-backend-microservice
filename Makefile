@@ -1,6 +1,6 @@
 DATABASE_URL ?= postgres://innogen:innogen@localhost:5432/innogen?sslmode=disable
 
-.PHONY: run-gateway run-auth run-runner run-submission run-submission-worker run-repo run-all stop-all tidy fmt test compose-up compose-down logs-piston piston-install seed-dev e2e test-ui-install test-ui test-ui-build
+.PHONY: run-gateway run-auth run-runner run-submission run-submission-worker run-repo run-all stop-all tidy fmt test compose-up compose-down logs-piston piston-install seed-dev e2e e2e-github test-ui-install test-ui test-ui-build
 
 run-gateway:
 	go run ./api_gateway/cmd/main.go
@@ -51,6 +51,9 @@ seed-dev:
 
 e2e: piston-install
 	bash scripts/e2e_mvp.sh
+
+e2e-github: piston-install
+	bash scripts/e2e_github.sh
 
 run-all:
 	@echo "Starting all services in background..."
