@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
 	"innogen-backend/repo_service/internal/githubapp"
 	"innogen-backend/repo_service/internal/handler"
@@ -17,6 +18,18 @@ import (
 	"innogen-backend/shared/logger"
 	"innogen-backend/shared/response"
 )
+
+func requestLogger(log *slog.Logger, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		next.ServeHTTP(w, r)
+		log.Info("request",
+			slog.String("method", r.Method),
+			slog.String("path", r.URL.Path),
+			slog.Duration("duration", time.Since(start)),
+		)
+	})
+}
 
 func main() {
 	cfg := config.Load()
@@ -63,7 +76,8 @@ func main() {
 	addr := ":" + cfg.RepoServicePort
 	log.Info("repo-service listening on " + addr)
 
-	if err := http.ListenAndServe(addr, mux); err != nil {
+	handler := requestLogger(log, mux)
+	if err := http.ListenAndServe(addr, handler); err != nil {
 		log.Error("server terminated with error", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
