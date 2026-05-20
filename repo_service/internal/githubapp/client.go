@@ -239,7 +239,7 @@ func (c *RealClient) GetFileContent(ctx context.Context, token, owner, repoName,
 }
 
 // CreateOrUpdateFile creates or updates a file on GitHub.
-func (c *RealClient) CreateOrUpdateFile(ctx context.Context, token, owner, repoName, filePath, branch, content, commitMessage string, existingSHA *string) (*CommitResult, error) {
+func (c *RealClient) CreateOrUpdateFile(ctx context.Context, token, owner, repoName, filePath, branch, content, commitMessage string, existingSHA *string, authorName, authorEmail string) (*CommitResult, error) {
 	url := fmt.Sprintf("%s/repos/%s/%s/contents/%s", c.baseURL, owner, repoName, filePath)
 
 	body := map[string]interface{}{
@@ -249,6 +249,12 @@ func (c *RealClient) CreateOrUpdateFile(ctx context.Context, token, owner, repoN
 	}
 	if existingSHA != nil {
 		body["sha"] = *existingSHA
+	}
+	if authorName != "" && authorEmail != "" {
+		body["author"] = map[string]string{
+			"name":  authorName,
+			"email": authorEmail,
+		}
 	}
 
 	bodyBytes, _ := json.Marshal(body)

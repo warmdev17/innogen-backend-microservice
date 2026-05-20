@@ -38,5 +38,5 @@ type GitHubClient interface {
 	// CreateOrUpdateFile creates or updates a file in a GitHub repository.
 	// If existingSHA is non-nil, the file will be updated (must match current SHA).
 	// If existingSHA is nil, a new file will be created.
-	CreateOrUpdateFile(ctx context.Context, token, owner, repoName, filePath, branch, content, commitMessage string, existingSHA *string) (*CommitResult, error)
+	CreateOrUpdateFile(ctx context.Context, token, owner, repoName, filePath, branch, content, commitMessage string, existingSHA *string, authorName, authorEmail string) (*CommitResult, error)
 }

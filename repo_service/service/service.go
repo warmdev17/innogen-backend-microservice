@@ -137,6 +137,15 @@ func (s *RepoService) CommitAcceptedSubmission(ctx context.Context, req CommitAc
 		return nil, ErrGithubAccountNotFound
 	}
 
+	// Validate OAuth identity for commit author
+	if githubAccount.OAuthStatus != "connected" || githubAccount.CommitAuthorName == nil || githubAccount.GithubNoreplyEmail == nil || *githubAccount.CommitAuthorName == "" || *githubAccount.GithubNoreplyEmail == "" {
+		s.log.Error("cannot commit: OAuth account not connected",
+			slog.Int("userId", req.UserID),
+			slog.String("oauthStatus", githubAccount.OAuthStatus),
+		)
+		return nil, fmt.Errorf("GitHub OAuth account is not connected. Connect GitHub account before committing.")
+	}
+
 	// 2. Load curriculum context
 	curriculum, err := s.repo.GetCurriculumContext(ctx, req.ProblemID)
 	if err != nil {
@@ -187,7 +196,7 @@ func (s *RepoService) CommitAcceptedSubmission(ctx context.Context, req CommitAc
 
 	// 9. Commit the file to GitHub
 	commitMessage := fmt.Sprintf("Solve %s", curriculum.ProblemSlug)
-	commitResult, err := s.githubClient.CreateOrUpdateFile(ctx, token, githubAccount.GithubOwner, repoName, newRepoPath, s.cfg.GitHubDefaultBranch, req.Code, commitMessage, existingSHA)
+	commitResult, err := s.githubClient.CreateOrUpdateFile(ctx, token, githubAccount.GithubOwner, repoName, newRepoPath, s.cfg.GitHubDefaultBranch, req.Code, commitMessage, existingSHA, *githubAccount.CommitAuthorName, *githubAccount.GithubNoreplyEmail)
 	if err != nil {
 		return nil, fmt.Errorf("create or update file: %w", err)
 	}
