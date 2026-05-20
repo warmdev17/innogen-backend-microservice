@@ -106,3 +106,11 @@
 - **Callback flow**: GitHub redirects to `/github/callback?installation_id=XXX`. Frontend calls `POST /github/installations/link` to link the installation to the current user.
 - **Race handling**: Webhook may populate `github_installations` before or after the link API is called. If the installation doesn't exist yet, the API returns 404 with a retry message.
 - **Duplicate prevention**: `LinkGithubInstallation` checks if installation is already linked to another user before upserting.
+
+### GitHub OAuth Account Linking (STEP 16)
+
+- GitHub OAuth identifies the commit author. GitHub App installation provides write permission.
+- OAuth account and installation owner are separate — for org installs, commit author is the OAuth-linked user.
+- Noreply email: {github_user_id}+{username}@users.noreply.github.com
+- OAuth access token is NOT stored after use.
+- State uses signed JWT with 10-min expiry binding to the current RinnoGen user.

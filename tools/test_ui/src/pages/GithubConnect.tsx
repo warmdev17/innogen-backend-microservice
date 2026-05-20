@@ -21,6 +21,40 @@ export default function GithubConnect() {
   const [linking, setLinking] = useState(false)
   const [error, setError] = useState('')
 
+  // OAuth state
+  const [oauthState, setOAuthState] = useState<any>(null)
+  const [oauthLoading, setOAuthLoading] = useState(false)
+
+  const checkOAuth = async () => {
+    setOAuthLoading(true)
+    try {
+      const d = await request<any>('GET', '/github/account')
+      setOAuthState(d)
+    } catch (e: any) {
+      console.error(e)
+    } finally {
+      setOAuthLoading(false)
+    }
+  }
+
+  const startOAuth = async () => {
+    try {
+      const d = await request<any>('GET', '/github/oauth/start-url')
+      if (d.url) window.location.href = d.url
+    } catch (e: any) {
+      alert('Failed: ' + e.message)
+    }
+  }
+
+  const disconnectOAuth = async () => {
+    try {
+      await request('POST', '/github/oauth/disconnect')
+      await checkOAuth()
+    } catch (e: any) {
+      alert('Failed: ' + e.message)
+    }
+  }
+
   const checkConnection = async () => {
     try {
       setLoading(true)
@@ -49,15 +83,28 @@ export default function GithubConnect() {
     }
   }, [])
 
-  // On mount: check connection + handle callback
+  // On mount: check OAuth + connection + handle callback
   useEffect(() => {
     const installationId = searchParams.get('installation_id')
     if (installationId) {
       handleLink(installationId)
     } else {
+      checkOAuth()
       checkConnection()
     }
   }, [searchParams, handleLink])
+
+  // Handle OAuth callback query params on page load
+  useEffect(() => {
+    const oauthStatus = searchParams.get('oauth')
+    if (oauthStatus === 'connected') {
+      checkOAuth()
+      checkConnection()
+    } else if (oauthStatus === 'error') {
+      const msg = searchParams.get('message') || 'Unknown error'
+      setError('OAuth failed: ' + msg)
+    }
+  }, [searchParams])
 
   if (!token) {
     return <div className="card"><h3>GitHub Connect</h3><p>Please log in first.</p></div>
@@ -73,38 +120,60 @@ export default function GithubConnect() {
 
   return (
     <div>
-      <h2>GitHub Connect</h2>
+      <h2>GitHub Account</h2>
 
       {error && <div className="card" style={{ border: '1px solid #e53e3e', background: '#fff5f5' }}>
         <p className="error">{error}</p>
         <button onClick={checkConnection} style={{ marginTop: '0.5rem' }}>Retry</button>
       </div>}
 
-      {state?.connected ? (
-        <div className="card">
-          <h3>✅ Connected</h3>
-          <div style={{ marginTop: '0.5rem' }}>
+      {/* OAuth Account Identity */}
+      <div className="card">
+        <h3>Account Identity</h3>
+        {oauthState?.connected ? (
+          <div>
+            <p>✅ Connected as <strong>{oauthState.githubUsername}</strong></p>
+            {oauthState.githubAvatarURL && <img src={oauthState.githubAvatarURL} alt="" style={{ width: 40, height: 40, borderRadius: '50%' }} />}
+            <p style={{ fontSize: '0.85rem' }}>ID: {oauthState.githubUserID}</p>
+            <p style={{ fontSize: '0.85rem' }}>Email: <code>{oauthState.githubNoreplyEmail}</code></p>
+            <p style={{ fontSize: '0.85rem' }}>Commit Author: <strong>{oauthState.commitAuthorName}</strong></p>
+            <button onClick={checkOAuth} style={{ marginRight: '0.5rem' }}>Refresh</button>
+            <button onClick={disconnectOAuth} className="danger">Disconnect</button>
+          </div>
+        ) : (
+          <div>
+            <p>Not connected. Link your GitHub account to identify yourself as the commit author.</p>
+            <button onClick={startOAuth}>Connect GitHub Account</button>
+          </div>
+        )}
+        {oauthLoading && <p>Checking...</p>}
+      </div>
+
+      {/* GitHub App Installation */}
+      <div className="card">
+        <h3>GitHub App Installation</h3>
+        {state?.connected ? (
+          <div>
             <p><strong>Owner:</strong> {state.githubOwner}</p>
             <p><strong>Type:</strong> {state.githubOwnerType}</p>
             <p><strong>Installation ID:</strong> {state.installationId}</p>
             <p><strong>Status:</strong> <span className="success">{state.status}</span></p>
+            <button onClick={checkConnection} style={{ marginTop: '1rem' }}>Refresh Status</button>
           </div>
-          <button onClick={checkConnection} style={{ marginTop: '1rem' }}>Refresh Status</button>
-        </div>
-      ) : (
-        <div className="card">
-          <h3>Not Connected</h3>
-          <p style={{ marginBottom: '1rem' }}>Install the RinnoGen GitHub App to enable repository commits.</p>
-          <button
-            onClick={() => {
-              const url = (import.meta as any).env?.VITE_GITHUB_APP_INSTALL_URL || 'https://github.com/apps/rinnogen/installations/new'
-              window.location.href = url
-            }}
-          >
-            Connect GitHub App
-          </button>
-        </div>
-      )}
+        ) : (
+          <div>
+            <p style={{ marginBottom: '1rem' }}>Install the RinnoGen GitHub App to enable repository commits.</p>
+            <button
+              onClick={() => {
+                const url = (import.meta as any).env?.VITE_GITHUB_APP_INSTALL_URL || 'https://github.com/apps/rinnogen/installations/new'
+                window.location.href = url
+              }}
+            >
+              Connect GitHub App
+            </button>
+          </div>
+        )}
+      </div>
 
       <div className="info" style={{ marginTop: '1rem' }}>
         <strong>Note:</strong> GitHub App connection is stored in the backend database.

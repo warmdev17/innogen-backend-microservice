@@ -110,17 +110,21 @@ type Tag struct {
 
 // GithubAccount represents a row in the github_accounts table.
 type GithubAccount struct {
-	ID              int       `json:"id"`
-	UserID          int       `json:"userId"`
-	InstallationID  string    `json:"installationId"`
-	GithubUserID    *string   `json:"githubUserId"`
-	GithubUsername  *string   `json:"githubUsername"`
-	GithubAvatarURL *string   `json:"githubAvatarUrl"`
-	GithubOwner     string    `json:"githubOwner"`
-	GithubOwnerType string    `json:"githubOwnerType"`
-	Status          string    `json:"status"`
-	CreatedAt       time.Time `json:"createdAt"`
-	UpdatedAt       time.Time `json:"updatedAt"`
+	ID                 int        `json:"id"`
+	UserID             int        `json:"userId"`
+	InstallationID     string     `json:"installationId"`
+	GithubUserID       *string    `json:"githubUserId"`
+	GithubUsername     *string    `json:"githubUsername"`
+	GithubAvatarURL    *string    `json:"githubAvatarUrl"`
+	GithubOwner        string     `json:"githubOwner"`
+	GithubOwnerType    string     `json:"githubOwnerType"`
+	Status             string     `json:"status"`
+	GithubNoreplyEmail *string    `json:"githubNoreplyEmail"`
+	CommitAuthorName   *string    `json:"commitAuthorName"`
+	OAuthConnectedAt   *time.Time `json:"oauthConnectedAt"`
+	OAuthStatus        string     `json:"oauthStatus"`
+	CreatedAt          time.Time  `json:"createdAt"`
+	UpdatedAt          time.Time  `json:"updatedAt"`
 }
 
 // GithubInstallation represents a row in the github_installations table.

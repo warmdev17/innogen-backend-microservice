@@ -248,10 +248,13 @@ func (r *RepoRepository) GetGithubAccountByUserID(ctx context.Context, userID in
 	a := &models.GithubAccount{}
 	err := r.pool.QueryRow(ctx,
 		`SELECT id, user_id, installation_id, github_user_id, github_username, github_avatar_url,
-                github_owner, github_owner_type, status, created_at, updated_at
+                github_owner, github_owner_type, status, github_noreply_email, commit_author_name,
+                oauth_connected_at, oauth_status, created_at, updated_at
          FROM github_accounts WHERE user_id = $1`, userID,
 	).Scan(&a.ID, &a.UserID, &a.InstallationID, &a.GithubUserID, &a.GithubUsername,
-		&a.GithubAvatarURL, &a.GithubOwner, &a.GithubOwnerType, &a.Status, &a.CreatedAt, &a.UpdatedAt)
+		&a.GithubAvatarURL, &a.GithubOwner, &a.GithubOwnerType, &a.Status,
+		&a.GithubNoreplyEmail, &a.CommitAuthorName, &a.OAuthConnectedAt, &a.OAuthStatus,
+		&a.CreatedAt, &a.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
@@ -267,10 +270,13 @@ func (r *RepoRepository) GetGithubAccountByInstallationID(ctx context.Context, i
 	a := &models.GithubAccount{}
 	err := r.pool.QueryRow(ctx,
 		`SELECT id, user_id, installation_id, github_user_id, github_username, github_avatar_url,
-                github_owner, github_owner_type, status, created_at, updated_at
+                github_owner, github_owner_type, status, github_noreply_email, commit_author_name,
+                oauth_connected_at, oauth_status, created_at, updated_at
          FROM github_accounts WHERE installation_id = $1`, installationID,
 	).Scan(&a.ID, &a.UserID, &a.InstallationID, &a.GithubUserID, &a.GithubUsername,
-		&a.GithubAvatarURL, &a.GithubOwner, &a.GithubOwnerType, &a.Status, &a.CreatedAt, &a.UpdatedAt)
+		&a.GithubAvatarURL, &a.GithubOwner, &a.GithubOwnerType, &a.Status,
+		&a.GithubNoreplyEmail, &a.CommitAuthorName, &a.OAuthConnectedAt, &a.OAuthStatus,
+		&a.CreatedAt, &a.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
@@ -440,6 +446,38 @@ func (r *RepoRepository) UpdateGithubAccountOwnerByInstallation(ctx context.Cont
 	)
 	if err != nil {
 		return fmt.Errorf("repository.UpdateGithubAccountOwnerByInstallation: %w", err)
+	}
+	return nil
+}
+
+func (r *RepoRepository) UpsertGitHubOAuth(ctx context.Context, userID int, githubUserID, githubUsername, githubAvatarURL, githubNoreplyEmail, commitAuthorName string) error {
+	_, err := r.pool.Exec(ctx,
+		`UPDATE github_accounts SET github_user_id=$2, github_username=$3, github_avatar_url=$4, github_noreply_email=$5, commit_author_name=$6, oauth_connected_at=CURRENT_TIMESTAMP, oauth_status='connected', updated_at=CURRENT_TIMESTAMP WHERE user_id=$1`,
+		userID, githubUserID, githubUsername, githubAvatarURL, githubNoreplyEmail, commitAuthorName,
+	)
+	if err != nil {
+		return fmt.Errorf("repository.UpsertGitHubOAuth: %w", err)
+	}
+	return nil
+}
+
+func (r *RepoRepository) GetGitHubOAuthByUserID(ctx context.Context, userID int) (githubUserID, githubUsername, githubAvatarURL, githubNoreplyEmail, commitAuthorName, oauthStatus string, err error) {
+	err = r.pool.QueryRow(ctx,
+		`SELECT COALESCE(github_user_id,''), COALESCE(github_username,''), COALESCE(github_avatar_url,''), COALESCE(github_noreply_email,''), COALESCE(commit_author_name,''), COALESCE(oauth_status,'disconnected') FROM github_accounts WHERE user_id=$1`, userID,
+	).Scan(&githubUserID, &githubUsername, &githubAvatarURL, &githubNoreplyEmail, &commitAuthorName, &oauthStatus)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", "", "", "", "", "disconnected", nil
+	}
+	if err != nil {
+		return "", "", "", "", "", "", fmt.Errorf("repository.GetGitHubOAuthByUserID: %w", err)
+	}
+	return
+}
+
+func (r *RepoRepository) DisconnectGitHubOAuth(ctx context.Context, userID int) error {
+	_, err := r.pool.Exec(ctx, `UPDATE github_accounts SET oauth_status='disconnected', updated_at=CURRENT_TIMESTAMP WHERE user_id=$1`, userID)
+	if err != nil {
+		return fmt.Errorf("repository.DisconnectGitHubOAuth: %w", err)
 	}
 	return nil
 }

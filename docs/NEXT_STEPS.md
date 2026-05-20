@@ -19,6 +19,11 @@ curl -X POST http://localhost:8084/webhooks/github \
   -d "$BODY"
 ```
 
+### STEP 17 — Commit attribution fix using OAuth identity
+- Use OAuth-linked GitHub identity (username + noreply email) as commit author
+- Fall back to installation owner if OAuth not connected
+- Ensure commits show the correct author avatar/name on GitHub
+
 ### Production readiness
 - CORS middleware at gateway
 - Request ID middleware

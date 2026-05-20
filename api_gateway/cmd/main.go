@@ -109,6 +109,11 @@ func main() {
 		log.Error("failed to create repo proxy", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
+	repoPublicProxy, err := proxy.NewProxy(cfg.RepoServiceURL, log)
+	if err != nil {
+		log.Error("failed to create repo public proxy", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
 
 	proxySet := route.ProxySet{
 		AuthPublic: authPublicProxy,
@@ -116,6 +121,7 @@ func main() {
 		Run:        runProxy,
 		Submission: submissionProxy,
 		Repo:       repoProxy,
+		RepoPublic: repoPublicProxy,
 	}
 
 	mux := http.NewServeMux()

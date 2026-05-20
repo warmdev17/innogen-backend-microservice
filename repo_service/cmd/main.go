@@ -9,6 +9,7 @@ import (
 
 	"innogen-backend/repo_service/internal/githubapp"
 	"innogen-backend/repo_service/internal/handler"
+	"innogen-backend/repo_service/internal/oauth"
 	"innogen-backend/repo_service/internal/route"
 	"innogen-backend/repo_service/internal/webhook"
 	"innogen-backend/repo_service/repository"
@@ -69,9 +70,14 @@ func main() {
 	svc := service.New(repoRepo, githubClient, cfg, log)
 	h := handler.New(svc, log)
 
+	// OAuth
+	oauthClient := oauth.NewOAuthClient(cfg.GitHubOAuthClientID, cfg.GitHubOAuthClientSecret)
+	oauthSvc := oauth.NewOAuthService(repoRepo, oauthClient, cfg, log)
+	oauthH := oauth.NewOAuthHandler(oauthSvc, log)
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", healthHandler)
-	route.Register(mux, h, webhookH)
+	route.Register(mux, h, webhookH, oauthH)
 
 	addr := ":" + cfg.RepoServicePort
 	log.Info("repo-service listening on " + addr)

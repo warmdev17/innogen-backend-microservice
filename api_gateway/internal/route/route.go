@@ -15,6 +15,7 @@ type ProxySet struct {
 	Run        *httputil.ReverseProxy
 	Submission *httputil.ReverseProxy
 	Repo       *httputil.ReverseProxy
+	RepoPublic *httputil.ReverseProxy // /webhooks/github (public, HMAC-signed)
 }
 
 // stripHealthPath rewrites the incoming path to /health before forwarding.
@@ -76,6 +77,15 @@ func RegisterProxyRoutes(mux *http.ServeMux, proxies *ProxySet, log *slog.Logger
 	// GitHub App connection routes
 	mux.Handle("GET /github/connection", authMW(stripAllAuth(proxies.Repo)))
 	mux.Handle("POST /github/installations/link", authMW(stripAllAuth(proxies.Repo)))
+
+	// GitHub OAuth routes
+	mux.Handle("GET /github/oauth/start-url", authMW(stripAllAuth(proxies.Repo)))
+	mux.Handle("GET /github/oauth/callback", stripUserHeaders(proxies.RepoPublic))
+	mux.Handle("GET /github/account", authMW(stripAllAuth(proxies.Repo)))
+	mux.Handle("POST /github/oauth/disconnect", authMW(stripAllAuth(proxies.Repo)))
+
+	// GitHub webhook — public, HMAC-signed; no auth middleware
+	mux.Handle("POST /webhooks/github", stripUserHeaders(proxies.RepoPublic))
 
 	// Health checks proxied to backend services
 	mux.Handle("GET /health/auth", stripUserHeaders(stripHealthPath(proxies.AuthPublic)))

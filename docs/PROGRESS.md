@@ -16,4 +16,9 @@
 
 - [x] STEP 13 — Local developer test UI (React + Vite + TypeScript)
 
-### 🎉 All steps complete
+- [x] STEP 14 — GitHub Commit E2E Visibility (commit URLs in submission responses)
+- [x] STEP 15 — Test UI GitHub Connect UX improvements
+- [x] STEP 16 — GitHub OAuth Account Linking (commit author identity)
+
+### 🔜 Pending
+- [ ] STEP 17 — Commit attribution fix using OAuth identity

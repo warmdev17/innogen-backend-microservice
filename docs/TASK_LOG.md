@@ -158,3 +158,11 @@
 - Created `scripts/e2e_github.sh` for E2E GitHub commit validation
 - Added `make e2e-github` target
 - Validated: go build, go test, npm build all pass
+
+### 2026-05-20 — GitHub OAuth Account Linking (STEP 16)
+- Added OAuth flow: start URL → GitHub authorize → callback → exchange code → get user → store identity
+- Added 4 new columns to github_accounts: github_noreply_email, commit_author_name, oauth_connected_at, oauth_status
+- Created repo_service/internal/oauth package: state, client, service, handler, dto
+- Added GET /github/oauth/start-url, GET /github/oauth/callback, GET /github/account, POST /github/oauth/disconnect
+- Updated test UI with OAuth Account Identity section (username, avatar, email, commit author)
+- OAuth callback redirects to frontend with ?oauth=connected or ?oauth=error
