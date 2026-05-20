@@ -8,15 +8,17 @@ import (
 // User represents a row in the users table.
 // Password is tagged json:"-" to prevent accidental serialization in API responses.
 type User struct {
-	ID        int       `json:"id"`
-	Email     string    `json:"email"`
-	Password  string    `json:"-"`
-	Username  *string   `json:"username"`
-	FullName  *string   `json:"fullName"`
-	Role      string    `json:"role"`
-	IsActive  bool      `json:"isActive"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ID            int        `json:"id"`
+	Email         string     `json:"email"`
+	Password      string     `json:"-"`
+	Username      *string    `json:"username"`
+	FullName      *string    `json:"fullName"`
+	Role          string     `json:"role"`
+	IsActive      bool       `json:"isActive"`
+	InstalledAt   *time.Time `json:"installedAt"`
+	UninstalledAt *time.Time `json:"uninstalledAt"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	UpdatedAt     time.Time  `json:"updatedAt"`
 }
 
 // Subject represents a row in the subjects table.
@@ -123,19 +125,23 @@ type GithubAccount struct {
 	CommitAuthorName   *string    `json:"commitAuthorName"`
 	OAuthConnectedAt   *time.Time `json:"oauthConnectedAt"`
 	OAuthStatus        string     `json:"oauthStatus"`
+	InstalledAt        *time.Time `json:"installedAt"`
+	UninstalledAt      *time.Time `json:"uninstalledAt"`
 	CreatedAt          time.Time  `json:"createdAt"`
 	UpdatedAt          time.Time  `json:"updatedAt"`
 }
 
 // GithubInstallation represents a row in the github_installations table.
 type GithubInstallation struct {
-	ID              int       `json:"id"`
-	InstallationID  string    `json:"installationId"`
-	GithubOwner     string    `json:"githubOwner"`
-	GithubOwnerType string    `json:"githubOwnerType"`
-	IsActive        bool      `json:"isActive"`
-	CreatedAt       time.Time `json:"createdAt"`
-	UpdatedAt       time.Time `json:"updatedAt"`
+	ID              int        `json:"id"`
+	InstallationID  string     `json:"installationId"`
+	GithubOwner     string     `json:"githubOwner"`
+	GithubOwnerType string     `json:"githubOwnerType"`
+	IsActive        bool       `json:"isActive"`
+	InstalledAt     *time.Time `json:"installedAt"`
+	UninstalledAt   *time.Time `json:"uninstalledAt"`
+	CreatedAt       time.Time  `json:"createdAt"`
+	UpdatedAt       time.Time  `json:"updatedAt"`
 }
 
 // Repository represents a row in the repositories table.

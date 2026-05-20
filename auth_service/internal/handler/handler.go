@@ -105,6 +105,33 @@ func (h *Handler) GithubCallback(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, redirectURL, http.StatusFound)
 }
 
+// Register handles POST /auth/register.
+func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
+	var req dto.RegisterRequest
+	if err := response.DecodeJSON(r, &req); err != nil {
+		response.Error(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	resp, err := h.svc.Register(r.Context(), req)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrInvalidInput):
+			response.Error(w, http.StatusBadRequest, err.Error())
+		case errors.Is(err, service.ErrEmailTaken):
+			response.Error(w, http.StatusConflict, "Email already registered")
+		case errors.Is(err, service.ErrUsernameTaken):
+			response.Error(w, http.StatusConflict, "Username already taken")
+		default:
+			h.log.Error("register failed", slog.String("error", err.Error()))
+			response.Error(w, http.StatusInternalServerError, "Internal server error")
+		}
+		return
+	}
+
+	response.JSON(w, http.StatusCreated, resp)
+}
+
 // GithubStatus handles GET /auth/github/status
 func (h *Handler) GithubStatus(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r)

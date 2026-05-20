@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"innogen-backend/repo_service/internal/dto"
 	"innogen-backend/repo_service/internal/githubapp"
@@ -263,7 +264,7 @@ func (s *RepoService) GetGithubConnection(ctx context.Context, userID int) (*dto
 	if err != nil {
 		return nil, err
 	}
-	if account == nil {
+	if account == nil || account.InstallationID == "" || strings.HasPrefix(account.InstallationID, "oauth_pending_") || account.GithubOwner == "" || account.Status != "active" {
 		return &dto.GithubConnectionResponse{Connected: false}, nil
 	}
 	return &dto.GithubConnectionResponse{
@@ -283,7 +284,16 @@ func (s *RepoService) LinkGithubInstallation(ctx context.Context, userID int, in
 		return nil, err
 	}
 	if inst == nil {
-		return nil, ErrInstallationNotFound
+		// Verify via GitHub API
+		if s.githubClient != nil {
+			if _, err := s.githubClient.GetInstallationToken(ctx, installationID); err == nil {
+				_ = s.repo.UpsertGithubInstallation(ctx, installationID, "", "")
+				inst, _ = s.repo.GetGithubInstallationByID(ctx, installationID)
+			}
+		}
+		if inst == nil {
+			return nil, ErrInstallationNotFound
+		}
 	}
 
 	// Check if installation already linked to another user
@@ -311,6 +321,11 @@ func (s *RepoService) LinkGithubInstallation(ctx context.Context, userID int, in
 		GithubOwner:     inst.GithubOwner,
 		GithubOwnerType: inst.GithubOwnerType,
 	}, nil
+}
+
+// DisconnectInstallation soft-disconnects the GitHub App installation for a user.
+func (s *RepoService) DisconnectInstallation(ctx context.Context, userID int) error {
+	return s.repo.UpdateGithubAccountStatusByUserID(ctx, userID, "disconnected")
 }
 
 func strPtr(s string) *string { return &s }

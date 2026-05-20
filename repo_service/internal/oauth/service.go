@@ -37,14 +37,17 @@ func (s *OAuthService) HandleCallback(ctx context.Context, code, stateToken stri
 	}
 	accessToken, err := s.client.ExchangeCode(ctx, code, s.cfg.GitHubOAuthRedirectURL)
 	if err != nil {
+		s.log.Error("oauth token exchange failed", slog.String("error", err.Error()))
 		return s.cfg.GitHubOAuthFrontendRedirectURL + "?oauth=error&message=token_exchange_failed", nil
 	}
 	user, err := s.client.GetUser(ctx, accessToken)
 	if err != nil {
+		s.log.Error("oauth user lookup failed", slog.String("error", err.Error()))
 		return s.cfg.GitHubOAuthFrontendRedirectURL + "?oauth=error&message=user_lookup_failed", nil
 	}
 	noreplyEmail := fmt.Sprintf("%d+%s@users.noreply.github.com", user.ID, user.Login)
 	if err := s.repo.UpsertGitHubOAuth(ctx, claims.UserID, fmt.Sprintf("%d", user.ID), user.Login, user.AvatarURL, noreplyEmail, user.Login); err != nil {
+		s.log.Error("oauth upsert failed", slog.String("error", err.Error()))
 		return s.cfg.GitHubOAuthFrontendRedirectURL + "?oauth=error&message=db_error", nil
 	}
 	s.log.Info("oauth account linked", slog.Int("userId", claims.UserID), slog.String("githubUser", user.Login))

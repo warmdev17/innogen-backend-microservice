@@ -111,6 +111,21 @@ func (r *UserRepository) GetGithubInstallationOwner(ctx context.Context, install
 	return owner, ownerType, nil
 }
 
+// CreateUser inserts a new user with bcrypt hashed password.
+func (r *UserRepository) CreateUser(ctx context.Context, email, passwordHash, username, fullName string) (*models.User, error) {
+	u := &models.User{}
+	err := r.pool.QueryRow(ctx,
+		`INSERT INTO users (email, password, username, full_name, role, is_active)
+         VALUES ($1, $2, $3, $4, 'student', true)
+         RETURNING id, email, username, full_name, role, is_active, created_at, updated_at`,
+		email, passwordHash, username, fullName,
+	).Scan(&u.ID, &u.Email, &u.Username, &u.FullName, &u.Role, &u.IsActive, &u.CreatedAt, &u.UpdatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("repository.CreateUser: %w", err)
+	}
+	return u, nil
+}
+
 // GetGithubAccountByUserID retrieves the github_account for a user (for status check).
 func (r *UserRepository) GetGithubAccountByUserID(ctx context.Context, userID int) (installationID, owner, ownerType, status string, err error) {
 	err = r.pool.QueryRow(ctx,

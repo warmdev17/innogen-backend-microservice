@@ -19,6 +19,7 @@
 - [x] STEP 14 — GitHub Commit E2E Visibility (commit URLs in submission responses)
 - [x] STEP 15 — Test UI GitHub Connect UX improvements
 - [x] STEP 16 — GitHub OAuth Account Linking (commit author identity)
+- [x] STEP 16 fix — Stabilize GitHub App installation lifecycle
 
 ### 🔜 Pending
 - [ ] STEP 17 — Commit attribution fix using OAuth identity

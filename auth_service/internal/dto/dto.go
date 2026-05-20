@@ -23,6 +23,28 @@ func (r *LoginRequest) Validate() string {
 	return ""
 }
 
+// RegisterRequest is the JSON body for POST /auth/register.
+type RegisterRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Username string `json:"username"`
+	FullName string `json:"fullName"`
+}
+
+// Validate returns an error message string if invalid.
+func (r *RegisterRequest) Validate() string {
+	if strings.TrimSpace(r.Email) == "" {
+		return "Email is required"
+	}
+	if len(r.Password) < 6 {
+		return "Password must be at least 6 characters"
+	}
+	if strings.TrimSpace(r.Username) == "" {
+		return "Username is required"
+	}
+	return ""
+}
+
 // LoginResponse is the JSON body returned by POST /auth/login.
 type LoginResponse struct {
 	AccessToken string       `json:"accessToken"`

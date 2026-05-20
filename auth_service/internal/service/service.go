@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -18,6 +19,8 @@ var (
 	ErrInvalidCredentials = errors.New("invalid email or password")
 	ErrAccountInactive    = errors.New("account is inactive")
 	ErrUserNotFound       = errors.New("user not found")
+	ErrEmailTaken         = errors.New("email already registered")
+	ErrUsernameTaken      = errors.New("username already taken")
 )
 
 // AuthService handles authentication business logic.
@@ -116,6 +119,45 @@ func (s *AuthService) HandleGithubCallback(ctx context.Context, installationID s
 	}
 
 	return s.cfg.FrontendURL + "/settings?github_status=connected", nil
+}
+
+// Register creates a new user account.
+func (s *AuthService) Register(ctx context.Context, req dto.RegisterRequest) (*dto.LoginResponse, error) {
+	if msg := req.Validate(); msg != "" {
+		return nil, fmt.Errorf("%w: %s", ErrInvalidInput, msg)
+	}
+
+	// Check if email exists
+	existing, err := s.repo.FindByEmail(ctx, req.Email)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return nil, ErrEmailTaken
+	}
+
+	// Hash password
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	// Create user
+	user, err := s.repo.CreateUser(ctx, req.Email, string(hash), req.Username, req.FullName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Generate JWT and return same as login
+	token, err := s.jwtSvc.GenerateToken(user.ID, user.Email, user.Role)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.LoginResponse{
+		AccessToken: token,
+		User:        dto.ToUserResponse(user),
+	}, nil
 }
 
 // GithubStatus returns the GitHub connection status for a user.

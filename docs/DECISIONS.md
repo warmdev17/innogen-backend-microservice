@@ -114,3 +114,11 @@
 - Noreply email: {github_user_id}+{username}@users.noreply.github.com
 - OAuth access token is NOT stored after use.
 - State uses signed JWT with 10-min expiry binding to the current RinnoGen user.
+
+### GitHub App Installation Lifecycle (Fix)
+- `installation_id` is NEVER manually provided by users. It comes from GitHub callback or webhook.
+- `github_installations` stores installation state independently from user link.
+- `github_accounts` links RinnoGen user to OAuth identity + active installation.
+- Uninstall is handled by `installation.deleted` webhook as soft deletion (status='deleted', uninstalled_at set).
+- Historical submissions/commits are preserved after uninstall.
+- `installed_at`/`uninstalled_at` track lifecycle timestamps.

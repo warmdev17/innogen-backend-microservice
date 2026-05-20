@@ -249,12 +249,12 @@ func (r *RepoRepository) GetGithubAccountByUserID(ctx context.Context, userID in
 	err := r.pool.QueryRow(ctx,
 		`SELECT id, user_id, installation_id, github_user_id, github_username, github_avatar_url,
                 github_owner, github_owner_type, status, github_noreply_email, commit_author_name,
-                oauth_connected_at, oauth_status, created_at, updated_at
+                oauth_connected_at, oauth_status, installed_at, uninstalled_at, created_at, updated_at
          FROM github_accounts WHERE user_id = $1`, userID,
 	).Scan(&a.ID, &a.UserID, &a.InstallationID, &a.GithubUserID, &a.GithubUsername,
 		&a.GithubAvatarURL, &a.GithubOwner, &a.GithubOwnerType, &a.Status,
 		&a.GithubNoreplyEmail, &a.CommitAuthorName, &a.OAuthConnectedAt, &a.OAuthStatus,
-		&a.CreatedAt, &a.UpdatedAt)
+		&a.InstalledAt, &a.UninstalledAt, &a.CreatedAt, &a.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
@@ -271,12 +271,12 @@ func (r *RepoRepository) GetGithubAccountByInstallationID(ctx context.Context, i
 	err := r.pool.QueryRow(ctx,
 		`SELECT id, user_id, installation_id, github_user_id, github_username, github_avatar_url,
                 github_owner, github_owner_type, status, github_noreply_email, commit_author_name,
-                oauth_connected_at, oauth_status, created_at, updated_at
+                oauth_connected_at, oauth_status, installed_at, uninstalled_at, created_at, updated_at
          FROM github_accounts WHERE installation_id = $1`, installationID,
 	).Scan(&a.ID, &a.UserID, &a.InstallationID, &a.GithubUserID, &a.GithubUsername,
 		&a.GithubAvatarURL, &a.GithubOwner, &a.GithubOwnerType, &a.Status,
 		&a.GithubNoreplyEmail, &a.CommitAuthorName, &a.OAuthConnectedAt, &a.OAuthStatus,
-		&a.CreatedAt, &a.UpdatedAt)
+		&a.InstalledAt, &a.UninstalledAt, &a.CreatedAt, &a.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
@@ -323,12 +323,14 @@ func (r *RepoRepository) InsertSubmissionCommitWithURLTx(ctx context.Context, tx
 // UpsertGithubInstallation creates or updates a GitHub installation record.
 func (r *RepoRepository) UpsertGithubInstallation(ctx context.Context, installationID, owner, ownerType string) error {
 	_, err := r.pool.Exec(ctx,
-		`INSERT INTO github_installations (installation_id, github_owner, github_owner_type)
-         VALUES ($1, $2, $3)
+		`INSERT INTO github_installations (installation_id, github_owner, github_owner_type, is_active, installed_at)
+         VALUES ($1, $2, $3, true, CURRENT_TIMESTAMP)
          ON CONFLICT (installation_id) DO UPDATE SET
              github_owner = EXCLUDED.github_owner,
              github_owner_type = EXCLUDED.github_owner_type,
              is_active = true,
+             installed_at = COALESCE(github_installations.installed_at, CURRENT_TIMESTAMP),
+             uninstalled_at = NULL,
              updated_at = CURRENT_TIMESTAMP`,
 		installationID, owner, ownerType,
 	)
@@ -341,7 +343,7 @@ func (r *RepoRepository) UpsertGithubInstallation(ctx context.Context, installat
 // UpdateGithubInstallationStatus sets the active status of a GitHub installation.
 func (r *RepoRepository) UpdateGithubInstallationStatus(ctx context.Context, installationID string, isActive bool) error {
 	_, err := r.pool.Exec(ctx,
-		`UPDATE github_installations SET is_active = $2, updated_at = CURRENT_TIMESTAMP WHERE installation_id = $1`,
+		`UPDATE github_installations SET is_active=$2, uninstalled_at=CASE WHEN $2 THEN NULL ELSE COALESCE(uninstalled_at, CURRENT_TIMESTAMP) END, updated_at=CURRENT_TIMESTAMP WHERE installation_id=$1`,
 		installationID, isActive,
 	)
 	if err != nil {
@@ -353,7 +355,7 @@ func (r *RepoRepository) UpdateGithubInstallationStatus(ctx context.Context, ins
 // UpdateGithubAccountStatusByInstallation updates the status of github_accounts linked to an installation.
 func (r *RepoRepository) UpdateGithubAccountStatusByInstallation(ctx context.Context, installationID, status string) error {
 	_, err := r.pool.Exec(ctx,
-		`UPDATE github_accounts SET status = $2, updated_at = CURRENT_TIMESTAMP WHERE installation_id = $1`,
+		`UPDATE github_accounts SET status=$2, uninstalled_at=CASE WHEN $2 IN ('deleted','suspended') THEN COALESCE(uninstalled_at, CURRENT_TIMESTAMP) ELSE NULL END, updated_at=CURRENT_TIMESTAMP WHERE installation_id=$1`,
 		installationID, status,
 	)
 	if err != nil {
@@ -406,9 +408,9 @@ func (r *RepoRepository) UpdateRepositoriesStatusByOwner(ctx context.Context, gi
 func (r *RepoRepository) GetGithubInstallationByID(ctx context.Context, installationID string) (*models.GithubInstallation, error) {
 	inst := &models.GithubInstallation{}
 	err := r.pool.QueryRow(ctx,
-		`SELECT id, installation_id, github_owner, github_owner_type, is_active, created_at, updated_at
+		`SELECT id, installation_id, github_owner, github_owner_type, is_active, installed_at, uninstalled_at, created_at, updated_at
          FROM github_installations WHERE installation_id = $1`, installationID,
-	).Scan(&inst.ID, &inst.InstallationID, &inst.GithubOwner, &inst.GithubOwnerType, &inst.IsActive, &inst.CreatedAt, &inst.UpdatedAt)
+	).Scan(&inst.ID, &inst.InstallationID, &inst.GithubOwner, &inst.GithubOwnerType, &inst.IsActive, &inst.InstalledAt, &inst.UninstalledAt, &inst.CreatedAt, &inst.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
@@ -421,13 +423,15 @@ func (r *RepoRepository) GetGithubInstallationByID(ctx context.Context, installa
 // UpsertGithubAccount creates or updates a github_accounts row for a user.
 func (r *RepoRepository) UpsertGithubAccount(ctx context.Context, userID int, installationID, githubOwner, githubOwnerType string) error {
 	_, err := r.pool.Exec(ctx,
-		`INSERT INTO github_accounts (user_id, installation_id, github_owner, github_owner_type, status)
-         VALUES ($1, $2, $3, $4, 'active')
+		`INSERT INTO github_accounts (user_id, installation_id, github_owner, github_owner_type, status, installed_at)
+         VALUES ($1, $2, $3, $4, 'active', CURRENT_TIMESTAMP)
          ON CONFLICT (user_id) DO UPDATE SET
              installation_id = EXCLUDED.installation_id,
              github_owner = EXCLUDED.github_owner,
              github_owner_type = EXCLUDED.github_owner_type,
              status = 'active',
+             installed_at = COALESCE(github_accounts.installed_at, CURRENT_TIMESTAMP),
+             uninstalled_at = NULL,
              updated_at = CURRENT_TIMESTAMP`,
 		userID, installationID, githubOwner, githubOwnerType,
 	)
@@ -437,12 +441,12 @@ func (r *RepoRepository) UpsertGithubAccount(ctx context.Context, userID int, in
 	return nil
 }
 
-// UpdateGithubAccountOwnerByInstallation updates the owner, owner_type, and status on github_accounts
+// UpdateGithubAccountOwnerByInstallation updates the installation_id, owner, owner_type, and status on github_accounts
 // linked to a given installation_id. Used by webhook handler to backfill data set by OAuth callback.
 func (r *RepoRepository) UpdateGithubAccountOwnerByInstallation(ctx context.Context, installationID, owner, ownerType, status string) error {
 	_, err := r.pool.Exec(ctx,
-		`UPDATE github_accounts SET github_owner = $2, github_owner_type = $3, status = $4, updated_at = CURRENT_TIMESTAMP WHERE installation_id = $1`,
-		installationID, owner, ownerType, status,
+		`UPDATE github_accounts SET installation_id = $2, github_owner = $3, github_owner_type = $4, status = $5, updated_at = CURRENT_TIMESTAMP WHERE installation_id = $1`,
+		installationID, installationID, owner, ownerType, status,
 	)
 	if err != nil {
 		return fmt.Errorf("repository.UpdateGithubAccountOwnerByInstallation: %w", err)
@@ -451,9 +455,20 @@ func (r *RepoRepository) UpdateGithubAccountOwnerByInstallation(ctx context.Cont
 }
 
 func (r *RepoRepository) UpsertGitHubOAuth(ctx context.Context, userID int, githubUserID, githubUsername, githubAvatarURL, githubNoreplyEmail, commitAuthorName string) error {
+	installationID := fmt.Sprintf("oauth_pending_%d", userID)
 	_, err := r.pool.Exec(ctx,
-		`UPDATE github_accounts SET github_user_id=$2, github_username=$3, github_avatar_url=$4, github_noreply_email=$5, commit_author_name=$6, oauth_connected_at=CURRENT_TIMESTAMP, oauth_status='connected', updated_at=CURRENT_TIMESTAMP WHERE user_id=$1`,
-		userID, githubUserID, githubUsername, githubAvatarURL, githubNoreplyEmail, commitAuthorName,
+		`INSERT INTO github_accounts (user_id, installation_id, github_owner, github_owner_type, status, github_user_id, github_username, github_avatar_url, github_noreply_email, commit_author_name, oauth_connected_at, oauth_status)
+         VALUES ($1, $2, '', 'User', 'active', $3, $4, $5, $6, $7, CURRENT_TIMESTAMP, 'connected')
+         ON CONFLICT (user_id) DO UPDATE SET
+             github_user_id = EXCLUDED.github_user_id,
+             github_username = EXCLUDED.github_username,
+             github_avatar_url = EXCLUDED.github_avatar_url,
+             github_noreply_email = EXCLUDED.github_noreply_email,
+             commit_author_name = EXCLUDED.commit_author_name,
+             oauth_connected_at = EXCLUDED.oauth_connected_at,
+             oauth_status = EXCLUDED.oauth_status,
+             updated_at = CURRENT_TIMESTAMP`,
+		userID, installationID, githubUserID, githubUsername, githubAvatarURL, githubNoreplyEmail, commitAuthorName,
 	)
 	if err != nil {
 		return fmt.Errorf("repository.UpsertGitHubOAuth: %w", err)
@@ -478,6 +493,14 @@ func (r *RepoRepository) DisconnectGitHubOAuth(ctx context.Context, userID int) 
 	_, err := r.pool.Exec(ctx, `UPDATE github_accounts SET oauth_status='disconnected', updated_at=CURRENT_TIMESTAMP WHERE user_id=$1`, userID)
 	if err != nil {
 		return fmt.Errorf("repository.DisconnectGitHubOAuth: %w", err)
+	}
+	return nil
+}
+
+func (r *RepoRepository) UpdateGithubAccountStatusByUserID(ctx context.Context, userID int, status string) error {
+	_, err := r.pool.Exec(ctx, `UPDATE github_accounts SET status=$2, uninstalled_at=CASE WHEN $2 IN ('deleted','suspended','disconnected') THEN COALESCE(uninstalled_at, CURRENT_TIMESTAMP) ELSE NULL END, updated_at=CURRENT_TIMESTAMP WHERE user_id=$1`, userID, status)
+	if err != nil {
+		return fmt.Errorf("repository.UpdateGithubAccountStatusByUserID: %w", err)
 	}
 	return nil
 }

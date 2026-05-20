@@ -159,6 +159,12 @@ export default function GithubConnect() {
             <p><strong>Installation ID:</strong> {state.installationId}</p>
             <p><strong>Status:</strong> <span className="success">{state.status}</span></p>
             <button onClick={checkConnection} style={{ marginTop: '1rem' }}>Refresh Status</button>
+            <button onClick={async () => {
+                try {
+                    await request('POST', '/github/disconnect')
+                    await checkConnection()
+                } catch(e: any) { alert('Failed: ' + e.message) }
+            }} className="danger" style={{marginLeft:'0.5rem'}}>Disconnect</button>
           </div>
         ) : (
           <div>

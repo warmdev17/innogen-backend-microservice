@@ -179,6 +179,8 @@ CREATE TABLE github_accounts (
     commit_author_name varchar(255),
     oauth_connected_at timestamp,
     oauth_status varchar(20) NOT NULL DEFAULT 'disconnected',
+    installed_at timestamp,
+    uninstalled_at timestamp,
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_github_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
@@ -201,6 +203,8 @@ CREATE TABLE github_installations (
     github_owner varchar(255) NOT NULL,
     github_owner_type varchar(20) NOT NULL,
     is_active boolean NOT NULL DEFAULT TRUE,
+    installed_at timestamp,
+    uninstalled_at timestamp,
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT chk_github_installations_owner_type CHECK (github_owner_type IN ('User', 'Organization'))

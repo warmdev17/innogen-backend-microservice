@@ -165,3 +165,18 @@ func (h *Handler) LinkGithubInstallation(w http.ResponseWriter, r *http.Request)
 	}
 	response.JSON(w, http.StatusOK, resp)
 }
+
+// DisconnectInstallation handles POST /github/disconnect
+func (h *Handler) DisconnectInstallation(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserID(r)
+	if !ok {
+		response.Error(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+	if err := h.svc.DisconnectInstallation(r.Context(), userID); err != nil {
+		h.log.Error("disconnect failed", slog.String("error", err.Error()))
+		response.Error(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+	response.JSON(w, http.StatusOK, map[string]string{"status": "disconnected"})
+}

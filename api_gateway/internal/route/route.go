@@ -55,6 +55,7 @@ func RegisterProxyRoutes(mux *http.ServeMux, proxies *ProxySet, log *slog.Logger
 
 	// Public auth route — only strip X-User-* headers, keep Authorization intact
 	mux.Handle("POST /auth/login", stripUserHeaders(proxies.AuthPublic))
+	mux.Handle("POST /auth/register", stripUserHeaders(proxies.AuthPublic))
 
 	// Authenticated routes — validate JWT, strip all auth headers, inject from claims
 	mux.Handle("GET /auth/me", authMW(stripAllAuth(proxies.Auth)))
@@ -77,6 +78,7 @@ func RegisterProxyRoutes(mux *http.ServeMux, proxies *ProxySet, log *slog.Logger
 	// GitHub App connection routes
 	mux.Handle("GET /github/connection", authMW(stripAllAuth(proxies.Repo)))
 	mux.Handle("POST /github/installations/link", authMW(stripAllAuth(proxies.Repo)))
+	mux.Handle("POST /github/disconnect", authMW(stripAllAuth(proxies.Repo)))
 
 	// GitHub OAuth routes
 	mux.Handle("GET /github/oauth/start-url", authMW(stripAllAuth(proxies.Repo)))

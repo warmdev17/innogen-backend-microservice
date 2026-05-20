@@ -17,6 +17,7 @@ func Register(mux *http.ServeMux, h *handler.Handler, wh *webhook.WebhookHandler
 	mux.HandleFunc("POST /webhooks/github", wh.HandleWebhook)
 	mux.Handle("GET /github/connection", middleware.XUserID()(http.HandlerFunc(h.GetGithubConnection)))
 	mux.Handle("POST /github/installations/link", middleware.XUserID()(http.HandlerFunc(h.LinkGithubInstallation)))
+	mux.Handle("POST /github/disconnect", middleware.XUserID()(http.HandlerFunc(h.DisconnectInstallation)))
 
 	// GitHub OAuth routes
 	mux.Handle("GET /github/oauth/start-url", middleware.XUserID()(http.HandlerFunc(oh.StartURL)))
