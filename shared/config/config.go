@@ -1,6 +1,9 @@
 package config
 
-import "os"
+import (
+	"os"
+	"strconv"
+)
 
 // Config holds all configuration values loaded from environment variables.
 type Config struct {
@@ -30,6 +33,11 @@ type Config struct {
 	RunServiceURL                  string
 	SubmissionServiceURL           string
 	RepoServiceURL                 string
+	CORSAllowedOrigins             string
+	MaxBodyBytes                   int
+	RateLimitRequests              int
+	RateLimitWindowSeconds         int
+	UpstreamTimeoutSeconds         int
 }
 
 // defaults defines the fallback values for configuration keys.
@@ -60,6 +68,11 @@ var defaults = map[string]string{
 	"RUN_SERVICE_URL":                    "http://localhost:8082",
 	"SUBMISSION_SERVICE_URL":             "http://localhost:8083",
 	"REPO_SERVICE_URL":                   "http://localhost:8084",
+	"CORS_ALLOWED_ORIGINS":               "http://localhost:3000,http://localhost:5173",
+	"MAX_BODY_BYTES":                     "1048576",
+	"RATE_LIMIT_REQUESTS":                "120",
+	"RATE_LIMIT_WINDOW_SECONDS":          "60",
+	"UPSTREAM_TIMEOUT_SECONDS":           "30",
 }
 
 // getEnv returns the value of the environment variable named by key, or the
@@ -101,5 +114,15 @@ func Load() *Config {
 		RunServiceURL:                  getEnv("RUN_SERVICE_URL"),
 		SubmissionServiceURL:           getEnv("SUBMISSION_SERVICE_URL"),
 		RepoServiceURL:                 getEnv("REPO_SERVICE_URL"),
+		CORSAllowedOrigins:             getEnv("CORS_ALLOWED_ORIGINS"),
+		MaxBodyBytes:                   atoi(getEnv("MAX_BODY_BYTES")),
+		RateLimitRequests:              atoi(getEnv("RATE_LIMIT_REQUESTS")),
+		RateLimitWindowSeconds:         atoi(getEnv("RATE_LIMIT_WINDOW_SECONDS")),
+		UpstreamTimeoutSeconds:         atoi(getEnv("UPSTREAM_TIMEOUT_SECONDS")),
 	}
+}
+
+func atoi(s string) int {
+	n, _ := strconv.Atoi(s)
+	return n
 }

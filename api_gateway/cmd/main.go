@@ -5,10 +5,10 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"time"
 
 	"innogen-backend/api_gateway/internal/admin"
 	"innogen-backend/api_gateway/internal/curriculum"
+	"innogen-backend/api_gateway/internal/middleware"
 	"innogen-backend/api_gateway/internal/problem"
 	"innogen-backend/api_gateway/internal/proxy"
 	"innogen-backend/api_gateway/internal/route"
@@ -17,52 +17,6 @@ import (
 	"innogen-backend/shared/logger"
 	"innogen-backend/shared/response"
 )
-
-// allowedOrigins lists origins permitted for CORS requests.
-var allowedOrigins = map[string]bool{
-	"http://localhost:5173":               true,
-	"http://localhost:3000":               true,
-	"https://maiphuongtrunghieu.site":     true,
-	"https://www.maiphuongtrunghieu.site": true,
-}
-
-// requestLogger logs every HTTP request.
-func requestLogger(log *slog.Logger, next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		next.ServeHTTP(w, r)
-		log.Info("request",
-			slog.String("method", r.Method),
-			slog.String("path", r.URL.Path),
-			slog.Duration("duration", time.Since(start)),
-		)
-	})
-}
-
-// corsMiddleware adds CORS headers for allowed origins.
-func corsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		origin := r.Header.Get("Origin")
-
-		if r.Method == http.MethodOptions {
-			if allowedOrigins[origin] {
-				w.Header().Set("Access-Control-Allow-Origin", origin)
-				w.Header().Set("Vary", "Origin")
-				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
-				w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-User-ID, X-User-Email, X-User-Role")
-			}
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-
-		if allowedOrigins[origin] {
-			w.Header().Set("Access-Control-Allow-Origin", origin)
-			w.Header().Set("Vary", "Origin")
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}
 
 func main() {
 	cfg := config.Load()
@@ -152,7 +106,20 @@ func main() {
 	addr := ":" + cfg.APIGatewayPort
 	log.Info("api-gateway listening on " + addr)
 
-	handler := requestLogger(log, corsMiddleware(mux))
+	// Middleware chain (outermost first)
+	rateLimiter := middleware.NewRateLimiter(cfg.RateLimitRequests, cfg.RateLimitWindowSeconds)
+
+	handler := middleware.Recover(log,
+		middleware.RequestLogger(log,
+			middleware.RequestID(
+				middleware.CORS(cfg.CORSAllowedOrigins)(
+					middleware.BodyLimit(cfg.MaxBodyBytes)(
+						middleware.RateLimit(rateLimiter)(mux),
+					),
+				),
+			),
+		),
+	)
 	if err := http.ListenAndServe(addr, handler); err != nil {
 		log.Error("server failed", slog.String("error", err.Error()))
 		os.Exit(1)
