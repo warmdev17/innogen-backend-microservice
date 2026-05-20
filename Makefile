@@ -1,6 +1,6 @@
 DATABASE_URL ?= postgres://innogen:innogen@localhost:5432/innogen?sslmode=disable
 
-.PHONY: run-gateway run-auth run-runner run-submission run-submission-worker run-repo run-all stop-all tidy fmt test compose-up compose-down logs-piston piston-install seed-dev e2e e2e-github test-ui-install test-ui test-ui-build
+.PHONY: run-gateway run-auth run-runner run-submission run-submission-worker run-repo run-all stop-all tidy fmt test compose-up compose-down logs-piston piston-install seed-dev seed-problems e2e e2e-github test-ui-install test-ui test-ui-build
 
 run-gateway:
 	go run ./api_gateway/cmd/main.go
@@ -48,6 +48,10 @@ piston-install:
 seed-dev:
 	psql "$(DATABASE_URL)" -f schema.sql
 	psql "$(DATABASE_URL)" -f seeds/dev_seed.sql
+	psql "$(DATABASE_URL)" -f seeds/dev_problem_pack.sql
+
+seed-problems:
+	psql "$(DATABASE_URL)" -f seeds/dev_problem_pack.sql
 
 e2e: piston-install
 	bash scripts/e2e_mvp.sh
