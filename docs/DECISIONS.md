@@ -115,6 +115,12 @@
 - OAuth access token is NOT stored after use.
 - State uses signed JWT with 10-min expiry binding to the current RinnoGen user.
 
+### API Response Contract
+- All responses use envelope: `{status, code, message, data}` for success, `{status, code, message, error, details}` for errors
+- `code` is the HTTP status code number
+- `error` is the machine-readable code (BAD_REQUEST, UNAUTHORIZED, etc.)
+- Business statuses (submission status, run result) stay inside `data`
+
 ### GitHub App Installation Lifecycle (Fix)
 - `installation_id` is NEVER manually provided by users. It comes from GitHub callback or webhook.
 - `github_installations` stores installation state independently from user link.

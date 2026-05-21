@@ -27,14 +27,14 @@ func New(svc *service.RepoService, log *slog.Logger) *Handler {
 func (h *Handler) ListRepositories(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r)
 	if !ok {
-		response.Error(w, http.StatusUnauthorized, "Unauthorized")
+		response.ErrorSimple(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
 	repos, err := h.svc.ListRepositories(r.Context(), userID)
 	if err != nil {
 		h.log.Error("list repositories failed", slog.String("error", err.Error()))
-		response.Error(w, http.StatusInternalServerError, "Internal server error")
+		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
@@ -45,28 +45,28 @@ func (h *Handler) ListRepositories(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) CommitAcceptedSubmission(w http.ResponseWriter, r *http.Request) {
 	var req dto.CommitAcceptedSubmissionRequest
 	if err := response.DecodeJSON(r, &req); err != nil {
-		response.Error(w, http.StatusBadRequest, "Invalid request body")
+		response.ErrorSimple(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	if req.SubmissionID == "" {
-		response.Error(w, http.StatusBadRequest, "Missing required field: submissionId")
+		response.ErrorSimple(w, http.StatusBadRequest, "Missing required field: submissionId")
 		return
 	}
 	if req.UserID <= 0 {
-		response.Error(w, http.StatusBadRequest, "Missing required field: userId")
+		response.ErrorSimple(w, http.StatusBadRequest, "Missing required field: userId")
 		return
 	}
 	if req.ProblemID <= 0 {
-		response.Error(w, http.StatusBadRequest, "Missing required field: problemId")
+		response.ErrorSimple(w, http.StatusBadRequest, "Missing required field: problemId")
 		return
 	}
 	if req.LanguageID <= 0 {
-		response.Error(w, http.StatusBadRequest, "Missing required field: languageId")
+		response.ErrorSimple(w, http.StatusBadRequest, "Missing required field: languageId")
 		return
 	}
 	if req.Code == "" {
-		response.Error(w, http.StatusBadRequest, "Missing required field: code")
+		response.ErrorSimple(w, http.StatusBadRequest, "Missing required field: code")
 		return
 	}
 
@@ -81,11 +81,11 @@ func (h *Handler) CommitAcceptedSubmission(w http.ResponseWriter, r *http.Reques
 	resp, err := h.svc.CommitAcceptedSubmission(r.Context(), svcReq)
 	if err != nil {
 		if errors.Is(err, service.ErrGithubAccountNotFound) {
-			response.Error(w, http.StatusNotFound, "GitHub account not linked")
+			response.ErrorSimple(w, http.StatusNotFound, "GitHub account not linked")
 			return
 		}
 		h.log.Error("commit accepted submission failed", slog.String("error", err.Error()))
-		response.Error(w, http.StatusInternalServerError, "Internal server error")
+		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
@@ -96,25 +96,25 @@ func (h *Handler) CommitAcceptedSubmission(w http.ResponseWriter, r *http.Reques
 func (h *Handler) ListCommits(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r)
 	if !ok {
-		response.Error(w, http.StatusUnauthorized, "Unauthorized")
+		response.ErrorSimple(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
 	idStr := r.PathValue("id")
 	repoID, err := strconv.Atoi(idStr)
 	if err != nil || repoID <= 0 {
-		response.Error(w, http.StatusBadRequest, "Invalid repository ID")
+		response.ErrorSimple(w, http.StatusBadRequest, "Invalid repository ID")
 		return
 	}
 
 	commits, err := h.svc.ListCommits(r.Context(), userID, repoID)
 	if err != nil {
 		if errors.Is(err, service.ErrRepositoryNotFound) {
-			response.Error(w, http.StatusNotFound, "Repository not found")
+			response.ErrorSimple(w, http.StatusNotFound, "Repository not found")
 			return
 		}
 		h.log.Error("list commits failed", slog.String("error", err.Error()))
-		response.Error(w, http.StatusInternalServerError, "Internal server error")
+		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
@@ -125,13 +125,13 @@ func (h *Handler) ListCommits(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetGithubConnection(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r)
 	if !ok {
-		response.Error(w, http.StatusUnauthorized, "Unauthorized")
+		response.ErrorSimple(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 	resp, err := h.svc.GetGithubConnection(r.Context(), userID)
 	if err != nil {
 		h.log.Error("get github connection failed", slog.String("error", err.Error()))
-		response.Error(w, http.StatusInternalServerError, "Internal server error")
+		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 	response.JSON(w, http.StatusOK, resp)
@@ -141,26 +141,26 @@ func (h *Handler) GetGithubConnection(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) LinkGithubInstallation(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r)
 	if !ok {
-		response.Error(w, http.StatusUnauthorized, "Unauthorized")
+		response.ErrorSimple(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 	var req dto.LinkGithubInstallationRequest
 	if err := response.DecodeJSON(r, &req); err != nil || req.InstallationID == "" {
-		response.Error(w, http.StatusBadRequest, "Invalid request body")
+		response.ErrorSimple(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 	resp, err := h.svc.LinkGithubInstallation(r.Context(), userID, req.InstallationID)
 	if err != nil {
 		if errors.Is(err, service.ErrInstallationNotFound) {
-			response.Error(w, http.StatusNotFound, "Installation not yet registered. Wait for webhook or retry.")
+			response.ErrorSimple(w, http.StatusNotFound, "Installation not yet registered. Wait for webhook or retry.")
 			return
 		}
 		if errors.Is(err, service.ErrInstallationAlreadyLinked) {
-			response.Error(w, http.StatusConflict, "Installation already linked to another user")
+			response.ErrorSimple(w, http.StatusConflict, "Installation already linked to another user")
 			return
 		}
 		h.log.Error("link installation failed", slog.String("error", err.Error()))
-		response.Error(w, http.StatusInternalServerError, "Internal server error")
+		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 	response.JSON(w, http.StatusOK, resp)
@@ -170,12 +170,12 @@ func (h *Handler) LinkGithubInstallation(w http.ResponseWriter, r *http.Request)
 func (h *Handler) DisconnectInstallation(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r)
 	if !ok {
-		response.Error(w, http.StatusUnauthorized, "Unauthorized")
+		response.ErrorSimple(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 	if err := h.svc.DisconnectInstallation(r.Context(), userID); err != nil {
 		h.log.Error("disconnect failed", slog.String("error", err.Error()))
-		response.Error(w, http.StatusInternalServerError, "Internal server error")
+		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 	response.JSON(w, http.StatusOK, map[string]string{"status": "disconnected"})

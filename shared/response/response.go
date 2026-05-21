@@ -7,49 +7,93 @@ import (
 	"net/http"
 )
 
-// JSON writes a JSON response with the given status code and data.
-// It sets the Content-Type header to application/json.
-// If marshaling fails, it writes a 500 Internal Server Error response.
-func JSON(w http.ResponseWriter, status int, data any) {
+// SuccessEnvelope wraps a successful response.
+type SuccessEnvelope struct {
+	Status  string `json:"status"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Data    any    `json:"data"`
+}
+
+// ErrorEnvelope wraps an error response.
+type ErrorEnvelope struct {
+	Status  string `json:"status"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Error   string `json:"error"`
+	Details any    `json:"details"`
+}
+
+// Success writes a standardized success response.
+func Success(w http.ResponseWriter, status int, data any, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-
-	if data == nil {
-		return
+	if message == "" {
+		message = http.StatusText(status)
 	}
+	_ = json.NewEncoder(w).Encode(SuccessEnvelope{
+		Status: "success", Code: status, Message: message, Data: data,
+	})
+}
 
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		// At this point the header may already be partially sent,
-		// so we attempt to write the error body only if possible.
-		http.Error(w, `{"error":"internal server error"}`+"\n", http.StatusInternalServerError)
+// Error writes a standardized error response with a machine-readable code.
+func Error(w http.ResponseWriter, status int, message string, machineCode string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(ErrorEnvelope{
+		Status: "error", Code: status, Message: message, Error: machineCode, Details: nil,
+	})
+}
+
+// ErrorCode maps HTTP status to machine-readable error code.
+func ErrorCode(status int) string {
+	switch status {
+	case http.StatusBadRequest:
+		return "BAD_REQUEST"
+	case http.StatusUnauthorized:
+		return "UNAUTHORIZED"
+	case http.StatusForbidden:
+		return "FORBIDDEN"
+	case http.StatusNotFound:
+		return "NOT_FOUND"
+	case http.StatusConflict:
+		return "CONFLICT"
+	case http.StatusRequestEntityTooLarge:
+		return "REQUEST_TOO_LARGE"
+	case http.StatusTooManyRequests:
+		return "RATE_LIMITED"
+	case http.StatusBadGateway:
+		return "UPSTREAM_ERROR"
+	case http.StatusGatewayTimeout:
+		return "TIMEOUT"
+	case http.StatusInternalServerError:
+		return "INTERNAL_ERROR"
+	default:
+		return "UNKNOWN_ERROR"
 	}
 }
 
-// Error writes a JSON error response with the given status code and message.
-// The response body is {"error": "message"}.
-func Error(w http.ResponseWriter, status int, message string) {
-	JSON(w, status, map[string]string{"error": message})
+// ErrorSimple writes an error with machine code derived from status.
+func ErrorSimple(w http.ResponseWriter, status int, message string) {
+	Error(w, status, message, ErrorCode(status))
+}
+
+// JSON is deprecated — use Success instead. Kept for internal backward compat.
+func JSON(w http.ResponseWriter, status int, data any) {
+	Success(w, status, data, "")
 }
 
 // DecodeJSON decodes the JSON request body into the provided destination.
-// It returns an error if the body is empty or if decoding fails.
 func DecodeJSON(r *http.Request, dst any) error {
 	if r.Body == nil {
 		return errors.New("request body is empty")
 	}
-
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return err
 	}
-
 	if len(body) == 0 {
 		return errors.New("request body is empty")
 	}
-
-	if err := json.Unmarshal(body, dst); err != nil {
-		return err
-	}
-
-	return nil
+	return json.Unmarshal(body, dst)
 }

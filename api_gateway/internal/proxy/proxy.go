@@ -67,6 +67,6 @@ func proxyErrorHandler(log *slog.Logger) func(http.ResponseWriter, *http.Request
 			slog.String("path", r.URL.Path),
 			slog.String("error", err.Error()),
 		)
-		response.Error(w, http.StatusBadGateway, "Bad gateway")
+		response.ErrorSimple(w, http.StatusBadGateway, "Bad gateway")
 	}
 }

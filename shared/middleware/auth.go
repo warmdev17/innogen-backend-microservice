@@ -35,13 +35,13 @@ func Auth(jwtSecret string) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
-				response.Error(w, http.StatusUnauthorized, "Missing authorization header")
+				response.ErrorSimple(w, http.StatusUnauthorized, "Missing authorization header")
 				return
 			}
 
 			tokenString, ok := strings.CutPrefix(authHeader, "Bearer ")
 			if !ok || tokenString == "" {
-				response.Error(w, http.StatusUnauthorized, "Invalid token format")
+				response.ErrorSimple(w, http.StatusUnauthorized, "Invalid token format")
 				return
 			}
 
@@ -53,7 +53,7 @@ func Auth(jwtSecret string) func(http.Handler) http.Handler {
 				return []byte(jwtSecret), nil
 			})
 			if err != nil || !token.Valid {
-				response.Error(w, http.StatusUnauthorized, "Invalid or expired token")
+				response.ErrorSimple(w, http.StatusUnauthorized, "Invalid or expired token")
 				return
 			}
 
@@ -93,13 +93,13 @@ func XUserID() func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			userIDStr := r.Header.Get("X-User-ID")
 			if userIDStr == "" {
-				response.Error(w, http.StatusUnauthorized, "Missing X-User-ID header")
+				response.ErrorSimple(w, http.StatusUnauthorized, "Missing X-User-ID header")
 				return
 			}
 
 			userID, err := strconv.Atoi(userIDStr)
 			if err != nil || userID <= 0 {
-				response.Error(w, http.StatusUnauthorized, "Invalid X-User-ID")
+				response.ErrorSimple(w, http.StatusUnauthorized, "Invalid X-User-ID")
 				return
 			}
 

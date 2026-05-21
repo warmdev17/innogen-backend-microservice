@@ -25,7 +25,7 @@ func New(svc *service.RunService, log *slog.Logger) *Handler {
 func (h *Handler) Run(w http.ResponseWriter, r *http.Request) {
 	var req dto.RunRequest
 	if err := response.DecodeJSON(r, &req); err != nil {
-		response.Error(w, http.StatusBadRequest, "Invalid request body")
+		response.ErrorSimple(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
@@ -33,14 +33,14 @@ func (h *Handler) Run(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidInput):
-			response.Error(w, http.StatusBadRequest, "Invalid request body")
+			response.ErrorSimple(w, http.StatusBadRequest, "Invalid request body")
 		case errors.Is(err, service.ErrProblemNotFound):
-			response.Error(w, http.StatusNotFound, "Problem not found")
+			response.ErrorSimple(w, http.StatusNotFound, "Problem not found")
 		case errors.Is(err, service.ErrLanguageNotFound):
-			response.Error(w, http.StatusNotFound, "Language not found")
+			response.ErrorSimple(w, http.StatusNotFound, "Language not found")
 		default:
 			h.log.Error("run failed", slog.String("error", err.Error()))
-			response.Error(w, http.StatusInternalServerError, "Internal server error")
+			response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		}
 		return
 	}

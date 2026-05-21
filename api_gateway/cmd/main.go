@@ -128,8 +128,8 @@ func main() {
 
 // healthHandler responds with the service health status.
 func healthHandler(w http.ResponseWriter, r *http.Request) {
-	response.JSON(w, http.StatusOK, map[string]string{
+	response.Success(w, http.StatusOK, map[string]string{
 		"status":  "ok",
 		"service": "api-gateway",
-	})
+	}, "OK")
 }

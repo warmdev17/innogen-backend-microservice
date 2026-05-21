@@ -24,7 +24,7 @@ func (h *Handler) ListSubjects(w http.ResponseWriter, r *http.Request) {
 	subjects, err := h.repo.FindAllSubjects(r.Context())
 	if err != nil {
 		h.log.Error("failed to list subjects", slog.String("error", err.Error()))
-		response.Error(w, http.StatusInternalServerError, "Internal server error")
+		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
@@ -40,18 +40,18 @@ func (h *Handler) ListSubjects(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetSubject(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 	if slug == "" {
-		response.Error(w, http.StatusBadRequest, "Missing subject slug")
+		response.ErrorSimple(w, http.StatusBadRequest, "Missing subject slug")
 		return
 	}
 
 	subject, err := h.repo.FindSubjectBySlug(r.Context(), slug)
 	if err != nil {
 		h.log.Error("failed to get subject", slog.String("slug", slug), slog.String("error", err.Error()))
-		response.Error(w, http.StatusInternalServerError, "Internal server error")
+		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 	if subject == nil {
-		response.Error(w, http.StatusNotFound, "Subject not found")
+		response.ErrorSimple(w, http.StatusNotFound, "Subject not found")
 		return
 	}
 
@@ -62,25 +62,25 @@ func (h *Handler) GetSubject(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ListSessions(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 	if slug == "" {
-		response.Error(w, http.StatusBadRequest, "Missing subject slug")
+		response.ErrorSimple(w, http.StatusBadRequest, "Missing subject slug")
 		return
 	}
 
 	subject, err := h.repo.FindSubjectBySlug(r.Context(), slug)
 	if err != nil {
 		h.log.Error("failed to find subject for sessions", slog.String("slug", slug), slog.String("error", err.Error()))
-		response.Error(w, http.StatusInternalServerError, "Internal server error")
+		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 	if subject == nil {
-		response.Error(w, http.StatusNotFound, "Subject not found")
+		response.ErrorSimple(w, http.StatusNotFound, "Subject not found")
 		return
 	}
 
 	sessions, err := h.repo.FindSessionsBySubjectID(r.Context(), subject.ID)
 	if err != nil {
 		h.log.Error("failed to list sessions", slog.Int("subjectID", subject.ID), slog.String("error", err.Error()))
-		response.Error(w, http.StatusInternalServerError, "Internal server error")
+		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
@@ -97,14 +97,14 @@ func (h *Handler) ListLessons(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		response.Error(w, http.StatusBadRequest, "Invalid session id")
+		response.ErrorSimple(w, http.StatusBadRequest, "Invalid session id")
 		return
 	}
 
 	lessons, err := h.repo.FindLessonsBySessionID(r.Context(), id)
 	if err != nil {
 		h.log.Error("failed to list lessons", slog.Int("sessionID", id), slog.String("error", err.Error()))
-		response.Error(w, http.StatusInternalServerError, "Internal server error")
+		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
@@ -121,18 +121,18 @@ func (h *Handler) GetLesson(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		response.Error(w, http.StatusBadRequest, "Invalid lesson id")
+		response.ErrorSimple(w, http.StatusBadRequest, "Invalid lesson id")
 		return
 	}
 
 	lesson, err := h.repo.FindLessonByID(r.Context(), id)
 	if err != nil {
 		h.log.Error("failed to get lesson", slog.Int("lessonID", id), slog.String("error", err.Error()))
-		response.Error(w, http.StatusInternalServerError, "Internal server error")
+		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 	if lesson == nil {
-		response.Error(w, http.StatusNotFound, "Lesson not found")
+		response.ErrorSimple(w, http.StatusNotFound, "Lesson not found")
 		return
 	}
 
@@ -144,14 +144,14 @@ func (h *Handler) ListLessonProblems(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		response.Error(w, http.StatusBadRequest, "Invalid lesson id")
+		response.ErrorSimple(w, http.StatusBadRequest, "Invalid lesson id")
 		return
 	}
 
 	items, err := h.repo.FindProblemsByLessonID(r.Context(), id)
 	if err != nil {
 		h.log.Error("failed to list lesson problems", slog.Int("lessonID", id), slog.String("error", err.Error()))
-		response.Error(w, http.StatusInternalServerError, "Internal server error")
+		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 

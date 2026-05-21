@@ -26,7 +26,7 @@ func New(svc *service.AuthService, log *slog.Logger) *Handler {
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	var req dto.LoginRequest
 	if err := response.DecodeJSON(r, &req); err != nil {
-		response.Error(w, http.StatusBadRequest, "Invalid request body")
+		response.ErrorSimple(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
@@ -34,14 +34,14 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidInput):
-			response.Error(w, http.StatusBadRequest, "Invalid request body")
+			response.ErrorSimple(w, http.StatusBadRequest, "Invalid request body")
 		case errors.Is(err, service.ErrInvalidCredentials):
-			response.Error(w, http.StatusUnauthorized, "Invalid email or password")
+			response.ErrorSimple(w, http.StatusUnauthorized, "Invalid email or password")
 		case errors.Is(err, service.ErrAccountInactive):
-			response.Error(w, http.StatusForbidden, "Account is inactive")
+			response.ErrorSimple(w, http.StatusForbidden, "Account is inactive")
 		default:
 			h.log.Error("login failed", slog.String("error", err.Error()))
-			response.Error(w, http.StatusInternalServerError, "Internal server error")
+			response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		}
 		return
 	}
@@ -53,7 +53,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) CurrentUser(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r)
 	if !ok {
-		response.Error(w, http.StatusUnauthorized, "Unauthorized")
+		response.ErrorSimple(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
@@ -61,12 +61,12 @@ func (h *Handler) CurrentUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrUserNotFound):
-			response.Error(w, http.StatusUnauthorized, "User not found")
+			response.ErrorSimple(w, http.StatusUnauthorized, "User not found")
 		case errors.Is(err, service.ErrAccountInactive):
-			response.Error(w, http.StatusForbidden, "Account is inactive")
+			response.ErrorSimple(w, http.StatusForbidden, "Account is inactive")
 		default:
 			h.log.Error("current user lookup failed", slog.String("error", err.Error()))
-			response.Error(w, http.StatusInternalServerError, "Internal server error")
+			response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		}
 		return
 	}
@@ -78,7 +78,7 @@ func (h *Handler) CurrentUser(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GithubConnect(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r)
 	if !ok {
-		response.Error(w, http.StatusUnauthorized, "Unauthorized")
+		response.ErrorSimple(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 	email, _ := middleware.GetUserEmail(r)
@@ -109,7 +109,7 @@ func (h *Handler) GithubCallback(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	var req dto.RegisterRequest
 	if err := response.DecodeJSON(r, &req); err != nil {
-		response.Error(w, http.StatusBadRequest, "Invalid request body")
+		response.ErrorSimple(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
@@ -117,14 +117,14 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidInput):
-			response.Error(w, http.StatusBadRequest, err.Error())
+			response.ErrorSimple(w, http.StatusBadRequest, err.Error())
 		case errors.Is(err, service.ErrEmailTaken):
-			response.Error(w, http.StatusConflict, "Email already registered")
+			response.ErrorSimple(w, http.StatusConflict, "Email already registered")
 		case errors.Is(err, service.ErrUsernameTaken):
-			response.Error(w, http.StatusConflict, "Username already taken")
+			response.ErrorSimple(w, http.StatusConflict, "Username already taken")
 		default:
 			h.log.Error("register failed", slog.String("error", err.Error()))
-			response.Error(w, http.StatusInternalServerError, "Internal server error")
+			response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		}
 		return
 	}
@@ -136,13 +136,13 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GithubStatus(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r)
 	if !ok {
-		response.Error(w, http.StatusUnauthorized, "Unauthorized")
+		response.ErrorSimple(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 	resp, err := h.svc.GithubStatus(r.Context(), userID)
 	if err != nil {
 		h.log.Error("github status failed", slog.String("error", err.Error()))
-		response.Error(w, http.StatusInternalServerError, "Internal server error")
+		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 	response.JSON(w, http.StatusOK, resp)

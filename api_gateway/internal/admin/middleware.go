@@ -15,7 +15,7 @@ func AdminAuth(jwtSecret string) func(http.Handler) http.Handler {
 		return authMW(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			role, ok := middleware.GetUserRole(r)
 			if !ok || role != "admin" {
-				response.Error(w, http.StatusForbidden, "Admin access required")
+				response.ErrorSimple(w, http.StatusForbidden, "Admin access required")
 				return
 			}
 			next.ServeHTTP(w, r)

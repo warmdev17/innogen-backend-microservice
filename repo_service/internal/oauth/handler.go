@@ -20,13 +20,13 @@ func NewOAuthHandler(svc *OAuthService, log *slog.Logger) *OAuthHandler {
 func (h *OAuthHandler) StartURL(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r)
 	if !ok {
-		response.Error(w, http.StatusUnauthorized, "Unauthorized")
+		response.ErrorSimple(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 	resp, err := h.svc.GetStartURL(userID)
 	if err != nil {
 		h.log.Error("oauth start url failed", slog.String("error", err.Error()))
-		response.Error(w, http.StatusInternalServerError, "Internal server error")
+		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 	response.JSON(w, http.StatusOK, resp)
@@ -49,13 +49,13 @@ func (h *OAuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 func (h *OAuthHandler) GetAccount(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r)
 	if !ok {
-		response.Error(w, http.StatusUnauthorized, "Unauthorized")
+		response.ErrorSimple(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 	resp, err := h.svc.GetAccount(r.Context(), userID)
 	if err != nil {
 		h.log.Error("get oauth account failed", slog.String("error", err.Error()))
-		response.Error(w, http.StatusInternalServerError, "Internal server error")
+		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 	response.JSON(w, http.StatusOK, resp)
@@ -64,12 +64,12 @@ func (h *OAuthHandler) GetAccount(w http.ResponseWriter, r *http.Request) {
 func (h *OAuthHandler) Disconnect(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r)
 	if !ok {
-		response.Error(w, http.StatusUnauthorized, "Unauthorized")
+		response.ErrorSimple(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 	if err := h.svc.Disconnect(r.Context(), userID); err != nil {
 		h.log.Error("oauth disconnect failed", slog.String("error", err.Error()))
-		response.Error(w, http.StatusInternalServerError, "Internal server error")
+		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 	response.JSON(w, http.StatusOK, map[string]string{"status": "disconnected"})

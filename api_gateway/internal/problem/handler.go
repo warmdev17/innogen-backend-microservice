@@ -56,18 +56,18 @@ type TestCaseListResponse struct {
 func (h *Handler) GetProblem(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 	if slug == "" {
-		response.Error(w, http.StatusBadRequest, "slug is required")
+		response.ErrorSimple(w, http.StatusBadRequest, "slug is required")
 		return
 	}
 
 	problem, err := h.repo.FindBySlug(r.Context(), slug)
 	if err != nil {
 		h.log.Error("failed to find problem by slug", "slug", slug, "error", err)
-		response.Error(w, http.StatusInternalServerError, "internal server error")
+		response.ErrorSimple(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 	if problem == nil {
-		response.Error(w, http.StatusNotFound, "Problem not found")
+		response.ErrorSimple(w, http.StatusNotFound, "Problem not found")
 		return
 	}
 
@@ -93,7 +93,7 @@ func (h *Handler) ListTestCases(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		response.Error(w, http.StatusBadRequest, "invalid problem id")
+		response.ErrorSimple(w, http.StatusBadRequest, "invalid problem id")
 		return
 	}
 
@@ -105,7 +105,7 @@ func (h *Handler) ListTestCases(w http.ResponseWriter, r *http.Request) {
 	testCases, err := h.repo.FindTestCasesByProblemID(r.Context(), id, visibility)
 	if err != nil {
 		h.log.Error("failed to find test cases", "problemId", id, "error", err)
-		response.Error(w, http.StatusInternalServerError, "internal server error")
+		response.ErrorSimple(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 

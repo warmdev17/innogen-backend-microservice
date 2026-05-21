@@ -28,13 +28,13 @@ func New(svc *service.SubmissionService, log *slog.Logger) *Handler {
 func (h *Handler) Submit(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r)
 	if !ok {
-		response.Error(w, http.StatusUnauthorized, "Unauthorized")
+		response.ErrorSimple(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
 	var req dto.SubmitRequest
 	if err := response.DecodeJSON(r, &req); err != nil {
-		response.Error(w, http.StatusBadRequest, "Invalid request body")
+		response.ErrorSimple(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
@@ -42,18 +42,18 @@ func (h *Handler) Submit(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidInput):
-			response.Error(w, http.StatusBadRequest, err.Error())
+			response.ErrorSimple(w, http.StatusBadRequest, err.Error())
 		case errors.Is(err, service.ErrProblemNotFound):
-			response.Error(w, http.StatusBadRequest, "Problem not found")
+			response.ErrorSimple(w, http.StatusBadRequest, "Problem not found")
 		case errors.Is(err, service.ErrLanguageNotFound):
-			response.Error(w, http.StatusBadRequest, "Language not found")
+			response.ErrorSimple(w, http.StatusBadRequest, "Language not found")
 		default:
 			if errors.Is(err, repository.ErrSpamCooldown) {
-				response.Error(w, http.StatusTooManyRequests, "Please wait 10 seconds before submitting again")
+				response.ErrorSimple(w, http.StatusTooManyRequests, "Please wait 10 seconds before submitting again")
 				return
 			}
 			h.log.Error("create submission failed", slog.String("error", err.Error()))
-			response.Error(w, http.StatusInternalServerError, "Internal server error")
+			response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		}
 		return
 	}
@@ -65,18 +65,18 @@ func (h *Handler) Submit(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" || !isValidUUID(id) {
-		response.Error(w, http.StatusBadRequest, "Invalid submission ID")
+		response.ErrorSimple(w, http.StatusBadRequest, "Invalid submission ID")
 		return
 	}
 
 	sub, err := h.svc.GetByID(r.Context(), id)
 	if err != nil {
 		if errors.Is(err, service.ErrSubmissionNotFound) {
-			response.Error(w, http.StatusNotFound, "Submission not found")
+			response.ErrorSimple(w, http.StatusNotFound, "Submission not found")
 			return
 		}
 		h.log.Error("get submission failed", slog.String("error", err.Error()))
-		response.Error(w, http.StatusInternalServerError, "Internal server error")
+		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
@@ -87,14 +87,14 @@ func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ListMySubmissions(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r)
 	if !ok {
-		response.Error(w, http.StatusUnauthorized, "Unauthorized")
+		response.ErrorSimple(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
 	items, err := h.svc.ListByUserID(r.Context(), userID)
 	if err != nil {
 		h.log.Error("list submissions failed", slog.String("error", err.Error()))
-		response.Error(w, http.StatusInternalServerError, "Internal server error")
+		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
@@ -105,25 +105,25 @@ func (h *Handler) ListMySubmissions(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetLatestForProblem(w http.ResponseWriter, r *http.Request) {
 	userID, ok := middleware.GetUserID(r)
 	if !ok {
-		response.Error(w, http.StatusUnauthorized, "Unauthorized")
+		response.ErrorSimple(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
 	problemIDStr := r.PathValue("problemId")
 	problemID, err := strconv.Atoi(problemIDStr)
 	if err != nil || problemID <= 0 {
-		response.Error(w, http.StatusBadRequest, "Invalid problem ID")
+		response.ErrorSimple(w, http.StatusBadRequest, "Invalid problem ID")
 		return
 	}
 
 	sub, err := h.svc.GetLatestByUserAndProblem(r.Context(), userID, problemID)
 	if err != nil {
 		if errors.Is(err, service.ErrNoSubmissionForProblem) {
-			response.Error(w, http.StatusNotFound, "No submission found for this problem")
+			response.ErrorSimple(w, http.StatusNotFound, "No submission found for this problem")
 			return
 		}
 		h.log.Error("get latest submission failed", slog.String("error", err.Error()))
-		response.Error(w, http.StatusInternalServerError, "Internal server error")
+		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 

@@ -38,11 +38,11 @@ export async function request<T = any>(method: string, path: string, body?: any)
     body: body ? JSON.stringify(body) : undefined,
   })
 
+  const json = await res.json().catch(() => ({}))
   if (!res.ok) {
-    const msg = await res.text().catch(() => 'Unknown error')
-    throw new ApiError(res.status, msg)
+    throw new ApiError(res.status, json.message || json.error || 'Unknown error')
   }
 
   if (res.status === 204) return {} as T
-  return res.json()
+  return json.data !== undefined ? json.data : json
 }

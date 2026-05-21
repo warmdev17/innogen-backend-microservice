@@ -16,7 +16,7 @@ echo "=== GitHub Commit E2E Test ==="
 # 1. Login
 info "1. Logging in..."
 LOGIN=$(curl -s -X POST "$API_BASE_URL/auth/login" -H "Content-Type: application/json" -d "{\"email\":\"$TEST_EMAIL\",\"password\":\"$TEST_PASSWORD\"}")
-TOKEN=$(echo "$LOGIN" | python3 -c "import sys,json; print(json.load(sys.stdin)['accessToken'])" 2>/dev/null || echo "")
+TOKEN=$(echo "$LOGIN" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['accessToken'])" 2>/dev/null || echo "")
 if [ -z "$TOKEN" ]; then fail "Login failed"; fi
 pass "Login OK"
 AUTH="Authorization: Bearer $TOKEN"
@@ -25,7 +25,7 @@ AUTH="Authorization: Bearer $TOKEN"
 info "2. Submitting solution..."
 SOLUTION="const fs = require('fs'); const input = fs.readFileSync(0, 'utf8').trim().split(' ').map(Number); console.log(input[0] + input[1]);"
 SUBMIT=$(curl -s -X POST "$API_BASE_URL/submit" -H "Content-Type: application/json" -H "$AUTH" -d "{\"problemId\":1,\"languageId\":1,\"code\":\"$SOLUTION\"}")
-SUB_ID=$(echo "$SUBMIT" | python3 -c "import sys,json; print(json.load(sys.stdin)['submission']['id'])" 2>/dev/null || echo "")
+SUB_ID=$(echo "$SUBMIT" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['submission']['id'])" 2>/dev/null || echo "")
 if [ -z "$SUB_ID" ]; then fail "Submit failed"; fi
 pass "Submission: $SUB_ID"
 
@@ -34,7 +34,7 @@ info "3. Polling submission..."
 for i in $(seq 1 20); do
     sleep 2
     RESULT=$(curl -s "$API_BASE_URL/submissions/$SUB_ID" -H "$AUTH")
-    STATUS=$(echo "$RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin)['submission']['status'])" 2>/dev/null || echo "Pending")
+    STATUS=$(echo "$RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['submission']['status'])" 2>/dev/null || echo "Pending")
     echo "  [${i}] $STATUS"
     case "$STATUS" in
         Accepted|"Wrong Answer"|"Compilation Error"|"Runtime Error"|"Time Limit Exceeded"|"Internal Error")
@@ -53,9 +53,9 @@ pass "Verdict: Accepted"
 # 5. Check commit metadata
 info "5. Checking commit metadata..."
 FINAL=$(curl -s "$API_BASE_URL/submissions/$SUB_ID" -H "$AUTH")
-REPO_PATH=$(echo "$FINAL" | python3 -c "import sys,json; print(json.load(sys.stdin)['submission'].get('repoPath',''))" 2>/dev/null || echo "")
-COMMIT_SHA=$(echo "$FINAL" | python3 -c "import sys,json; print(json.load(sys.stdin)['submission'].get('commitSha',''))" 2>/dev/null || echo "")
-COMMIT_URL=$(echo "$FINAL" | python3 -c "import sys,json; print(json.load(sys.stdin)['submission'].get('commitUrl',''))" 2>/dev/null || echo "")
+REPO_PATH=$(echo "$FINAL" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['submission'].get('repoPath',''))" 2>/dev/null || echo "")
+COMMIT_SHA=$(echo "$FINAL" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['submission'].get('commitSha',''))" 2>/dev/null || echo "")
+COMMIT_URL=$(echo "$FINAL" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['submission'].get('commitUrl',''))" 2>/dev/null || echo "")
 
 if [ -n "$REPO_PATH" ]; then pass "repoPath: $REPO_PATH"; else pass "repoPath: (empty)"; fi
 if [ -n "$COMMIT_SHA" ]; then pass "commitSha: $COMMIT_SHA"; else pass "commitSha: (empty)"; fi

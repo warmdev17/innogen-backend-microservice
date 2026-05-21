@@ -35,7 +35,7 @@ info "2. Logging in as admin..."
 LOGIN_RESP=$(curl -s -X POST "$GATEWAY/auth/login" \
     -H "Content-Type: application/json" \
     -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}")
-ACCESS_TOKEN=$(echo "$LOGIN_RESP" | jq -r '.accessToken // empty')
+ACCESS_TOKEN=$(echo "$LOGIN_RESP" | jq -r '.data.accessToken // empty')
 if [ -z "$ACCESS_TOKEN" ] || [ "$ACCESS_TOKEN" = "null" ]; then
     echo "Login response: $LOGIN_RESP"
     fail "Failed to extract accessToken"
@@ -48,7 +48,7 @@ AUTH_HEADER="Authorization: Bearer $ACCESS_TOKEN"
 echo ""
 info "3. Listing subjects..."
 SUBJECTS=$(curl -s "$GATEWAY/subjects")
-SUBJECT_COUNT=$(echo "$SUBJECTS" | jq -r '.subjects | length')
+SUBJECT_COUNT=$(echo "$SUBJECTS" | jq -r '.data.subjects | length')
 if [ "$SUBJECT_COUNT" -lt 1 ]; then fail "Expected at least 1 subject, got $SUBJECT_COUNT"; fi
 pass "Found $SUBJECT_COUNT subject(s)"
 
@@ -62,7 +62,7 @@ RUN_RESP=$(curl -s -X POST "$GATEWAY/run" \
     -H "Content-Type: application/json" \
     -H "$AUTH_HEADER" \
     -d "{\"problemId\":1,\"languageId\":1,\"code\":$(echo "$SOLUTION" | jq -Rs .)}")
-RUN_STATUS=$(echo "$RUN_RESP" | jq -r '.status // "error"')
+RUN_STATUS=$(echo "$RUN_RESP" | jq -r '.data.status // "error"')
 if [ "$RUN_STATUS" != "Accepted" ]; then
     echo "Run response: $RUN_RESP"
     fail "Run status is '$RUN_STATUS', expected 'Accepted'"
@@ -76,7 +76,7 @@ SUBMIT_RESP=$(curl -s -X POST "$GATEWAY/submit" \
     -H "Content-Type: application/json" \
     -H "$AUTH_HEADER" \
     -d "{\"problemId\":1,\"languageId\":1,\"code\":$(echo "$SOLUTION" | jq -Rs .)}")
-SUBMISSION_ID=$(echo "$SUBMIT_RESP" | jq -r '.submission.id // empty')
+SUBMISSION_ID=$(echo "$SUBMIT_RESP" | jq -r '.data.submission.id // empty')
 if [ -z "$SUBMISSION_ID" ] || [ "$SUBMISSION_ID" = "null" ]; then
     echo "Submit response: $SUBMIT_RESP"
     fail "Failed to extract submission ID"
@@ -90,7 +90,7 @@ ELAPSED=0
 STATUS="Pending"
 while [ "$ELAPSED" -lt "$TIMEOUT_SECONDS" ]; do
     SUB_RESP=$(curl -s "$GATEWAY/submissions/$SUBMISSION_ID" -H "$AUTH_HEADER")
-    STATUS=$(echo "$SUB_RESP" | jq -r '.submission.status // "error"')
+    STATUS=$(echo "$SUB_RESP" | jq -r '.data.submission.status // "error"')
     echo "  [${ELAPSED}s] Status: $STATUS"
     case "$STATUS" in
         "Accepted"|"Wrong Answer"|"Compilation Error"|"Runtime Error"|"Time Limit Exceeded"|"Internal Error")

@@ -94,7 +94,7 @@ func Recover(log *slog.Logger, next http.Handler) http.Handler {
 					slog.String("requestId", GetRequestID(r)),
 					slog.Any("panic", rec),
 				)
-				response.Error(w, http.StatusInternalServerError, "Internal server error")
+				response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 			}
 		}()
 		next.ServeHTTP(w, r)
@@ -178,7 +178,7 @@ func RateLimit(rl *RateLimiter) func(http.Handler) http.Handler {
 			}
 			ip, _, _ := net.SplitHostPort(r.RemoteAddr)
 			if !rl.Allow(ip) {
-				response.Error(w, http.StatusTooManyRequests, "Too many requests")
+				response.ErrorSimple(w, http.StatusTooManyRequests, "Too many requests")
 				return
 			}
 			next.ServeHTTP(w, r)
