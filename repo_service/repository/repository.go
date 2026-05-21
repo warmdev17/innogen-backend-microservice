@@ -355,8 +355,8 @@ func (r *RepoRepository) UpdateGithubInstallationStatus(ctx context.Context, ins
 // UpdateGithubAccountStatusByInstallation updates the status of github_accounts linked to an installation.
 func (r *RepoRepository) UpdateGithubAccountStatusByInstallation(ctx context.Context, installationID, status string) error {
 	_, err := r.pool.Exec(ctx,
-		`UPDATE github_accounts SET status=$2, uninstalled_at=CASE WHEN $2 IN ('deleted','suspended') THEN COALESCE(uninstalled_at, CURRENT_TIMESTAMP) ELSE NULL END, updated_at=CURRENT_TIMESTAMP WHERE installation_id=$1`,
-		installationID, status,
+		`UPDATE github_accounts SET status=$2, uninstalled_at=CASE WHEN $3 IN ('deleted','suspended') THEN COALESCE(uninstalled_at, CURRENT_TIMESTAMP) ELSE NULL END, updated_at=CURRENT_TIMESTAMP WHERE installation_id=$1`,
+		installationID, status, status,
 	)
 	if err != nil {
 		return fmt.Errorf("repository.UpdateGithubAccountStatusByInstallation: %w", err)
@@ -498,7 +498,7 @@ func (r *RepoRepository) DisconnectGitHubOAuth(ctx context.Context, userID int) 
 }
 
 func (r *RepoRepository) UpdateGithubAccountStatusByUserID(ctx context.Context, userID int, status string) error {
-	_, err := r.pool.Exec(ctx, `UPDATE github_accounts SET status=$2, uninstalled_at=CASE WHEN $2 IN ('deleted','suspended','disconnected') THEN COALESCE(uninstalled_at, CURRENT_TIMESTAMP) ELSE NULL END, updated_at=CURRENT_TIMESTAMP WHERE user_id=$1`, userID, status)
+	_, err := r.pool.Exec(ctx, `UPDATE github_accounts SET status=$2, uninstalled_at=CASE WHEN $3 IN ('deleted','suspended','disconnected') THEN COALESCE(uninstalled_at, CURRENT_TIMESTAMP) ELSE NULL END, updated_at=CURRENT_TIMESTAMP WHERE user_id=$1`, userID, status, status)
 	if err != nil {
 		return fmt.Errorf("repository.UpdateGithubAccountStatusByUserID: %w", err)
 	}
