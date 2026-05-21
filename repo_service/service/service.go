@@ -284,10 +284,11 @@ func (s *RepoService) LinkGithubInstallation(ctx context.Context, userID int, in
 		return nil, err
 	}
 	if inst == nil {
-		// Verify via GitHub API
+		// Verify via GitHub API and extract owner info
 		if s.githubClient != nil {
-			if _, err := s.githubClient.GetInstallationToken(ctx, installationID); err == nil {
-				_ = s.repo.UpsertGithubInstallation(ctx, installationID, "", "")
+			owner, ownerType, err := s.githubClient.GetInstallation(ctx, installationID)
+			if err == nil && owner != "" {
+				_ = s.repo.UpsertGithubInstallation(ctx, installationID, owner, ownerType)
 				inst, _ = s.repo.GetGithubInstallationByID(ctx, installationID)
 			}
 		}

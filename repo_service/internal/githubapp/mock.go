@@ -5,6 +5,7 @@ import "context"
 // MockClient implements GitHubClient for testing.
 type MockClient struct {
 	GetInstallationTokenFn func(ctx context.Context, installationID string) (string, error)
+	GetInstallationFn      func(ctx context.Context, installationID string) (string, string, error)
 	EnsureRepoFn           func(ctx context.Context, token, owner, repoName, ownerType, defaultBranch string) (*RepoInfo, error)
 	GetFileContentFn       func(ctx context.Context, token, owner, repoName, filePath, branch string) (*FileInfo, error)
 	CreateOrUpdateFileFn   func(ctx context.Context, token, owner, repoName, filePath, branch, content, commitMessage string, existingSHA *string, authorName, authorEmail string) (*CommitResult, error)
@@ -12,6 +13,10 @@ type MockClient struct {
 
 func (m *MockClient) GetInstallationToken(ctx context.Context, installationID string) (string, error) {
 	return m.GetInstallationTokenFn(ctx, installationID)
+}
+
+func (m *MockClient) GetInstallation(ctx context.Context, installationID string) (string, string, error) {
+	return m.GetInstallationFn(ctx, installationID)
 }
 
 func (m *MockClient) EnsureRepo(ctx context.Context, token, owner, repoName, ownerType, defaultBranch string) (*RepoInfo, error) {

@@ -73,6 +73,46 @@ func (c *RealClient) generateJWT() (string, error) {
 	return token.SignedString(c.privateKey)
 }
 
+// GetInstallation retrieves installation details (owner login and type) from GitHub.
+// Uses a JWT for App authentication as required by the GitHub API.
+func (c *RealClient) GetInstallation(ctx context.Context, installationID string) (string, string, error) {
+	jwt, err := c.generateJWT()
+	if err != nil {
+		return "", "", fmt.Errorf("githubapp: failed to generate JWT: %w", err)
+	}
+
+	url := fmt.Sprintf("%s/app/installations/%s", c.baseURL, installationID)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return "", "", err
+	}
+	req.Header.Set("Authorization", "Bearer "+jwt)
+	req.Header.Set("Accept", "application/vnd.github+json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return "", "", fmt.Errorf("githubapp: get installation failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return "", "", fmt.Errorf("githubapp: installation %s not found (status %d): %s", installationID, resp.StatusCode, string(body))
+	}
+
+	var result struct {
+		Account struct {
+			Login string `json:"login"`
+			Type  string `json:"type"`
+		} `json:"account"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", "", fmt.Errorf("githubapp: decode installation failed: %w", err)
+	}
+
+	return result.Account.Login, result.Account.Type, nil
+}
+
 // GetInstallationToken exchanges a JWT for an installation access token.
 func (c *RealClient) GetInstallationToken(ctx context.Context, installationID string) (string, error) {
 	jwt, err := c.generateJWT()

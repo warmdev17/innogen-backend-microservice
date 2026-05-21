@@ -28,6 +28,9 @@ type GitHubClient interface {
 	// GetInstallationToken exchanges a GitHub App JWT for an installation access token.
 	GetInstallationToken(ctx context.Context, installationID string) (string, error)
 
+	// GetInstallation retrieves installation details (owner login and type) from GitHub.
+	GetInstallation(ctx context.Context, installationID string) (owner, ownerType string, err error)
+
 	// EnsureRepo checks if a repository exists and creates it if not.
 	EnsureRepo(ctx context.Context, token, owner, repoName, ownerType, defaultBranch string) (*RepoInfo, error)
 

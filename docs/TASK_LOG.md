@@ -166,3 +166,8 @@
 - Added GET /github/oauth/start-url, GET /github/oauth/callback, GET /github/account, POST /github/oauth/disconnect
 - Updated test UI with OAuth Account Identity section (username, avatar, email, commit author)
 - OAuth callback redirects to frontend with ?oauth=connected or ?oauth=error
+
+### Stabilize GitHub Connection Flow
+- Fixed LinkGithubInstallation to extract owner from GitHub API GET /app/installations/{id}
+- Added GetInstallation to GitHubClient interface
+- Merged UI useEffect hooks for reliable OAuth callback handling

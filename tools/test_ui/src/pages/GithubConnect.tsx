@@ -83,28 +83,28 @@ export default function GithubConnect() {
     }
   }, [])
 
-  // On mount: check OAuth + connection + handle callback
+  // Single effect: handle all mount/callback scenarios
   useEffect(() => {
     const installationId = searchParams.get('installation_id')
+    const oauthStatus = searchParams.get('oauth')
+
     if (installationId) {
       handleLink(installationId)
-    } else {
+    } else if (oauthStatus === 'connected') {
       checkOAuth()
       checkConnection()
-    }
-  }, [searchParams, handleLink])
-
-  // Handle OAuth callback query params on page load
-  useEffect(() => {
-    const oauthStatus = searchParams.get('oauth')
-    if (oauthStatus === 'connected') {
-      checkOAuth()
-      checkConnection()
+      setError('')
     } else if (oauthStatus === 'error') {
       const msg = searchParams.get('message') || 'Unknown error'
       setError('OAuth failed: ' + msg)
+      checkOAuth()
+      checkConnection()
+    } else {
+      // Normal page load — check both
+      checkConnection()
+      checkOAuth()
     }
-  }, [searchParams])
+  }, [searchParams, handleLink])
 
   if (!token) {
     return <div className="card"><h3>GitHub Connect</h3><p>Please log in first.</p></div>
