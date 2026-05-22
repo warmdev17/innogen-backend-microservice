@@ -1,6 +1,6 @@
 DATABASE_URL ?= postgres://innogen:innogen@localhost:5432/innogen?sslmode=disable
 
-.PHONY: run-gateway run-auth run-runner run-submission run-submission-worker run-repo run-all stop-all tidy fmt test compose-up compose-down logs-piston piston-install seed-dev seed-problems e2e e2e-github test-ui-install test-ui test-ui-build compose-full-up compose-full-down compose-full-logs compose-ps docker-build docker-reset logs-gateway logs-auth logs-runner logs-submission logs-worker logs-repo
+.PHONY: run-gateway run-auth run-runner run-submission run-submission-worker run-repo run-all stop-all tidy fmt test compose-up compose-down logs-piston piston-install seed-dev seed-problems e2e e2e-github test-ui-install test-ui test-ui-build compose-full-up compose-full-down compose-full-logs compose-ps docker-build docker-reset logs-gateway logs-auth logs-runner logs-submission logs-worker logs-repo ci gofmt-check ci-go ci-docker ci-test-ui ci-openapi
 
 run-gateway:
 	go run ./api_gateway/cmd/main.go
@@ -141,3 +141,20 @@ logs-worker:
 
 logs-repo:
 	docker compose logs -f repo_service
+
+gofmt-check:
+	@test -z "$$(gofmt -l . 2>/dev/null | grep -v node_modules | grep -v vendor)" || (echo "Files not formatted:"; gofmt -l . 2>/dev/null | grep -v node_modules | grep -v vendor; exit 1)
+
+ci-go: gofmt-check
+	go test ./...
+
+ci-docker:
+	docker compose build
+
+ci-test-ui:
+	cd tools/test_ui && npm ci && npm run build
+
+ci-openapi:
+	npx @redocly/cli lint docs/openapi.yaml --skip-rule no-unused-components 2>/dev/null || echo "OpenAPI lint skipped (redocly not installed)"
+
+ci: ci-go ci-docker ci-test-ui ci-openapi

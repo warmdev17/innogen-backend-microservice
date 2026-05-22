@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  go-test:
+    name: Go Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: true
+      - name: Verify gofmt
+        run: |
+          unformatted=$(gofmt -l . 2>/dev/null | grep -v node_modules | grep -v vendor || true)
+          if [ -n "$unformatted" ]; then echo "$unformatted"; exit 1; fi
+      - name: Run tests
+        run: go test ./...
+
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build images
+        run: docker compose build
+
+  test-ui-build:
+    name: Test UI Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: tools/test_ui/package-lock.json
+      - name: Install & Build
+        working-directory: tools/test_ui
+        run: |
+          npm ci || npm install
+          npm run build
+
+  openapi-validate:
+    name: OpenAPI Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Validate OpenAPI
+        run: npx @redocly/cli lint docs/openapi.yaml --skip-rule no-unused-components
+
+  secret-scan:
+    name: Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for secrets
+        run: |
+          if git ls-files | grep -qE '(^\.env$|\.pem$|\.key$|secrets/)'; then
+            echo "ERROR: Secret files detected in repository"
+            exit 1
+          fi
+          echo "No secrets found in tracked files"

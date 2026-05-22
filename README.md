@@ -16,6 +16,14 @@ Go monorepo with microservice-style separation:
 
 Infrastructure: PostgreSQL 16, Redis 7, Piston (code execution engine)
 
+## CI/CD
+
+GitHub Actions validates on every push/PR: Go tests, Docker build, UI build, OpenAPI lint, secret scan.
+
+```bash
+make ci    # Run all CI checks locally
+```
+
 ## Docker
 
 ```bash
