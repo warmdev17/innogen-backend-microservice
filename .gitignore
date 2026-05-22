@@ -1,5 +1,6 @@
 .env
 AGENTS.md
+CLAUDE.md
 
 # binaries
 /main
@@ -17,3 +18,7 @@ AGENTS.md
 *.key
 secrets/
 tools/test_ui/node_modules/
+
+# ignore gitnexus & .claude
+.gitnexus/
+.claude/
