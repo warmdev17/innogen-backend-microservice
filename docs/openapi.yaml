@@ -1,0 +1,746 @@
+openapi: 3.0.3
+info:
+  title: RinnoGen API
+  description: Curriculum-based programming practice platform
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Local development
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ApiSuccess:
+      type: object
+      properties:
+        status: { type: string, example: success }
+        code: { type: integer, example: 200 }
+        message: { type: string, example: OK }
+        data: { type: object }
+    ApiError:
+      type: object
+      properties:
+        status: { type: string, example: error }
+        code: { type: integer, example: 404 }
+        message: { type: string }
+        error: { type: string }
+        details: { type: object, nullable: true }
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email, example: admin@example.com }
+        password: { type: string, example: password }
+
+    User:
+      type: object
+      properties:
+        id: { type: integer }
+        email: { type: string }
+        username: { type: string }
+        fullName: { type: string }
+        role: { type: string, enum: [student, teacher, admin] }
+
+    LoginData:
+      type: object
+      properties:
+        accessToken: { type: string }
+        user: { $ref: '#/components/schemas/User' }
+
+    Subject:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        slug: { type: string }
+        color: { type: string, nullable: true }
+        languageId: { type: integer, nullable: true }
+
+    Session:
+      type: object
+      properties:
+        id: { type: integer }
+        subjectId: { type: integer }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        orderIndex: { type: integer }
+
+    Lesson:
+      type: object
+      properties:
+        id: { type: integer }
+        subjectSessionId: { type: integer }
+        title: { type: string }
+        contentMd: { type: string, nullable: true }
+        orderIndex: { type: integer }
+
+    ProblemListItem:
+      type: object
+      properties:
+        id: { type: integer }
+        slug: { type: string }
+        title: { type: string }
+        difficulty: { type: string, enum: [Easy, Medium, Hard] }
+        orderIndex: { type: integer }
+        acceptanceRate: { type: number }
+
+    Problem:
+      type: object
+      properties:
+        id: { type: integer }
+        slug: { type: string }
+        title: { type: string }
+        difficulty: { type: string }
+        problemMd: { type: string }
+        timeLimitMs: { type: integer }
+        memoryLimitMb: { type: integer }
+        acceptanceRate: { type: number }
+        sampleTestCases: { type: array, items: { type: object } }
+
+    TestCase:
+      type: object
+      properties:
+        id: { type: integer }
+        problemId: { type: integer }
+        inputData: { type: string, nullable: true }
+        expectedOutput: { type: string }
+        orderIndex: { type: integer }
+
+    RunRequest:
+      type: object
+      required: [problemId, languageId, code]
+      properties:
+        problemId: { type: integer }
+        languageId: { type: integer }
+        code: { type: string }
+
+    RunTestResult:
+      type: object
+      properties:
+        testCaseId: { type: integer }
+        status: { type: string }
+        inputData: { type: string }
+        expectedOutput: { type: string }
+        actualOutput: { type: string }
+        runtimeMs: { type: integer, nullable: true }
+        errorMessage: { type: string, nullable: true }
+
+    RunData:
+      type: object
+      properties:
+        status: { type: string }
+        passed: { type: integer }
+        total: { type: integer }
+        results: { type: array, items: { $ref: '#/components/schemas/RunTestResult' } }
+
+    SubmitRequest:
+      type: object
+      required: [problemId, languageId, code]
+      properties:
+        problemId: { type: integer }
+        languageId: { type: integer }
+        code: { type: string }
+
+    Submission:
+      type: object
+      properties:
+        id: { type: string }
+        userId: { type: integer }
+        problemId: { type: integer }
+        languageId: { type: integer }
+        status: { type: string }
+        runtimeMs: { type: integer, nullable: true }
+        memoryKb: { type: integer, nullable: true }
+        errorMessage: { type: string, nullable: true }
+        passCount: { type: integer }
+        totalTestcases: { type: integer }
+        repoPath: { type: string, nullable: true }
+        commitSha: { type: string, nullable: true }
+        commitUrl: { type: string, nullable: true }
+        createdAt: { type: string }
+        judgedAt: { type: string, nullable: true }
+
+    GitHubAccount:
+      type: object
+      properties:
+        connected: { type: boolean }
+        githubUserId: { type: string }
+        githubUsername: { type: string }
+        githubAvatarUrl: { type: string }
+        githubNoreplyEmail: { type: string }
+        commitAuthorName: { type: string }
+        oauthStatus: { type: string }
+
+    GitHubConnection:
+      type: object
+      properties:
+        connected: { type: boolean }
+        installationId: { type: string }
+        githubOwner: { type: string }
+        githubOwnerType: { type: string }
+        status: { type: string }
+
+    LinkInstallationRequest:
+      type: object
+      required: [installationId]
+      properties:
+        installationId: { type: string }
+
+    RegisterRequest:
+      type: object
+      required: [email, password, username]
+      properties:
+        email: { type: string }
+        password: { type: string, minLength: 6 }
+        username: { type: string }
+        fullName: { type: string }
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      security: []
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          status: { type: string, example: ok }
+                          service: { type: string, example: api-gateway }
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - properties:
+                      data: { $ref: '#/components/schemas/LoginData' }
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Register new account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+      responses:
+        '201':
+          description: Account created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - properties:
+                      data: { $ref: '#/components/schemas/LoginData' }
+        '409':
+          description: Email taken
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      security: [{ bearerAuth: [] }]
+      summary: Get current user
+      responses:
+        '200':
+          description: User info
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - properties:
+                      data: { $ref: '#/components/schemas/User' }
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+
+  /subjects:
+    get:
+      tags: [Curriculum]
+      security: []
+      summary: List published subjects
+      responses:
+        '200':
+          description: Subjects
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          subjects: { type: array, items: { $ref: '#/components/schemas/Subject' } }
+
+  /subjects/{slug}:
+    get:
+      tags: [Curriculum]
+      security: []
+      summary: Get subject by slug
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Subject
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          subject: { $ref: '#/components/schemas/Subject' }
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+
+  /subjects/{slug}/sessions:
+    get:
+      tags: [Curriculum]
+      security: []
+      summary: List sessions for a subject
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Sessions
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          sessions: { type: array, items: { $ref: '#/components/schemas/Session' } }
+
+  /sessions/{id}/lessons:
+    get:
+      tags: [Curriculum]
+      security: []
+      summary: List lessons for a session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Lessons
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          lessons: { type: array, items: { $ref: '#/components/schemas/Lesson' } }
+
+  /lessons/{id}:
+    get:
+      tags: [Curriculum]
+      security: []
+      summary: Get lesson by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Lesson
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          lesson: { $ref: '#/components/schemas/Lesson' }
+
+  /lessons/{id}/problems:
+    get:
+      tags: [Curriculum]
+      security: []
+      summary: List problems for a lesson
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Problems
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          problems: { type: array, items: { $ref: '#/components/schemas/ProblemListItem' } }
+
+  /problems/{slug}:
+    get:
+      tags: [Problems]
+      security: []
+      summary: Get problem by slug
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Problem
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          problem: { $ref: '#/components/schemas/Problem' }
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+
+  /problems/{id}/test-cases:
+    get:
+      tags: [Problems]
+      security: []
+      summary: List sample test cases for a problem
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: visibility
+          in: query
+          schema: { type: string, enum: [sample], default: sample }
+      responses:
+        '200':
+          description: Test cases (sample only for public)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          testCases: { type: array, items: { $ref: '#/components/schemas/TestCase' } }
+
+  /run:
+    post:
+      tags: [Runner]
+      security: [{ bearerAuth: [] }]
+      summary: Run code against sample test cases
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RunRequest' }
+      responses:
+        '200':
+          description: Run result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - properties:
+                      data: { $ref: '#/components/schemas/RunData' }
+
+  /submit:
+    post:
+      tags: [Submissions]
+      security: [{ bearerAuth: [] }]
+      summary: Submit solution for judging
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SubmitRequest' }
+      responses:
+        '201':
+          description: Submission created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          submission: { $ref: '#/components/schemas/Submission' }
+
+  /submissions/{id}:
+    get:
+      tags: [Submissions]
+      security: [{ bearerAuth: [] }]
+      summary: Get submission by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Submission
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          submission: { $ref: '#/components/schemas/Submission' }
+
+  /me/submissions:
+    get:
+      tags: [Submissions]
+      security: [{ bearerAuth: [] }]
+      summary: List my submissions
+      responses:
+        '200':
+          description: Submissions
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          submissions: { type: array, items: { $ref: '#/components/schemas/Submission' } }
+
+  /me/submissions/{problemId}/latest:
+    get:
+      tags: [Submissions]
+      security: [{ bearerAuth: [] }]
+      summary: Get latest submission for a problem
+      parameters:
+        - name: problemId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Latest submission
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          submission: { $ref: '#/components/schemas/Submission' }
+        '404':
+          description: No submission found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+
+  /github/oauth/start-url:
+    get:
+      tags: [GitHub OAuth]
+      security: [{ bearerAuth: [] }]
+      summary: Get GitHub OAuth authorization URL
+      responses:
+        '200':
+          description: OAuth start URL
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - properties:
+                      data:
+                        type: object
+                        properties:
+                          url: { type: string }
+
+  /github/oauth/callback:
+    get:
+      tags: [GitHub OAuth]
+      security: []
+      summary: GitHub OAuth callback (called by GitHub, redirects to frontend)
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema: { type: string }
+        - name: state
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        '302':
+          description: Redirects to frontend
+
+  /github/account:
+    get:
+      tags: [GitHub OAuth]
+      security: [{ bearerAuth: [] }]
+      summary: Get connected GitHub account identity
+      responses:
+        '200':
+          description: Account info
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - properties:
+                      data: { $ref: '#/components/schemas/GitHubAccount' }
+
+  /github/oauth/disconnect:
+    post:
+      tags: [GitHub OAuth]
+      security: [{ bearerAuth: [] }]
+      summary: Disconnect GitHub OAuth identity
+      responses:
+        '200':
+          description: Disconnected
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiSuccess' }
+
+  /github/connection:
+    get:
+      tags: [GitHub App]
+      security: [{ bearerAuth: [] }]
+      summary: Get GitHub App installation status
+      responses:
+        '200':
+          description: Connection status
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - properties:
+                      data: { $ref: '#/components/schemas/GitHubConnection' }
+
+  /github/installations/link:
+    post:
+      tags: [GitHub App]
+      security: [{ bearerAuth: [] }]
+      summary: Link a GitHub App installation to current user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LinkInstallationRequest' }
+      responses:
+        '200':
+          description: Linked
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - properties:
+                      data: { $ref: '#/components/schemas/GitHubConnection' }
+        '404':
+          description: Installation not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+
+  /github/disconnect:
+    post:
+      tags: [GitHub App]
+      security: [{ bearerAuth: [] }]
+      summary: Disconnect GitHub App installation locally
+      responses:
+        '200':
+          description: Disconnected
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiSuccess' }
+
+tags:
+  - name: Health
+  - name: Auth
+  - name: Curriculum
+  - name: Problems
+  - name: Runner
+  - name: Submissions
+  - name: GitHub OAuth
+  - name: GitHub App
