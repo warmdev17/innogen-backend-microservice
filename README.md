@@ -17,8 +17,8 @@ Go monorepo with microservice-style separation:
 Infrastructure: PostgreSQL 16, Redis 7, Piston (code execution engine)
 
 ## API Documentation
-- Swagger UI: <http://localhost:8080/docs>
-- OpenAPI: `docs/openapi.yaml`
+- Frontend: <http://localhost:8080/docs/fe>
+- Full: <http://localhost:8080/docs/be>
 
 ## Quick Start
 

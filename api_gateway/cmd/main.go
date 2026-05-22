@@ -80,20 +80,24 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	// Swagger UI
+	// Swagger UI - Frontend
+	mux.HandleFunc("GET /docs/fe", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		w.Write([]byte(`<!DOCTYPE html><html><head><title>RinnoGen API - Frontend</title><link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css"></head><body><div id="swagger-ui"></div><script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script><script>SwaggerUIBundle({ url: '/docs/openapi_fe.yaml', dom_id: '#swagger-ui' });</script></body></html>`))
+	})
+
+	// Swagger UI - Full
+	mux.HandleFunc("GET /docs/be", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		w.Write([]byte(`<!DOCTYPE html><html><head><title>RinnoGen API - Full</title><link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css"></head><body><div id="swagger-ui"></div><script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script><script>SwaggerUIBundle({ url: '/docs/openapi.yaml', dom_id: '#swagger-ui' });</script></body></html>`))
+	})
+
+	// YAML specs
 	mux.HandleFunc("GET /docs/openapi.yaml", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "docs/openapi.yaml")
 	})
-	mux.HandleFunc("GET /docs", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(`<!DOCTYPE html>
-<html>
-<head><title>RinnoGen API</title><link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css"></head>
-<body><div id="swagger-ui"></div>
-<script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
-<script>
-SwaggerUIBundle({ url: '/docs/openapi.yaml', dom_id: '#swagger-ui' });
-</script></body></html>`))
+	mux.HandleFunc("GET /docs/openapi_fe.yaml", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "docs/openapi_fe.yaml")
 	})
 
 	// Health

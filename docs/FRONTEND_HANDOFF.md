@@ -4,7 +4,7 @@
 - Development: `http://localhost:8080`
 
 ## API Documentation
-- Swagger UI: `http://localhost:8080/docs`
+- Swagger UI: `http://localhost:8080/docs/fe`
 - OpenAPI Spec: `http://localhost:8080/docs/openapi.yaml`
 
 ## Auth Flow
