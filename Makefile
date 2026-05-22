@@ -1,6 +1,6 @@
 DATABASE_URL ?= postgres://innogen:innogen@localhost:5432/innogen?sslmode=disable
 
-.PHONY: run-gateway run-auth run-runner run-submission run-submission-worker run-repo run-all stop-all tidy fmt test compose-up compose-down logs-piston piston-install seed-dev seed-problems e2e e2e-github test-ui-install test-ui test-ui-build
+.PHONY: run-gateway run-auth run-runner run-submission run-submission-worker run-repo run-all stop-all tidy fmt test compose-up compose-down logs-piston piston-install seed-dev seed-problems e2e e2e-github test-ui-install test-ui test-ui-build compose-full-up compose-full-down compose-full-logs compose-ps docker-build docker-reset logs-gateway logs-auth logs-runner logs-submission logs-worker logs-repo
 
 run-gateway:
 	go run ./api_gateway/cmd/main.go
@@ -104,3 +104,40 @@ test-ui:
 
 test-ui-build:
 	cd tools/test_ui && npm run build
+
+compose-full-up:
+	docker compose up -d --build
+
+compose-full-down:
+	docker compose down
+
+compose-full-logs:
+	docker compose logs -f
+
+compose-ps:
+	docker compose ps
+
+docker-build:
+	docker compose build
+
+docker-reset:
+	docker compose down -v
+	docker compose up -d --build
+
+logs-gateway:
+	docker compose logs -f api_gateway
+
+logs-auth:
+	docker compose logs -f auth_service
+
+logs-runner:
+	docker compose logs -f run_service
+
+logs-submission:
+	docker compose logs -f submission_service
+
+logs-worker:
+	docker compose logs -f submission_worker
+
+logs-repo:
+	docker compose logs -f repo_service

@@ -16,6 +16,14 @@ Go monorepo with microservice-style separation:
 
 Infrastructure: PostgreSQL 16, Redis 7, Piston (code execution engine)
 
+## Docker
+
+```bash
+make compose-full-up    # Build and start all services
+make compose-full-down  # Stop all services
+make compose-full-logs  # View all logs
+```
+
 ## API Documentation
 - Frontend: <http://localhost:8080/docs/fe>
 - Full: <http://localhost:8080/docs/be>

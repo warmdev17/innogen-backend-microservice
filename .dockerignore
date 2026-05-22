@@ -1,0 +1,16 @@
+.git
+.env
+*.pem
+*.key
+secrets/
+tools/test_ui/node_modules
+tools/test_ui/dist
+tmp/
+*.out
+*.exe
+*.test
+coverage*
+logs
+*.log
+/vendor
+.DS_Store
