@@ -4,17 +4,7 @@ A LeetCode-like curriculum-based programming practice platform.
 
 ## Architecture
 
-Go monorepo with microservice-style separation:
-
-| Service | Port | Description |
-|---------|------|-------------|
-| `api_gateway` | 8080 | Single public entrypoint, JWT auth, proxy |
-| `auth_service` | 8081 | Login, user info |
-| `run_service` | 8082 | Code execution via Piston |
-| `submission_service` | 8083 | Submission CRUD, async judging |
-| `repo_service` | 8084 | GitHub repository commit |
-
-Infrastructure: PostgreSQL 16, Redis 7, Piston (code execution engine)
+See [docs/be/ARCHITECTURE.md](docs/be/ARCHITECTURE.md) for full architecture documentation.
 
 ## CI/CD
 
