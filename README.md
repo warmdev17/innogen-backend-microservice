@@ -22,6 +22,10 @@ make compose-full-down  # Stop all services
 make compose-full-logs  # View all logs
 ```
 
+## Production Deployment
+
+See [docs/be/VPS_NGINX_DEPLOYMENT.md](docs/be/VPS_NGINX_DEPLOYMENT.md) for full VPS setup with Nginx + HTTPS.
+
 ## API Documentation
 - Frontend: <http://localhost:8080/docs/fe>
 - Full: <http://localhost:8080/docs/be>
