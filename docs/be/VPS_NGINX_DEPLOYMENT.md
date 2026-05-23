@@ -4,16 +4,19 @@
 
 ```
 Internet → Nginx (HTTPS :443) → 127.0.0.1:8080 (api_gateway)
-                                   → Docker network → backend services
+                                   → /var/www/rinogen-leetcode (SPA static files)
 ```
 
-Only api_gateway is exposed. All other services stay private inside Docker.
+- **api_gateway** runs on port **8080** (not 8000).
+- API routes are proxied at **root level** (no `/api` prefix) — e.g., `/auth`, `/health`, `/subjects`, `/run`, etc.
+- **Frontend SPA** is served from `/var/www/rinogen-leetcode` with `try_files` fallback to `index.html`.
+- All other backend services (auth, run, submission, repo) stay private inside Docker and are **never** exposed publicly.
 
 ## Prerequisites
 
 - Ubuntu 22.04+ VPS
 - Docker + Docker Compose
-- Domain pointed to VPS IP (e.g., api.maiphuongtrunghieu.site)
+- Domain pointed to VPS IP (e.g., code.innogenlab.com)
 
 ## 1. Clone and set up
 
@@ -39,8 +42,8 @@ cp .env.example .env
 #   GITHUB_WEBHOOK_SECRET=<from-github-app-settings>
 #   GITHUB_OAUTH_CLIENT_ID=Ov23li...
 #   GITHUB_OAUTH_CLIENT_SECRET=<secret>
-#   GITHUB_OAUTH_REDIRECT_URL=https://api.your-domain.com/github/oauth/callback
-#   GITHUB_OAUTH_FRONTEND_REDIRECT_URL=https://your-domain.com/github
+#   GITHUB_OAUTH_REDIRECT_URL=https://code.innogenlab.com/github/oauth/callback
+#   GITHUB_OAUTH_FRONTEND_REDIRECT_URL=https://code.innogenlab.com/github
 ```
 
 ## 3. Start services
@@ -55,41 +58,66 @@ docker compose exec -T postgres psql -U innogen -d innogen < seeds/dev_seed.sql
 docker compose exec -T postgres psql -U innogen -d innogen < seeds/dev_problem_pack.sql
 ```
 
-## 4. Install Nginx
+## 4. Deploy Frontend SPA
 
 ```bash
-sudo apt update && sudo apt install nginx -y
+# Create web root and deploy your frontend build
+sudo mkdir -p /var/www/rinogen-leetcode
+# Copy frontend build output (index.html, assets/, etc.)
+sudo cp -r /path/to/frontend/dist/* /var/www/rinogen-leetcode/
+sudo chown -R www-data:www-data /var/www/rinogen-leetcode
 ```
 
 ## 5. Nginx config
+
+Key points:
+- **API routes are proxied at root level** (no `/api` prefix). Each API path prefix gets its own `location` block that proxies to `http://127.0.0.1:8080` (api_gateway).
+- **Frontend SPA** is served from `/var/www/rinogen-leetcode`. The catch-all `location /` uses `try_files` to fall back to `index.html` for client-side routing.
+- **api_gateway runs on port 8080** — all API proxying goes to this port.
 
 Create `/etc/nginx/sites-available/rinnogen`:
 
 ```nginx
 server {
     listen 80;
-    server_name api.maiphuongtrunghieu.site;
+    server_name code.innogenlab.com www.code.innogenlab.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name code.innogenlab.com www.code.innogenlab.com;
+
+    root /var/www/rinogen-leetcode;
+    index index.html index.htm;
+
+    ssl_certificate /etc/nginx/ssl/innogenlab.com.pem;
+    ssl_certificate_key /etc/nginx/ssl/innogenlab.com.key;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
 
     client_max_body_size 2M;
 
-    location / {
-        proxy_pass http://127.0.0.1:8080;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_read_timeout 60s;
-    }
+    # Backend API — proxy to api_gateway
+    location /health { proxy_pass http://127.0.0.1:8080; proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; }
+    location /auth { proxy_pass http://127.0.0.1:8080; proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; }
+    location /subjects { proxy_pass http://127.0.0.1:8080; proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; }
+    location /sessions { proxy_pass http://127.0.0.1:8080; proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; }
+    location /lessons { proxy_pass http://127.0.0.1:8080; proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; }
+    location /problems { proxy_pass http://127.0.0.1:8080; proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; }
+    location /run { proxy_pass http://127.0.0.1:8080; proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; }
+    location /submit { proxy_pass http://127.0.0.1:8080; proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; }
+    location /submissions { proxy_pass http://127.0.0.1:8080; proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; }
+    location /me { proxy_pass http://127.0.0.1:8080; proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; }
+    location /github { proxy_pass http://127.0.0.1:8080; proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; }
+    location /admin { proxy_pass http://127.0.0.1:8080; proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; }
+    location /docs { proxy_pass http://127.0.0.1:8080; proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; }
+    location /webhooks { proxy_pass http://127.0.0.1:8080; proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; }
+    location /repositories { proxy_pass http://127.0.0.1:8080; proxy_http_version 1.1; proxy_set_header Host $host; proxy_set_header X-Real-IP $remote_addr; proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; proxy_set_header X-Forwarded-Proto $scheme; }
 
-    location /webhooks/github {
-        proxy_pass http://127.0.0.1:8080;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_read_timeout 30s;
+    # Frontend SPA — everything else
+    location / {
+        try_files $uri $uri/ /index.html;
     }
 }
 ```
@@ -106,7 +134,7 @@ sudo systemctl reload nginx
 
 ```bash
 sudo apt install certbot python3-certbot-nginx -y
-sudo certbot --nginx -d api.maiphuongtrunghieu.site
+sudo certbot --nginx -d code.innogenlab.com -d www.code.innogenlab.com
 ```
 
 Auto-renewal:
@@ -119,9 +147,9 @@ sudo certbot renew --dry-run  # test
 ## 7. GitHub App Production URLs
 
 After HTTPS is set up, update GitHub App settings:
-- **Callback URL**: `https://api.your-domain.com/github/oauth/callback`
-- **Webhook URL**: `https://api.your-domain.com/webhooks/github`
-- **Setup URL**: `https://your-domain.com/github`
+- **Callback URL**: `https://code.innogenlab.com/github/oauth/callback`
+- **Webhook URL**: `https://code.innogenlab.com/webhooks/github`
+- **Setup URL**: `https://code.innogenlab.com/github`
 
 ## 8. Firewall
 
@@ -165,13 +193,14 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 docker compose exec postgres pg_dump -U innogen innogen > backup.sql
 
 # Check health
-curl -s https://api.your-domain.com/health
+curl -s https://code.innogenlab.com/health
 ```
 
 ## Production Checklist
 
 - [ ] .env secrets set (JWT, GitHub, OAuth)
 - [ ] GitHub private key in secrets/
+- [ ] Frontend deployed to /var/www/rinogen-leetcode
 - [ ] Nginx HTTPS working
 - [ ] Firewall active
 - [ ] GitHub App callback/webhook URLs updated
