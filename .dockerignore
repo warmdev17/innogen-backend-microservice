@@ -14,3 +14,5 @@ logs
 *.log
 /vendor
 .DS_Store
+/coverage
+/secrets
