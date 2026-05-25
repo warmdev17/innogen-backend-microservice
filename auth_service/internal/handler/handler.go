@@ -30,7 +30,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.svc.Login(r.Context(), req)
+	resp, err := h.svc.Login(r.Context(), w, r, req)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidInput):
@@ -130,6 +130,32 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.JSON(w, http.StatusCreated, resp)
+}
+
+// Refresh handles POST /auth/refresh.
+func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
+	resp, err := h.svc.Refresh(r.Context(), w, r)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrRefreshTokenMissing):
+			response.ErrorSimple(w, http.StatusUnauthorized, "Refresh token missing")
+		case errors.Is(err, service.ErrRefreshTokenInvalid), errors.Is(err, service.ErrRefreshTokenRevoked), errors.Is(err, service.ErrRefreshTokenExpired):
+			response.ErrorSimple(w, http.StatusUnauthorized, "Invalid refresh token")
+		default:
+			h.log.Error("refresh failed", slog.String("error", err.Error()))
+			response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
+		}
+		return
+	}
+	response.Success(w, http.StatusOK, resp, "Token refreshed")
+}
+
+// Logout handles POST /auth/logout.
+func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
+	if err := h.svc.Logout(r.Context(), w, r); err != nil {
+		h.log.Error("logout failed", slog.String("error", err.Error()))
+	}
+	response.Success(w, http.StatusOK, nil, "Logged out")
 }
 
 // GithubStatus handles GET /auth/github/status

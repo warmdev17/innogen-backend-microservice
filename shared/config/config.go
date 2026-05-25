@@ -38,6 +38,13 @@ type Config struct {
 	RateLimitRequests              int
 	RateLimitWindowSeconds         int
 	UpstreamTimeoutSeconds         int
+	AccessTokenTTLMinutes          int
+	RefreshTokenTTLDays            int
+	RefreshCookieName              string
+	RefreshCookieSecure            bool
+	RefreshCookieSameSite          string
+	RefreshCookieDomain            string
+	RefreshCookiePath              string
 }
 
 // defaults defines the fallback values for configuration keys.
@@ -73,6 +80,13 @@ var defaults = map[string]string{
 	"RATE_LIMIT_REQUESTS":                "120",
 	"RATE_LIMIT_WINDOW_SECONDS":          "60",
 	"UPSTREAM_TIMEOUT_SECONDS":           "30",
+	"ACCESS_TOKEN_TTL_MINUTES":           "15",
+	"REFRESH_TOKEN_TTL_DAYS":             "7",
+	"REFRESH_COOKIE_NAME":                "refreshToken",
+	"REFRESH_COOKIE_SECURE":              "false",
+	"REFRESH_COOKIE_SAMESITE":            "Lax",
+	"REFRESH_COOKIE_DOMAIN":              "",
+	"REFRESH_COOKIE_PATH":                "/auth",
 }
 
 // getEnv returns the value of the environment variable named by key, or the
@@ -119,6 +133,13 @@ func Load() *Config {
 		RateLimitRequests:              atoi(getEnv("RATE_LIMIT_REQUESTS")),
 		RateLimitWindowSeconds:         atoi(getEnv("RATE_LIMIT_WINDOW_SECONDS")),
 		UpstreamTimeoutSeconds:         atoi(getEnv("UPSTREAM_TIMEOUT_SECONDS")),
+		AccessTokenTTLMinutes:          atoi(getEnv("ACCESS_TOKEN_TTL_MINUTES")),
+		RefreshTokenTTLDays:            atoi(getEnv("REFRESH_TOKEN_TTL_DAYS")),
+		RefreshCookieName:              getEnv("REFRESH_COOKIE_NAME"),
+		RefreshCookieSecure:            getEnv("REFRESH_COOKIE_SECURE") == "true",
+		RefreshCookieSameSite:          getEnv("REFRESH_COOKIE_SAMESITE"),
+		RefreshCookieDomain:            getEnv("REFRESH_COOKIE_DOMAIN"),
+		RefreshCookiePath:              getEnv("REFRESH_COOKIE_PATH"),
 	}
 }
 

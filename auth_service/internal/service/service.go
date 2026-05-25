@@ -2,8 +2,13 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"net/http"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -15,12 +20,16 @@ import (
 
 // Sentinel errors for the service layer.
 var (
-	ErrInvalidInput       = errors.New("invalid input")
-	ErrInvalidCredentials = errors.New("invalid email or password")
-	ErrAccountInactive    = errors.New("account is inactive")
-	ErrUserNotFound       = errors.New("user not found")
-	ErrEmailTaken         = errors.New("email already registered")
-	ErrUsernameTaken      = errors.New("username already taken")
+	ErrInvalidInput        = errors.New("invalid input")
+	ErrInvalidCredentials  = errors.New("invalid email or password")
+	ErrAccountInactive     = errors.New("account is inactive")
+	ErrUserNotFound        = errors.New("user not found")
+	ErrEmailTaken          = errors.New("email already registered")
+	ErrUsernameTaken       = errors.New("username already taken")
+	ErrRefreshTokenMissing = errors.New("refresh token missing")
+	ErrRefreshTokenInvalid = errors.New("refresh token invalid")
+	ErrRefreshTokenRevoked = errors.New("refresh token revoked")
+	ErrRefreshTokenExpired = errors.New("refresh token expired")
 )
 
 // AuthService handles authentication business logic.
@@ -36,7 +45,7 @@ func New(repo *repository.UserRepository, jwtSvc *jwt.Service, cfg *config.Confi
 }
 
 // Login authenticates a user by email and password, returning a JWT token and user info.
-func (s *AuthService) Login(ctx context.Context, req dto.LoginRequest) (*dto.LoginResponse, error) {
+func (s *AuthService) Login(ctx context.Context, w http.ResponseWriter, r *http.Request, req dto.LoginRequest) (*dto.LoginResponse, error) {
 	if msg := req.Validate(); msg != "" {
 		return nil, ErrInvalidInput
 	}
@@ -57,10 +66,17 @@ func (s *AuthService) Login(ctx context.Context, req dto.LoginRequest) (*dto.Log
 		return nil, ErrInvalidCredentials
 	}
 
-	token, err := s.jwtSvc.GenerateToken(user.ID, user.Email, user.Role)
+	token, err := s.jwtSvc.GenerateToken(user.ID, user.Email, user.Role, s.cfg.AccessTokenTTLMinutes)
 	if err != nil {
 		return nil, err
 	}
+
+	rawRefresh, err := generateRefreshToken()
+	if err != nil {
+		return nil, err
+	}
+	_ = s.repo.CreateRefreshToken(ctx, user.ID, hashToken(rawRefresh), "", "", time.Now().Add(time.Duration(s.cfg.RefreshTokenTTLDays)*24*time.Hour))
+	s.setRefreshCookie(w, rawRefresh)
 
 	return &dto.LoginResponse{
 		AccessToken: token,
@@ -87,14 +103,122 @@ func (s *AuthService) CurrentUser(ctx context.Context, userID int) (*dto.MeRespo
 	}, nil
 }
 
+// Refresh validates a refresh token and issues a new access token with token rotation.
+func (s *AuthService) Refresh(ctx context.Context, w http.ResponseWriter, r *http.Request) (*dto.LoginResponse, error) {
+	cookie, err := r.Cookie(s.cfg.RefreshCookieName)
+	if err != nil {
+		return nil, ErrRefreshTokenMissing
+	}
+	rawToken := cookie.Value
+	tokenHash := hashToken(rawToken)
+	tokenID, userID, expiresAt, revokedAt, err := s.repo.FindRefreshToken(ctx, tokenHash)
+	if err != nil {
+		return nil, err
+	}
+	if tokenID == "" {
+		return nil, ErrRefreshTokenInvalid
+	}
+	if revokedAt != nil {
+		return nil, ErrRefreshTokenRevoked
+	}
+	if time.Now().After(expiresAt) {
+		return nil, ErrRefreshTokenExpired
+	}
+	user, err := s.repo.FindByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil || !user.IsActive {
+		return nil, ErrUserNotFound
+	}
+
+	// rotate: revoke old, create new
+	_ = s.repo.RevokeRefreshToken(ctx, tokenID)
+	newRaw, err := generateRefreshToken()
+	if err != nil {
+		return nil, err
+	}
+	_ = s.repo.CreateRefreshToken(ctx, userID, hashToken(newRaw), r.UserAgent(), r.RemoteAddr, time.Now().Add(time.Duration(s.cfg.RefreshTokenTTLDays)*24*time.Hour))
+	s.setRefreshCookie(w, newRaw)
+
+	accessToken, err := s.jwtSvc.GenerateToken(user.ID, user.Email, user.Role, s.cfg.AccessTokenTTLMinutes)
+	if err != nil {
+		return nil, err
+	}
+	return &dto.LoginResponse{AccessToken: accessToken, User: dto.ToUserResponse(user)}, nil
+}
+
+// Logout revokes the refresh token and clears the cookie.
+func (s *AuthService) Logout(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	cookie, err := r.Cookie(s.cfg.RefreshCookieName)
+	if err == nil {
+		tokenHash := hashToken(cookie.Value)
+		tokenID, _, _, _, _ := s.repo.FindRefreshToken(ctx, tokenHash)
+		if tokenID != "" {
+			_ = s.repo.RevokeRefreshToken(ctx, tokenID)
+		}
+	}
+	s.clearRefreshCookie(w)
+	return nil
+}
+
 // FrontendURL returns the configured frontend URL.
 func (s *AuthService) FrontendURL() string {
 	return s.cfg.FrontendURL
 }
 
+func (s *AuthService) setRefreshCookie(w http.ResponseWriter, token string) {
+	maxAge := s.cfg.RefreshTokenTTLDays * 86400
+	cookie := &http.Cookie{
+		Name:     s.cfg.RefreshCookieName,
+		Value:    token,
+		HttpOnly: true,
+		Secure:   s.cfg.RefreshCookieSecure,
+		SameSite: parseSameSite(s.cfg.RefreshCookieSameSite),
+		Path:     s.cfg.RefreshCookiePath,
+		MaxAge:   maxAge,
+	}
+	if s.cfg.RefreshCookieDomain != "" {
+		cookie.Domain = s.cfg.RefreshCookieDomain
+	}
+	http.SetCookie(w, cookie)
+}
+
+func (s *AuthService) clearRefreshCookie(w http.ResponseWriter) {
+	http.SetCookie(w, &http.Cookie{
+		Name: s.cfg.RefreshCookieName, Value: "", HttpOnly: true,
+		Secure: s.cfg.RefreshCookieSecure, SameSite: parseSameSite(s.cfg.RefreshCookieSameSite),
+		Path: s.cfg.RefreshCookiePath, MaxAge: -1,
+	})
+}
+
+func parseSameSite(s string) http.SameSite {
+	switch s {
+	case "Strict":
+		return http.SameSiteStrictMode
+	case "None":
+		return http.SameSiteNoneMode
+	default:
+		return http.SameSiteLaxMode
+	}
+}
+
+func hashToken(token string) string {
+	h := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(h[:])
+}
+
+func generateRefreshToken() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
+}
+
 // GithubConnectURL generates the GitHub App installation URL with a state JWT.
 func (s *AuthService) GithubConnectURL(userID int, userEmail string) string {
-	stateToken, _ := s.jwtSvc.GenerateToken(userID, userEmail, "user")
+	stateToken, _ := s.jwtSvc.GenerateToken(userID, userEmail, "user", 5)
 	return s.cfg.GitHubAppInstallURL + "?state=" + stateToken
 }
 
@@ -149,7 +273,7 @@ func (s *AuthService) Register(ctx context.Context, req dto.RegisterRequest) (*d
 	}
 
 	// Generate JWT and return same as login
-	token, err := s.jwtSvc.GenerateToken(user.ID, user.Email, user.Role)
+	token, err := s.jwtSvc.GenerateToken(user.ID, user.Email, user.Role, s.cfg.AccessTokenTTLMinutes)
 	if err != nil {
 		return nil, err
 	}

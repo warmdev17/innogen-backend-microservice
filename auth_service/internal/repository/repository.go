@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -127,6 +128,46 @@ func (r *UserRepository) CreateUser(ctx context.Context, email, passwordHash, us
 }
 
 // GetGithubAccountByUserID retrieves the github_account for a user (for status check).
+func (r *UserRepository) CreateRefreshToken(ctx context.Context, userID int, tokenHash, userAgent, ipAddress string, expiresAt time.Time) error {
+	_, err := r.pool.Exec(ctx,
+		`INSERT INTO refresh_tokens (user_id, token_hash, user_agent, ip_address, expires_at) VALUES ($1,$2,$3,$4,$5)`,
+		userID, tokenHash, userAgent, ipAddress, expiresAt,
+	)
+	if err != nil {
+		return fmt.Errorf("repository.CreateRefreshToken: %w", err)
+	}
+	return nil
+}
+
+func (r *UserRepository) FindRefreshToken(ctx context.Context, tokenHash string) (id string, userID int, expiresAt time.Time, revokedAt *time.Time, err error) {
+	err = r.pool.QueryRow(ctx,
+		`SELECT id, user_id, expires_at, revoked_at FROM refresh_tokens WHERE token_hash=$1`, tokenHash,
+	).Scan(&id, &userID, &expiresAt, &revokedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", 0, time.Time{}, nil, nil
+	}
+	if err != nil {
+		return "", 0, time.Time{}, nil, fmt.Errorf("repository.FindRefreshToken: %w", err)
+	}
+	return
+}
+
+func (r *UserRepository) RevokeRefreshToken(ctx context.Context, tokenID string) error {
+	_, err := r.pool.Exec(ctx, `UPDATE refresh_tokens SET revoked_at=CURRENT_TIMESTAMP WHERE id=$1`, tokenID)
+	if err != nil {
+		return fmt.Errorf("repository.RevokeRefreshToken: %w", err)
+	}
+	return nil
+}
+
+func (r *UserRepository) RevokeAllUserRefreshTokens(ctx context.Context, userID int) error {
+	_, err := r.pool.Exec(ctx, `UPDATE refresh_tokens SET revoked_at=CURRENT_TIMESTAMP WHERE user_id=$1 AND revoked_at IS NULL`, userID)
+	if err != nil {
+		return fmt.Errorf("repository.RevokeAllUserRefreshTokens: %w", err)
+	}
+	return nil
+}
+
 func (r *UserRepository) GetGithubAccountByUserID(ctx context.Context, userID int) (installationID, owner, ownerType, status string, err error) {
 	err = r.pool.QueryRow(ctx,
 		`SELECT installation_id, github_owner, github_owner_type, status FROM github_accounts WHERE user_id = $1`,

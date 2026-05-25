@@ -113,6 +113,22 @@ CREATE TRIGGER trg_users_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION set_updated_at ();
 
+CREATE TABLE refresh_tokens (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id int NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash text NOT NULL UNIQUE,
+    user_agent text,
+    ip_address text,
+    expires_at timestamp NOT NULL,
+    revoked_at timestamp,
+    created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    rotated_from uuid
+);
+
+CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
+CREATE INDEX idx_refresh_tokens_token_hash ON refresh_tokens(token_hash);
+CREATE INDEX idx_refresh_tokens_expires_at ON refresh_tokens(expires_at);
+
 CREATE TABLE tags (
     id serial PRIMARY KEY,
     name varchar(255) UNIQUE NOT NULL,

@@ -55,6 +55,8 @@ func RegisterProxyRoutes(mux *http.ServeMux, proxies *ProxySet, log *slog.Logger
 
 	// Public auth route — only strip X-User-* headers, keep Authorization intact
 	mux.Handle("POST /auth/login", stripUserHeaders(proxies.AuthPublic))
+	mux.Handle("POST /auth/refresh", stripUserHeaders(proxies.AuthPublic))
+	mux.Handle("POST /auth/logout", stripUserHeaders(proxies.AuthPublic))
 	mux.Handle("POST /auth/register", stripUserHeaders(proxies.AuthPublic))
 
 	// Authenticated routes — validate JWT, strip all auth headers, inject from claims
