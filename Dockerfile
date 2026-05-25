@@ -13,7 +13,7 @@ RUN apk add --no-cache ca-certificates tzdata
 RUN adduser -D -g '' appuser
 WORKDIR /app
 COPY --from=builder /app/bin /app/bin
-COPY docs/openapi.yaml /app/docs/openapi.yaml
+COPY docs/ /app/docs/
 USER appuser
 EXPOSE 8080
 CMD ["/app/bin"]
