@@ -371,7 +371,7 @@ paths:
       tags: [Auth]
       security: []
       summary: Login
-      description: Authenticate with email and password. Returns JWT access token and user profile.
+      description: Authenticate with email and password. Returns JWT accessToken in JSON body and sets HttpOnly refreshToken cookie.
       requestBody:
         required: true
         content:
@@ -403,6 +403,55 @@ paths:
                 error: UNAUTHORIZED
                 details: null
         '400': { $ref: '#/components/responses/BadRequest' }
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Refresh access token using HttpOnly cookie
+      description: Reads refresh token from HttpOnly cookie, validates, rotates, returns new accessToken.
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiSuccess' }
+              example:
+                status: success
+                code: 200
+                message: Token refreshed
+                data:
+                  accessToken: eyJhbGciOiJIUzI1NiIs...
+                  user: { id: 1, email: admin@example.com, username: admin, fullName: "Admin User", role: admin }
+        '401':
+          description: Invalid or missing refresh token
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+              example:
+                status: error
+                code: 401
+                message: Invalid refresh token
+                error: UNAUTHORIZED
+                details: null
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Logout and clear refresh cookie
+      description: Revokes refresh token and clears HttpOnly cookie.
+      responses:
+        '200':
+          description: Logged out
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiSuccess' }
+              example:
+                status: success
+                code: 200
+                message: Logged out
+                data: null
 
   /auth/register:
     post:
