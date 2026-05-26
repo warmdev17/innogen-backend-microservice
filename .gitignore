@@ -22,3 +22,4 @@ tools/test_ui/node_modules/
 # ignore gitnexus & .claude
 .gitnexus/
 .claude/
+.opencode/
