@@ -29,9 +29,9 @@ components:
       required: [status, code, message, data]
       properties:
         status: { type: string, enum: [success] }
-        code:   { type: integer }
+        code: { type: integer }
         message: { type: string }
-        data:   { type: object }
+        data: { type: object }
       example:
         status: success
         code: 200
@@ -42,10 +42,10 @@ components:
       type: object
       required: [status, code, message, error]
       properties:
-        status:  { type: string, enum: [error] }
-        code:    { type: integer }
+        status: { type: string, enum: [error] }
+        code: { type: integer }
         message: { type: string }
-        error:   { type: string }
+        error: { type: string }
         details: { type: object, nullable: true }
       example:
         status: error
@@ -60,14 +60,14 @@ components:
       type: object
       required: [email, password]
       properties:
-        email:    { type: string, format: email, example: admin@example.com }
+        email: { type: string, format: email, example: admin@example.com }
         password: { type: string, minLength: 6, example: password }
 
     RegisterRequest:
       type: object
       required: [email, password, username]
       properties:
-        email:    { type: string, format: email, example: user@example.com }
+        email: { type: string, format: email, example: user@example.com }
         password: { type: string, minLength: 6, example: test123 }
         username: { type: string, example: newuser }
         fullName: { type: string, example: "New User" }
@@ -75,86 +75,97 @@ components:
     UserResponse:
       type: object
       properties:
-        id:       { type: integer, example: 1 }
-        email:    { type: string, example: admin@example.com }
+        id: { type: integer, example: 1 }
+        email: { type: string, example: admin@example.com }
         username: { type: string, nullable: true, example: admin }
         fullName: { type: string, nullable: true, example: "Admin User" }
-        role:     { type: string, enum: [student, teacher, admin], example: admin }
+        role: { type: string, enum: [student, teacher, admin], example: admin }
 
     LoginData:
       type: object
       properties:
-        accessToken: { type: string, example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... }
-        user:        { $ref: '#/components/schemas/UserResponse' }
+        accessToken:
+          { type: string, example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... }
+        user: { $ref: "#/components/schemas/UserResponse" }
 
     # --- Curriculum ---
 
     Subject:
       type: object
       properties:
-        id:         { type: integer, example: 1 }
-        title:      { type: string, example: JavaScript }
-        slug:       { type: string, example: javascript }
-        color:      { type: string, nullable: true, example: "#f7df1e" }
+        id: { type: integer, example: 1 }
+        title: { type: string, example: JavaScript }
+        slug: { type: string, example: javascript }
+        color: { type: string, nullable: true, example: "#f7df1e" }
         languageId: { type: integer, nullable: true, example: 1 }
 
     SubjectWithDetail:
       type: object
       properties:
-        subject: { $ref: '#/components/schemas/Subject' }
+        subject: { $ref: "#/components/schemas/Subject" }
 
     SubjectListData:
       type: object
       properties:
         subjects:
           type: array
-          items: { $ref: '#/components/schemas/Subject' }
+          items: { $ref: "#/components/schemas/Subject" }
 
     Session:
       type: object
       properties:
-        id:          { type: integer, example: 1 }
-        subjectId:   { type: integer, example: 1 }
-        title:       { type: string, example: "Session 01 - Basics" }
-        description: { type: string, nullable: true, example: "Learn the fundamentals of JavaScript" }
-        orderIndex:  { type: integer, example: 1 }
+        id: { type: integer, example: 1 }
+        subjectId: { type: integer, example: 1 }
+        title: { type: string, example: "Session 01 - Basics" }
+        description:
+          {
+            type: string,
+            nullable: true,
+            example: "Learn the fundamentals of JavaScript",
+          }
+        orderIndex: { type: integer, example: 1 }
 
     SessionListData:
       type: object
       properties:
         sessions:
           type: array
-          items: { $ref: '#/components/schemas/Session' }
+          items: { $ref: "#/components/schemas/Session" }
 
     Lesson:
       type: object
       properties:
-        id:               { type: integer, example: 1 }
+        id: { type: integer, example: 1 }
         subjectSessionId: { type: integer, example: 1 }
-        title:            { type: string, example: "Lesson 01 - Input and Output" }
-        contentMd:        { type: string, nullable: true, example: "# Input and Output\n\nLearn how to read input..." }
-        orderIndex:       { type: integer, example: 1 }
+        title: { type: string, example: "Lesson 01 - Input and Output" }
+        contentMd:
+          {
+            type: string,
+            nullable: true,
+            example: "# Input and Output\n\nLearn how to read input...",
+          }
+        orderIndex: { type: integer, example: 1 }
 
     LessonDetail:
       type: object
       properties:
-        lesson: { $ref: '#/components/schemas/Lesson' }
+        lesson: { $ref: "#/components/schemas/Lesson" }
 
     LessonListData:
       type: object
       properties:
         lessons:
           type: array
-          items: { $ref: '#/components/schemas/Lesson' }
+          items: { $ref: "#/components/schemas/Lesson" }
 
     ProblemListItem:
       type: object
       properties:
-        id:             { type: integer, example: 1 }
-        slug:           { type: string, example: sum-two-numbers }
-        title:          { type: string, example: "Sum Two Numbers" }
-        difficulty:     { type: string, enum: [Easy, Medium, Hard], example: Easy }
-        orderIndex:     { type: integer, example: 1 }
+        id: { type: integer, example: 1 }
+        slug: { type: string, example: sum-two-numbers }
+        title: { type: string, example: "Sum Two Numbers" }
+        difficulty: { type: string, enum: [Easy, Medium, Hard], example: Easy }
+        orderIndex: { type: integer, example: 1 }
         acceptanceRate: { type: number, example: 75.5 }
 
     ProblemListData:
@@ -162,49 +173,53 @@ components:
       properties:
         problems:
           type: array
-          items: { $ref: '#/components/schemas/ProblemListItem' }
+          items: { $ref: "#/components/schemas/ProblemListItem" }
 
     # --- Problems ---
 
     ProblemDetail:
       type: object
       properties:
-        id:              { type: integer, example: 1 }
-        slug:            { type: string, example: sum-two-numbers }
-        title:           { type: string, example: "Sum Two Numbers" }
-        difficulty:      { type: string, example: Easy }
-        problemMd:       { type: string, example: "## Sum Two Numbers\n\nGiven two integers, return their sum." }
-        timeLimitMs:     { type: integer, example: 1000 }
-        memoryLimitMb:   { type: integer, example: 128 }
-        acceptanceRate:  { type: number, example: 75.5 }
+        id: { type: integer, example: 1 }
+        slug: { type: string, example: sum-two-numbers }
+        title: { type: string, example: "Sum Two Numbers" }
+        difficulty: { type: string, example: Easy }
+        problemMd:
+          {
+            type: string,
+            example: "## Sum Two Numbers\n\nGiven two integers, return their sum.",
+          }
+        timeLimitMs: { type: integer, example: 1000 }
+        memoryLimitMb: { type: integer, example: 128 }
+        acceptanceRate: { type: number, example: 75.5 }
         sampleTestCases:
           type: array
           items:
             type: object
             properties:
-              input:  { type: string, example: "2 3" }
+              input: { type: string, example: "2 3" }
               output: { type: string, example: "5" }
 
     ProblemDetailData:
       type: object
       properties:
-        problem: { $ref: '#/components/schemas/ProblemDetail' }
+        problem: { $ref: "#/components/schemas/ProblemDetail" }
 
     TestCase:
       type: object
       properties:
-        id:             { type: integer, example: 1 }
-        problemId:      { type: integer, example: 1 }
-        inputData:      { type: string, nullable: true, example: "2 3" }
+        id: { type: integer, example: 1 }
+        problemId: { type: integer, example: 1 }
+        inputData: { type: string, nullable: true, example: "2 3" }
         expectedOutput: { type: string, example: "5" }
-        orderIndex:     { type: integer, example: 1 }
+        orderIndex: { type: integer, example: 1 }
 
     TestCaseListData:
       type: object
       properties:
         testCases:
           type: array
-          items: { $ref: '#/components/schemas/TestCase' }
+          items: { $ref: "#/components/schemas/TestCase" }
 
     # --- Runner ---
 
@@ -212,30 +227,30 @@ components:
       type: object
       required: [problemId, languageId, code]
       properties:
-        problemId:  { type: integer, example: 1 }
+        problemId: { type: integer, example: 1 }
         languageId: { type: integer, example: 1 }
-        code:       { type: string, example: "console.log(1+2)" }
+        code: { type: string, example: "console.log(1+2)" }
 
     RunTestResult:
       type: object
       properties:
-        testCaseId:     { type: integer, example: 1 }
-        status:         { type: string, example: Accepted }
-        inputData:      { type: string, example: "2 3" }
+        testCaseId: { type: integer, example: 1 }
+        status: { type: string, example: Accepted }
+        inputData: { type: string, example: "2 3" }
         expectedOutput: { type: string, example: "5" }
-        actualOutput:   { type: string, example: "5" }
-        runtimeMs:      { type: integer, nullable: true, example: 25 }
-        errorMessage:   { type: string, nullable: true, example: null }
+        actualOutput: { type: string, example: "5" }
+        runtimeMs: { type: integer, nullable: true, example: 25 }
+        errorMessage: { type: string, nullable: true, example: null }
 
     RunData:
       type: object
       properties:
-        status:  { type: string, example: Accepted }
-        passed:  { type: integer, example: 2 }
-        total:   { type: integer, example: 2 }
+        status: { type: string, example: Accepted }
+        passed: { type: integer, example: 2 }
+        total: { type: integer, example: 2 }
         results:
           type: array
-          items: { $ref: '#/components/schemas/RunTestResult' }
+          items: { $ref: "#/components/schemas/RunTestResult" }
 
     # --- Submissions ---
 
@@ -243,78 +258,141 @@ components:
       type: object
       required: [problemId, languageId, code]
       properties:
-        problemId:  { type: integer, example: 1 }
+        problemId: { type: integer, example: 1 }
         languageId: { type: integer, example: 1 }
-        code:       { type: string, example: "console.log(1+2)" }
+        code: { type: string, example: "console.log(1+2)" }
 
     Submission:
       type: object
       properties:
-        id:             { type: string, format: uuid, example: "550e8400-e29b-41d4-a716-446655440000" }
-        userId:         { type: integer, example: 1 }
-        problemId:      { type: integer, example: 1 }
-        languageId:     { type: integer, example: 1 }
-        code:           { type: string, example: "console.log(1+2)" }
-        status:         { type: string, example: Accepted }
-        runtimeMs:      { type: integer, nullable: true, example: 45 }
-        memoryKb:       { type: integer, nullable: true, example: 8192 }
-        errorMessage:   { type: string, nullable: true, example: null }
-        passCount:      { type: integer, example: 2 }
+        id:
+          {
+            type: string,
+            format: uuid,
+            example: "550e8400-e29b-41d4-a716-446655440000",
+          }
+        userId: { type: integer, example: 1 }
+        problemId: { type: integer, example: 1 }
+        languageId: { type: integer, example: 1 }
+        code: { type: string, example: "console.log(1+2)" }
+        status: { type: string, example: Accepted }
+        runtimeMs: { type: integer, nullable: true, example: 45 }
+        memoryKb: { type: integer, nullable: true, example: 8192 }
+        errorMessage: { type: string, nullable: true, example: null }
+        passCount: { type: integer, example: 2 }
         totalTestcases: { type: integer, example: 2 }
-        repoPath:       { type: string, nullable: true, example: "javascript/Session-01/Lesson-01/Problem-01-sum-two-numbers/solution.js" }
-        commitSha:      { type: string, nullable: true, example: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0" }
-        commitUrl:      { type: string, nullable: true, example: "https://github.com/org/repo/commit/a1b2c3d" }
-        createdAt:      { type: string, format: date-time, example: "2026-05-20T10:00:00Z" }
-        judgedAt:       { type: string, format: date-time, nullable: true, example: "2026-05-20T10:00:05Z" }
+        repoPath:
+          {
+            type: string,
+            nullable: true,
+            example: "javascript/Session-01/Lesson-01/Problem-01-sum-two-numbers/solution.js",
+          }
+        commitSha:
+          {
+            type: string,
+            nullable: true,
+            example: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0",
+          }
+        commitUrl:
+          {
+            type: string,
+            nullable: true,
+            example: "https://github.com/org/repo/commit/a1b2c3d",
+          }
+        createdAt:
+          { type: string, format: date-time, example: "2026-05-20T10:00:00Z" }
+        judgedAt:
+          {
+            type: string,
+            format: date-time,
+            nullable: true,
+            example: "2026-05-20T10:00:05Z",
+          }
 
     SubmissionData:
       type: object
       properties:
-        submission: { $ref: '#/components/schemas/Submission' }
+        submission: { $ref: "#/components/schemas/Submission" }
 
     SubmissionListItem:
       type: object
       properties:
-        id:             { type: string, example: "550e8400-e29b-41d4-a716-446655440000" }
-        userId:         { type: integer, example: 1 }
-        problemId:      { type: integer, example: 1 }
-        languageId:     { type: integer, example: 1 }
-        status:         { type: string, example: Accepted }
-        runtimeMs:      { type: integer, nullable: true, example: 45 }
-        memoryKb:       { type: integer, nullable: true, example: 8192 }
-        errorMessage:   { type: string, nullable: true, example: null }
-        passCount:      { type: integer, example: 2 }
+        id: { type: string, example: "550e8400-e29b-41d4-a716-446655440000" }
+        userId: { type: integer, example: 1 }
+        problemId: { type: integer, example: 1 }
+        languageId: { type: integer, example: 1 }
+        status: { type: string, example: Accepted }
+        runtimeMs: { type: integer, nullable: true, example: 45 }
+        memoryKb: { type: integer, nullable: true, example: 8192 }
+        errorMessage: { type: string, nullable: true, example: null }
+        passCount: { type: integer, example: 2 }
         totalTestcases: { type: integer, example: 2 }
-        repoPath:       { type: string, nullable: true, example: "javascript/Session-01/Lesson-01/Problem-01-sum-two-numbers/solution.js" }
-        commitSha:      { type: string, nullable: true, example: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0" }
-        commitUrl:      { type: string, nullable: true, example: "https://github.com/org/repo/commit/a1b2c3d" }
-        createdAt:      { type: string, format: date-time, example: "2026-05-20T10:00:00Z" }
-        judgedAt:       { type: string, format: date-time, nullable: true, example: "2026-05-20T10:00:05Z" }
+        repoPath:
+          {
+            type: string,
+            nullable: true,
+            example: "javascript/Session-01/Lesson-01/Problem-01-sum-two-numbers/solution.js",
+          }
+        commitSha:
+          {
+            type: string,
+            nullable: true,
+            example: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0",
+          }
+        commitUrl:
+          {
+            type: string,
+            nullable: true,
+            example: "https://github.com/org/repo/commit/a1b2c3d",
+          }
+        createdAt:
+          { type: string, format: date-time, example: "2026-05-20T10:00:00Z" }
+        judgedAt:
+          {
+            type: string,
+            format: date-time,
+            nullable: true,
+            example: "2026-05-20T10:00:05Z",
+          }
 
     SubmissionListData:
       type: object
       properties:
         submissions:
           type: array
-          items: { $ref: '#/components/schemas/SubmissionListItem' }
+          items: { $ref: "#/components/schemas/SubmissionListItem" }
 
     # --- GitHub OAuth ---
 
     OAuthStartUrlData:
       type: object
       properties:
-        url: { type: string, example: "https://github.com/login/oauth/authorize?client_id=Ov23li..." }
+        url:
+          {
+            type: string,
+            example: "https://github.com/login/oauth/authorize?client_id=Ov23li...",
+          }
 
     GitHubAccountData:
       type: object
       properties:
-        connected:          { type: boolean, example: true }
-        githubUserId:       { type: string, nullable: true, example: "165092497" }
-        githubUsername:     { type: string, nullable: true, example: warmdev17 }
-        githubAvatarUrl:    { type: string, nullable: true, example: "https://avatars.githubusercontent.com/u/165092497?v=4" }
-        githubNoreplyEmail: { type: string, nullable: true, example: "165092497+warmdev17@users.noreply.github.com" }
-        commitAuthorName:   { type: string, nullable: true, example: warmdev17 }
-        oauthStatus:        { type: string, nullable: true, example: connected }
+        connected: { type: boolean, example: true }
+        githubUserId: { type: string, nullable: true, example: "165092497" }
+        githubUsername: { type: string, nullable: true, example: warmdev17 }
+        githubAvatarUrl:
+          {
+            type: string,
+            nullable: true,
+            example: "https://avatars.githubusercontent.com/u/165092497?v=4",
+          }
+        githubNoreplyEmail:
+          {
+            type: string,
+            nullable: true,
+            example: "165092497+warmdev17@users.noreply.github.com",
+          }
+        commitAuthorName: { type: string, nullable: true, example: warmdev17 }
+        oauthStatus: { type: string, nullable: true, example: connected }
 
     DisconnectData:
       type: object
@@ -326,12 +404,13 @@ components:
     GitHubConnectionData:
       type: object
       properties:
-        connected:       { type: boolean, example: true }
-        installationId:  { type: string, nullable: true, example: "133822192" }
-        githubOwner:     { type: string, nullable: true, example: "Test-GEM-Support" }
+        connected: { type: boolean, example: true }
+        installationId: { type: string, nullable: true, example: "133822192" }
+        githubOwner:
+          { type: string, nullable: true, example: "Test-GEM-Support" }
         githubOwnerType: { type: string, nullable: true, example: Organization }
-        githubUsername:  { type: string, nullable: true, example: warmdev17 }
-        status:          { type: string, nullable: true, example: active }
+        githubUsername: { type: string, nullable: true, example: warmdev17 }
+        status: { type: string, nullable: true, example: active }
 
     InstallationLinkRequest:
       type: object
@@ -342,9 +421,9 @@ components:
     InstallationLinkData:
       type: object
       properties:
-        linked:          { type: boolean, example: true }
-        installationId:  { type: string, example: "133822192" }
-        githubOwner:     { type: string, example: "Test-GEM-Support" }
+        linked: { type: boolean, example: true }
+        installationId: { type: string, example: "133822192" }
+        githubOwner: { type: string, example: "Test-GEM-Support" }
         githubOwnerType: { type: string, example: Organization }
 
   responses:
@@ -352,7 +431,7 @@ components:
       description: Invalid request (malformed body or missing required fields)
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ApiError' }
+          schema: { $ref: "#/components/schemas/ApiError" }
           example:
             status: error
             code: 400
@@ -364,7 +443,7 @@ components:
       description: Missing, malformed, or expired JWT
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ApiError' }
+          schema: { $ref: "#/components/schemas/ApiError" }
           example:
             status: error
             code: 401
@@ -376,7 +455,7 @@ components:
       description: Insufficient permissions (e.g. inactive account)
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ApiError' }
+          schema: { $ref: "#/components/schemas/ApiError" }
           example:
             status: error
             code: 403
@@ -388,7 +467,7 @@ components:
       description: The requested resource was not found
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ApiError' }
+          schema: { $ref: "#/components/schemas/ApiError" }
           example:
             status: error
             code: 404
@@ -400,7 +479,7 @@ components:
       description: Resource already exists (e.g. duplicate email)
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ApiError' }
+          schema: { $ref: "#/components/schemas/ApiError" }
           example:
             status: error
             code: 409
@@ -412,7 +491,7 @@ components:
       description: Anti-spam cooldown (10 seconds between submissions per user/problem)
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ApiError' }
+          schema: { $ref: "#/components/schemas/ApiError" }
           example:
             status: error
             code: 429
@@ -424,7 +503,7 @@ components:
       description: Unexpected server-side failure
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ApiError' }
+          schema: { $ref: "#/components/schemas/ApiError" }
           example:
             status: error
             code: 500
@@ -443,11 +522,11 @@ paths:
       summary: Health check
       description: Returns the API gateway health status. No authentication required.
       responses:
-        '200':
+        "200":
           description: Service is healthy
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ApiSuccess' }
+              schema: { $ref: "#/components/schemas/ApiSuccess" }
               example:
                 status: success
                 code: 200
@@ -469,20 +548,20 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/LoginRequest' }
+            schema: { $ref: "#/components/schemas/LoginRequest" }
             example:
               email: admin@example.com
               password: password
       responses:
-        '200':
+        "200":
           description: Login successful
           content:
             application/json:
               schema:
                 allOf:
-                  - { $ref: '#/components/schemas/ApiSuccess' }
+                  - { $ref: "#/components/schemas/ApiSuccess" }
                   - properties:
-                      data: { $ref: '#/components/schemas/LoginData' }
+                      data: { $ref: "#/components/schemas/LoginData" }
               example:
                 status: success
                 code: 200
@@ -495,18 +574,18 @@ paths:
                     username: admin
                     fullName: "Admin User"
                     role: admin
-        '401':
+        "401":
           description: Invalid email or password
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ApiError' }
+              schema: { $ref: "#/components/schemas/ApiError" }
               example:
                 status: error
                 code: 401
                 message: Invalid email or password
                 error: UNAUTHORIZED
                 details: null
-        '400': { $ref: '#/components/responses/BadRequest' }
+        "400": { $ref: "#/components/responses/BadRequest" }
 
   /auth/register:
     post:
@@ -518,22 +597,22 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/RegisterRequest' }
+            schema: { $ref: "#/components/schemas/RegisterRequest" }
             example:
               email: user@example.com
               password: test123
               username: newuser
               fullName: "New User"
       responses:
-        '201':
+        "201":
           description: Account created successfully
           content:
             application/json:
               schema:
                 allOf:
-                  - { $ref: '#/components/schemas/ApiSuccess' }
+                  - { $ref: "#/components/schemas/ApiSuccess" }
                   - properties:
-                      data: { $ref: '#/components/schemas/LoginData' }
+                      data: { $ref: "#/components/schemas/LoginData" }
               example:
                 status: success
                 code: 201
@@ -546,18 +625,18 @@ paths:
                     username: newuser
                     fullName: "New User"
                     role: student
-        '409':
+        "409":
           description: Email or username already taken
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ApiError' }
+              schema: { $ref: "#/components/schemas/ApiError" }
               example:
                 status: error
                 code: 409
                 message: Email already registered
                 error: CONFLICT
                 details: null
-        '400': { $ref: '#/components/responses/BadRequest' }
+        "400": { $ref: "#/components/responses/BadRequest" }
 
   /auth/me:
     get:
@@ -566,18 +645,18 @@ paths:
       summary: Get current user
       description: Returns the authenticated user's profile extracted from the JWT. Useful for session validation.
       responses:
-        '200':
+        "200":
           description: Current user profile
           content:
             application/json:
               schema:
                 allOf:
-                  - { $ref: '#/components/schemas/ApiSuccess' }
+                  - { $ref: "#/components/schemas/ApiSuccess" }
                   - properties:
                       data:
                         type: object
                         properties:
-                          user: { $ref: '#/components/schemas/UserResponse' }
+                          user: { $ref: "#/components/schemas/UserResponse" }
               example:
                 status: success
                 code: 200
@@ -589,8 +668,8 @@ paths:
                     username: admin
                     fullName: "Admin User"
                     role: admin
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { $ref: '#/components/responses/Forbidden' }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
 
   # ──────────────────────────────────────────────
   # Curriculum — Subjects
@@ -602,15 +681,15 @@ paths:
       summary: List published subjects
       description: Returns all published subjects ordered by ID. No authentication required.
       responses:
-        '200':
+        "200":
           description: List of subjects
           content:
             application/json:
               schema:
                 allOf:
-                  - { $ref: '#/components/schemas/ApiSuccess' }
+                  - { $ref: "#/components/schemas/ApiSuccess" }
                   - properties:
-                      data: { $ref: '#/components/schemas/SubjectListData' }
+                      data: { $ref: "#/components/schemas/SubjectListData" }
               example:
                 status: success
                 code: 200
@@ -627,7 +706,7 @@ paths:
                       slug: python
                       color: "#3572A5"
                       languageId: 2
-        '500': { $ref: '#/components/responses/InternalError' }
+        "500": { $ref: "#/components/responses/InternalError" }
 
   /subjects/{slug}:
     get:
@@ -636,17 +715,23 @@ paths:
       summary: Get subject by slug
       description: Returns a single published subject identified by its URL-safe slug.
       parameters:
-        - { name: slug, in: path, required: true, schema: { type: string }, example: javascript }
+        - {
+            name: slug,
+            in: path,
+            required: true,
+            schema: { type: string },
+            example: javascript,
+          }
       responses:
-        '200':
+        "200":
           description: Subject details
           content:
             application/json:
               schema:
                 allOf:
-                  - { $ref: '#/components/schemas/ApiSuccess' }
+                  - { $ref: "#/components/schemas/ApiSuccess" }
                   - properties:
-                      data: { $ref: '#/components/schemas/SubjectWithDetail' }
+                      data: { $ref: "#/components/schemas/SubjectWithDetail" }
               example:
                 status: success
                 code: 200
@@ -658,7 +743,7 @@ paths:
                     slug: javascript
                     color: "#f7df1e"
                     languageId: 1
-        '404': { $ref: '#/components/responses/NotFound' }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   /subjects/{slug}/sessions:
     get:
@@ -667,17 +752,23 @@ paths:
       summary: List sessions for a subject
       description: Returns all sessions belonging to the subject, ordered by orderIndex ascending.
       parameters:
-        - { name: slug, in: path, required: true, schema: { type: string }, example: javascript }
+        - {
+            name: slug,
+            in: path,
+            required: true,
+            schema: { type: string },
+            example: javascript,
+          }
       responses:
-        '200':
+        "200":
           description: List of sessions
           content:
             application/json:
               schema:
                 allOf:
-                  - { $ref: '#/components/schemas/ApiSuccess' }
+                  - { $ref: "#/components/schemas/ApiSuccess" }
                   - properties:
-                      data: { $ref: '#/components/schemas/SessionListData' }
+                      data: { $ref: "#/components/schemas/SessionListData" }
               example:
                 status: success
                 code: 200
@@ -694,7 +785,7 @@ paths:
                       title: "Session 02 - Functions"
                       description: "Deep dive into functions"
                       orderIndex: 2
-        '404': { $ref: '#/components/responses/NotFound' }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   # ──────────────────────────────────────────────
   # Curriculum — Lessons
@@ -706,17 +797,23 @@ paths:
       summary: List lessons for a session
       description: Returns all lessons in a session, ordered by orderIndex ascending.
       parameters:
-        - { name: id, in: path, required: true, schema: { type: integer }, example: 1 }
+        - {
+            name: id,
+            in: path,
+            required: true,
+            schema: { type: integer },
+            example: 1,
+          }
       responses:
-        '200':
+        "200":
           description: List of lessons
           content:
             application/json:
               schema:
                 allOf:
-                  - { $ref: '#/components/schemas/ApiSuccess' }
+                  - { $ref: "#/components/schemas/ApiSuccess" }
                   - properties:
-                      data: { $ref: '#/components/schemas/LessonListData' }
+                      data: { $ref: "#/components/schemas/LessonListData" }
               example:
                 status: success
                 code: 200
@@ -733,7 +830,7 @@ paths:
                       title: "Lesson 02 - Variables"
                       contentMd: "# Variables\n\nLearn about variable declarations."
                       orderIndex: 2
-        '400': { $ref: '#/components/responses/BadRequest' }
+        "400": { $ref: "#/components/responses/BadRequest" }
 
   /lessons/{id}:
     get:
@@ -742,17 +839,23 @@ paths:
       summary: Get lesson by ID
       description: Returns a single lesson including its Markdown content.
       parameters:
-        - { name: id, in: path, required: true, schema: { type: integer }, example: 1 }
+        - {
+            name: id,
+            in: path,
+            required: true,
+            schema: { type: integer },
+            example: 1,
+          }
       responses:
-        '200':
+        "200":
           description: Lesson details
           content:
             application/json:
               schema:
                 allOf:
-                  - { $ref: '#/components/schemas/ApiSuccess' }
+                  - { $ref: "#/components/schemas/ApiSuccess" }
                   - properties:
-                      data: { $ref: '#/components/schemas/LessonDetail' }
+                      data: { $ref: "#/components/schemas/LessonDetail" }
               example:
                 status: success
                 code: 200
@@ -764,8 +867,8 @@ paths:
                     title: "Lesson 01 - Input and Output"
                     contentMd: "# Input and Output\n\nLearn how to read input and print output."
                     orderIndex: 1
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '404': { $ref: '#/components/responses/NotFound' }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   /lessons/{id}/problems:
     get:
@@ -774,17 +877,23 @@ paths:
       summary: List problems for a lesson
       description: Returns published problems associated with a lesson, ordered by the lesson-specific orderIndex.
       parameters:
-        - { name: id, in: path, required: true, schema: { type: integer }, example: 1 }
+        - {
+            name: id,
+            in: path,
+            required: true,
+            schema: { type: integer },
+            example: 1,
+          }
       responses:
-        '200':
+        "200":
           description: List of problems
           content:
             application/json:
               schema:
                 allOf:
-                  - { $ref: '#/components/schemas/ApiSuccess' }
+                  - { $ref: "#/components/schemas/ApiSuccess" }
                   - properties:
-                      data: { $ref: '#/components/schemas/ProblemListData' }
+                      data: { $ref: "#/components/schemas/ProblemListData" }
               example:
                 status: success
                 code: 200
@@ -803,7 +912,7 @@ paths:
                       difficulty: Easy
                       orderIndex: 2
                       acceptanceRate: 90.0
-        '400': { $ref: '#/components/responses/BadRequest' }
+        "400": { $ref: "#/components/responses/BadRequest" }
 
   # ──────────────────────────────────────────────
   # Problems
@@ -815,17 +924,23 @@ paths:
       summary: Get problem by slug
       description: Returns full problem details including Markdown description, time/memory limits, acceptance rate, and sample test cases.
       parameters:
-        - { name: slug, in: path, required: true, schema: { type: string }, example: sum-two-numbers }
+        - {
+            name: slug,
+            in: path,
+            required: true,
+            schema: { type: string },
+            example: sum-two-numbers,
+          }
       responses:
-        '200':
+        "200":
           description: Problem details
           content:
             application/json:
               schema:
                 allOf:
-                  - { $ref: '#/components/schemas/ApiSuccess' }
+                  - { $ref: "#/components/schemas/ApiSuccess" }
                   - properties:
-                      data: { $ref: '#/components/schemas/ProblemDetailData' }
+                      data: { $ref: "#/components/schemas/ProblemDetailData" }
               example:
                 status: success
                 code: 200
@@ -845,7 +960,7 @@ paths:
                         output: "5"
                       - input: "-1 1"
                         output: "0"
-        '404': { $ref: '#/components/responses/NotFound' }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   /problems/{id}/test-cases:
     get:
@@ -854,18 +969,28 @@ paths:
       summary: List sample test cases for a problem
       description: Returns only sample (visible) test cases for a problem. Hidden test cases are never exposed to clients.
       parameters:
-        - { name: id, in: path, required: true, schema: { type: integer }, example: 1 }
-        - { name: visibility, in: query, schema: { type: string, enum: [sample], default: sample } }
+        - {
+            name: id,
+            in: path,
+            required: true,
+            schema: { type: integer },
+            example: 1,
+          }
+        - {
+            name: visibility,
+            in: query,
+            schema: { type: string, enum: [sample], default: sample },
+          }
       responses:
-        '200':
+        "200":
           description: List of sample test cases
           content:
             application/json:
               schema:
                 allOf:
-                  - { $ref: '#/components/schemas/ApiSuccess' }
+                  - { $ref: "#/components/schemas/ApiSuccess" }
                   - properties:
-                      data: { $ref: '#/components/schemas/TestCaseListData' }
+                      data: { $ref: "#/components/schemas/TestCaseListData" }
               example:
                 status: success
                 code: 200
@@ -882,7 +1007,7 @@ paths:
                       inputData: "-1 1"
                       expectedOutput: "0"
                       orderIndex: 2
-        '400': { $ref: '#/components/responses/BadRequest' }
+        "400": { $ref: "#/components/responses/BadRequest" }
 
   # ──────────────────────────────────────────────
   # Runner
@@ -897,7 +1022,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/RunRequest' }
+            schema: { $ref: "#/components/schemas/RunRequest" }
             example:
               problemId: 1
               languageId: 1
@@ -909,15 +1034,15 @@ paths:
                   console.log(a + b);
                 });
       responses:
-        '200':
+        "200":
           description: Run completed (may be Accepted or Wrong Answer)
           content:
             application/json:
               schema:
                 allOf:
-                  - { $ref: '#/components/schemas/ApiSuccess' }
+                  - { $ref: "#/components/schemas/ApiSuccess" }
                   - properties:
-                      data: { $ref: '#/components/schemas/RunData' }
+                      data: { $ref: "#/components/schemas/RunData" }
               example:
                 status: success
                 code: 200
@@ -939,9 +1064,9 @@ paths:
                       expectedOutput: "0"
                       actualOutput: "0"
                       runtimeMs: 20
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   # ──────────────────────────────────────────────
   # Submissions
@@ -956,7 +1081,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/SubmitRequest' }
+            schema: { $ref: "#/components/schemas/SubmitRequest" }
             example:
               problemId: 1
               languageId: 1
@@ -968,15 +1093,15 @@ paths:
                   console.log(a + b);
                 });
       responses:
-        '201':
+        "201":
           description: Submission created and queued for judging
           content:
             application/json:
               schema:
                 allOf:
-                  - { $ref: '#/components/schemas/ApiSuccess' }
+                  - { $ref: "#/components/schemas/ApiSuccess" }
                   - properties:
-                      data: { $ref: '#/components/schemas/SubmissionData' }
+                      data: { $ref: "#/components/schemas/SubmissionData" }
               example:
                 status: success
                 code: 201
@@ -999,9 +1124,9 @@ paths:
                     commitUrl: null
                     createdAt: "2026-05-20T10:00:00Z"
                     judgedAt: null
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '429': { $ref: '#/components/responses/TooManyRequests' }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
 
   /submissions/{id}:
     get:
@@ -1010,17 +1135,23 @@ paths:
       summary: Get a submission by ID
       description: Returns the full submission record including the submitted code, judgement results, and commit metadata (if committed to GitHub).
       parameters:
-        - { name: id, in: path, required: true, schema: { type: string, format: uuid }, example: "550e8400-e29b-41d4-a716-446655440000" }
+        - {
+            name: id,
+            in: path,
+            required: true,
+            schema: { type: string, format: uuid },
+            example: "550e8400-e29b-41d4-a716-446655440000",
+          }
       responses:
-        '200':
+        "200":
           description: Submission details
           content:
             application/json:
               schema:
                 allOf:
-                  - { $ref: '#/components/schemas/ApiSuccess' }
+                  - { $ref: "#/components/schemas/ApiSuccess" }
                   - properties:
-                      data: { $ref: '#/components/schemas/SubmissionData' }
+                      data: { $ref: "#/components/schemas/SubmissionData" }
               example:
                 status: success
                 code: 200
@@ -1043,9 +1174,9 @@ paths:
                     commitUrl: "https://github.com/org/repo/commit/a1b2c3d"
                     createdAt: "2026-05-20T10:00:00Z"
                     judgedAt: "2026-05-20T10:00:05Z"
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   /me/submissions:
     get:
@@ -1054,15 +1185,15 @@ paths:
       summary: List the current user's submissions
       description: Returns the authenticated user's submission history, newest first. The code field is excluded from list responses for efficiency.
       responses:
-        '200':
+        "200":
           description: List of submissions
           content:
             application/json:
               schema:
                 allOf:
-                  - { $ref: '#/components/schemas/ApiSuccess' }
+                  - { $ref: "#/components/schemas/ApiSuccess" }
                   - properties:
-                      data: { $ref: '#/components/schemas/SubmissionListData' }
+                      data: { $ref: "#/components/schemas/SubmissionListData" }
               example:
                 status: success
                 code: 200
@@ -1099,7 +1230,7 @@ paths:
                       commitUrl: null
                       createdAt: "2026-05-19T15:00:00Z"
                       judgedAt: "2026-05-19T15:00:04Z"
-        '401': { $ref: '#/components/responses/Unauthorized' }
+        "401": { $ref: "#/components/responses/Unauthorized" }
 
   /me/submissions/{problemId}/latest:
     get:
@@ -1108,17 +1239,23 @@ paths:
       summary: Get the latest submission for a specific problem
       description: Returns the most recent submission by the authenticated user for the given problem. Useful for restoring the last editor state or showing the latest result.
       parameters:
-        - { name: problemId, in: path, required: true, schema: { type: integer }, example: 1 }
+        - {
+            name: problemId,
+            in: path,
+            required: true,
+            schema: { type: integer },
+            example: 1,
+          }
       responses:
-        '200':
+        "200":
           description: Latest submission
           content:
             application/json:
               schema:
                 allOf:
-                  - { $ref: '#/components/schemas/ApiSuccess' }
+                  - { $ref: "#/components/schemas/ApiSuccess" }
                   - properties:
-                      data: { $ref: '#/components/schemas/SubmissionData' }
+                      data: { $ref: "#/components/schemas/SubmissionData" }
               example:
                 status: success
                 code: 200
@@ -1141,13 +1278,13 @@ paths:
                     commitUrl: "https://github.com/org/repo/commit/a1b2c3d"
                     createdAt: "2026-05-20T10:00:00Z"
                     judgedAt: "2026-05-20T10:00:05Z"
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404':
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404":
           description: No submission found for this problem
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ApiError' }
+              schema: { $ref: "#/components/schemas/ApiError" }
               example:
                 status: error
                 code: 404
@@ -1165,22 +1302,22 @@ paths:
       summary: Get GitHub OAuth authorization URL
       description: Returns the GitHub OAuth authorize URL. The frontend should redirect the user's browser to this URL to start the OAuth flow. After authorization, GitHub redirects back to the backend callback, which then redirects the browser to the frontend.
       responses:
-        '200':
+        "200":
           description: OAuth start URL
           content:
             application/json:
               schema:
                 allOf:
-                  - { $ref: '#/components/schemas/ApiSuccess' }
+                  - { $ref: "#/components/schemas/ApiSuccess" }
                   - properties:
-                      data: { $ref: '#/components/schemas/OAuthStartUrlData' }
+                      data: { $ref: "#/components/schemas/OAuthStartUrlData" }
               example:
                 status: success
                 code: 200
                 message: OK
                 data:
                   url: "https://github.com/login/oauth/authorize?client_id=Ov23li...&state=abc123&redirect_uri=http://localhost:8080/github/oauth/callback"
-        '401': { $ref: '#/components/responses/Unauthorized' }
+        "401": { $ref: "#/components/responses/Unauthorized" }
 
   /github/account:
     get:
@@ -1189,15 +1326,15 @@ paths:
       summary: Get connected GitHub identity
       description: Returns the OAuth-linked GitHub account used as the commit author. If no OAuth connection exists, connected is false and nullable fields are omitted.
       responses:
-        '200':
+        "200":
           description: GitHub account info
           content:
             application/json:
               schema:
                 allOf:
-                  - { $ref: '#/components/schemas/ApiSuccess' }
+                  - { $ref: "#/components/schemas/ApiSuccess" }
                   - properties:
-                      data: { $ref: '#/components/schemas/GitHubAccountData' }
+                      data: { $ref: "#/components/schemas/GitHubAccountData" }
               example:
                 status: success
                 code: 200
@@ -1210,8 +1347,8 @@ paths:
                   githubNoreplyEmail: "165092497+warmdev17@users.noreply.github.com"
                   commitAuthorName: warmdev17
                   oauthStatus: connected
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '500': { $ref: '#/components/responses/InternalError' }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "500": { $ref: "#/components/responses/InternalError" }
 
   /github/oauth/disconnect:
     post:
@@ -1220,23 +1357,23 @@ paths:
       summary: Disconnect GitHub OAuth identity
       description: Removes the GitHub OAuth link from the user's account. Does NOT uninstall the GitHub App or affect existing submission commits. After disconnecting, future submissions will not be committed.
       responses:
-        '200':
+        "200":
           description: OAuth disconnected
           content:
             application/json:
               schema:
                 allOf:
-                  - { $ref: '#/components/schemas/ApiSuccess' }
+                  - { $ref: "#/components/schemas/ApiSuccess" }
                   - properties:
-                      data: { $ref: '#/components/schemas/DisconnectData' }
+                      data: { $ref: "#/components/schemas/DisconnectData" }
               example:
                 status: success
                 code: 200
                 message: OK
                 data:
                   status: disconnected
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '500': { $ref: '#/components/responses/InternalError' }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "500": { $ref: "#/components/responses/InternalError" }
 
   # ──────────────────────────────────────────────
   # GitHub App — Connection & Installation
@@ -1248,15 +1385,16 @@ paths:
       summary: Get GitHub App installation status
       description: Returns the GitHub App installation status for the current user. Indicates whether the user has installed the GitHub App on a repository/organization and whether the installation is active.
       responses:
-        '200':
+        "200":
           description: GitHub App connection status
           content:
             application/json:
               schema:
                 allOf:
-                  - { $ref: '#/components/schemas/ApiSuccess' }
+                  - { $ref: "#/components/schemas/ApiSuccess" }
                   - properties:
-                      data: { $ref: '#/components/schemas/GitHubConnectionData' }
+                      data:
+                        { $ref: "#/components/schemas/GitHubConnectionData" }
               example:
                 status: success
                 code: 200
@@ -1268,8 +1406,8 @@ paths:
                   githubOwnerType: Organization
                   githubUsername: warmdev17
                   status: active
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '500': { $ref: '#/components/responses/InternalError' }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "500": { $ref: "#/components/responses/InternalError" }
 
   /github/installations/link:
     post:
@@ -1281,19 +1419,20 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/InstallationLinkRequest' }
+            schema: { $ref: "#/components/schemas/InstallationLinkRequest" }
             example:
               installationId: "133822192"
       responses:
-        '200':
+        "200":
           description: Installation linked successfully
           content:
             application/json:
               schema:
                 allOf:
-                  - { $ref: '#/components/schemas/ApiSuccess' }
+                  - { $ref: "#/components/schemas/ApiSuccess" }
                   - properties:
-                      data: { $ref: '#/components/schemas/InstallationLinkData' }
+                      data:
+                        { $ref: "#/components/schemas/InstallationLinkData" }
               example:
                 status: success
                 code: 200
@@ -1303,24 +1442,24 @@ paths:
                   installationId: "133822192"
                   githubOwner: "Test-GEM-Support"
                   githubOwnerType: Organization
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404':
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404":
           description: Installation not yet registered
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ApiError' }
+              schema: { $ref: "#/components/schemas/ApiError" }
               example:
                 status: error
                 code: 404
                 message: Installation is not yet registered. Wait for webhook or retry.
                 error: NOT_FOUND
                 details: null
-        '409':
+        "409":
           description: Installation already linked to another user
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ApiError' }
+              schema: { $ref: "#/components/schemas/ApiError" }
               example:
                 status: error
                 code: 409
@@ -1335,23 +1474,23 @@ paths:
       summary: Disconnect GitHub App installation locally
       description: Marks the local installation record as disconnected. Does NOT uninstall the GitHub App from the GitHub organization or repository. The user can reconnect later by installing the app again.
       responses:
-        '200':
+        "200":
           description: GitHub App disconnected
           content:
             application/json:
               schema:
                 allOf:
-                  - { $ref: '#/components/schemas/ApiSuccess' }
+                  - { $ref: "#/components/schemas/ApiSuccess" }
                   - properties:
-                      data: { $ref: '#/components/schemas/DisconnectData' }
+                      data: { $ref: "#/components/schemas/DisconnectData" }
               example:
                 status: success
                 code: 200
                 message: OK
                 data:
                   status: disconnected
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '500': { $ref: '#/components/responses/InternalError' }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "500": { $ref: "#/components/responses/InternalError" }
 
 tags:
   - name: Health
