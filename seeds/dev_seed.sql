@@ -8,7 +8,7 @@ ON CONFLICT (email)
 
 -- JavaScript language (matches Piston runtime)
 INSERT INTO languages (name, piston_alias, piston_version, file_extension, default_file_name)
-    VALUES ('JavaScript', 'javascript', '18.15.0', '.js', 'solution.js')
+    VALUES ('JavaScript', 'node', '18.15.0', '.js', 'solution.js')
 ON CONFLICT (piston_alias, piston_version)
     DO NOTHING;
 
