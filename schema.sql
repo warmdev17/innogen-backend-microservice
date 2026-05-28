@@ -114,8 +114,8 @@ CREATE TRIGGER trg_users_updated_at
     EXECUTE FUNCTION set_updated_at ();
 
 CREATE TABLE refresh_tokens (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id int NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid (),
+    user_id int NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     token_hash text NOT NULL UNIQUE,
     user_agent text,
     ip_address text,
@@ -125,9 +125,11 @@ CREATE TABLE refresh_tokens (
     rotated_from uuid
 );
 
-CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
-CREATE INDEX idx_refresh_tokens_token_hash ON refresh_tokens(token_hash);
-CREATE INDEX idx_refresh_tokens_expires_at ON refresh_tokens(expires_at);
+CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens (user_id);
+
+CREATE INDEX idx_refresh_tokens_token_hash ON refresh_tokens (token_hash);
+
+CREATE INDEX idx_refresh_tokens_expires_at ON refresh_tokens (expires_at);
 
 CREATE TABLE tags (
     id serial PRIMARY KEY,
@@ -520,7 +522,7 @@ CREATE TRIGGER trg_after_submission_update_rate
 -- =========================================================================
 INSERT INTO languages (name, piston_alias, piston_version, file_extension, default_file_name)
 VALUES
-    ('JavaScript', 'javascript', '18.15.0', '.js', 'solution.js'),
+    ('JavaScript', 'node', '18.15.0', '.js', 'solution.js'),
     ('Python 3', 'python', '3.10.0', '.py', 'solution.py'),
     ('C++', 'cpp', '10.2.0', '.cpp', 'solution.cpp')
 ON CONFLICT (piston_alias, piston_version)
