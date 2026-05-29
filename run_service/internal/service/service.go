@@ -32,7 +32,7 @@ func New(repo *repository.Repository, pistonClient *piston.Client) *RunService {
 
 // Run executes the user's code against all sample test cases for the given problem.
 func (s *RunService) Run(ctx context.Context, req dto.RunRequest) (*dto.RunResponse, error) {
-	if msg := req.Validate(); msg != "" {
+	if _, msg := req.Validate(); msg != "" {
 		return nil, ErrInvalidInput
 	}
 

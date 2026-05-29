@@ -711,7 +711,18 @@ paths:
                   total: 2
                   results:
                     - { testCaseId: 1, status: Accepted, inputData: "1 2", expectedOutput: "3", actualOutput: "3", runtimeMs: 25 }
-        '400': { $ref: '#/components/responses/BadRequest' }
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+              example:
+                status: error
+                code: 400
+                message: code must not be empty
+                error: VALIDATION_ERROR
+                details:
+                  field: code
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /submit:
@@ -745,7 +756,18 @@ paths:
                     passCount: 0
                     totalTestcases: 0
                     createdAt: "2026-05-20T10:00:00Z"
-        '400': { $ref: '#/components/responses/BadRequest' }
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+              example:
+                status: error
+                code: 400
+                message: Code must not be empty
+                error: VALIDATION_ERROR
+                details:
+                  field: code
         '401': { $ref: '#/components/responses/Unauthorized' }
         '429':
           description: Spam cooldown

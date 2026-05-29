@@ -78,6 +78,19 @@ func ErrorSimple(w http.ResponseWriter, status int, message string) {
 	Error(w, status, message, ErrorCode(status))
 }
 
+// ErrorValidation writes a 400 validation error with specific field details.
+func ErrorValidation(w http.ResponseWriter, message string, field string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusBadRequest)
+	_ = json.NewEncoder(w).Encode(ErrorEnvelope{
+		Status:  "error",
+		Code:    http.StatusBadRequest,
+		Message: message,
+		Error:   "VALIDATION_ERROR",
+		Details: map[string]string{"field": field},
+	})
+}
+
 // JSON is deprecated — use Success instead. Kept for internal backward compat.
 func JSON(w http.ResponseWriter, status int, data any) {
 	Success(w, status, data, "")

@@ -29,11 +29,16 @@ func (h *Handler) Run(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if field, msg := req.Validate(); msg != "" {
+		response.ErrorValidation(w, msg, field)
+		return
+	}
+
 	resp, err := h.svc.Run(r.Context(), req)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidInput):
-			response.ErrorSimple(w, http.StatusBadRequest, "Invalid request body")
+			response.ErrorSimple(w, http.StatusBadRequest, "Invalid input")
 		case errors.Is(err, service.ErrProblemNotFound):
 			response.ErrorSimple(w, http.StatusNotFound, "Problem not found")
 		case errors.Is(err, service.ErrLanguageNotFound):

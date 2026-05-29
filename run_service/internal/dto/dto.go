@@ -23,21 +23,21 @@ type RunRequest struct {
 	Code       string `json:"code"`
 }
 
-// Validate returns an error message string if the request is invalid, or empty string if valid.
-func (r *RunRequest) Validate() string {
+// Validate returns a field name and an error message string if the request is invalid, or empty strings if valid.
+func (r *RunRequest) Validate() (string, string) {
 	if r.ProblemID <= 0 {
-		return "problemId must be greater than 0"
+		return "problemId", "problemId must be greater than 0"
 	}
 	if r.LanguageID <= 0 {
-		return "languageId must be greater than 0"
+		return "languageId", "languageId must be greater than 0"
 	}
 	if strings.TrimSpace(r.Code) == "" {
-		return "code must not be empty"
+		return "code", "code must not be empty"
 	}
 	if len(r.Code) > 100*1024 {
-		return "code exceeds maximum allowed length (100KB)"
+		return "code", "code exceeds maximum allowed length (100KB)"
 	}
-	return ""
+	return "", ""
 }
 
 // TestResult represents the result of a single test case execution.

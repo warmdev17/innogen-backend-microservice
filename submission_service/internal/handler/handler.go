@@ -38,11 +38,16 @@ func (h *Handler) Submit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if field, msg := req.Validate(); msg != "" {
+		response.ErrorValidation(w, msg, field)
+		return
+	}
+
 	sub, err := h.svc.CreateSubmission(r.Context(), userID, req)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidInput):
-			response.ErrorSimple(w, http.StatusBadRequest, err.Error())
+			response.ErrorSimple(w, http.StatusBadRequest, "Invalid input")
 		case errors.Is(err, service.ErrProblemNotFound):
 			response.ErrorSimple(w, http.StatusBadRequest, "Problem not found")
 		case errors.Is(err, service.ErrLanguageNotFound):

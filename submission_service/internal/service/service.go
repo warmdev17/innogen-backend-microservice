@@ -36,7 +36,7 @@ func New(repo *repository.SubmissionRepository, q *queue.Queue, log *slog.Logger
 
 // CreateSubmission validates inputs and creates a new Pending submission.
 func (s *SubmissionService) CreateSubmission(ctx context.Context, userID int, req dto.SubmitRequest) (*models.Submission, error) {
-	if msg := req.Validate(); msg != "" {
+	if _, msg := req.Validate(); msg != "" {
 		return nil, fmt.Errorf("%w: %s", ErrInvalidInput, msg)
 	}
 

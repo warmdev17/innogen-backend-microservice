@@ -14,18 +14,18 @@ type SubmitRequest struct {
 	Code       string `json:"code"`
 }
 
-// Validate returns an error message if invalid, or empty string if valid.
-func (r *SubmitRequest) Validate() string {
+// Validate returns a field name and an error message if invalid, or empty strings if valid.
+func (r *SubmitRequest) Validate() (string, string) {
 	if r.ProblemID <= 0 {
-		return "Problem ID is required"
+		return "problemId", "Problem ID is required"
 	}
 	if r.LanguageID <= 0 {
-		return "Language ID is required"
+		return "languageId", "Language ID is required"
 	}
 	if strings.TrimSpace(r.Code) == "" {
-		return "Code must not be empty"
+		return "code", "Code must not be empty"
 	}
-	return ""
+	return "", ""
 }
 
 // SubmitResponse wraps a submission for POST /submit response.
