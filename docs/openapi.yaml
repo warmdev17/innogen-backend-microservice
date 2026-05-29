@@ -196,6 +196,9 @@ components:
         expectedOutput: { type: string, example: "3" }
         actualOutput: { type: string, example: "3" }
         runtimeMs: { type: integer, nullable: true, example: 25 }
+        errorMessage: { type: string, nullable: true, example: "ReferenceError: c is not defined" }
+        errorType: { type: string, nullable: true, example: "runtime_error" }
+        stderr: { type: string, nullable: true, example: "ReferenceError: c is not defined\n    at solution.js:2:14" }
 
     RunData:
       type: object

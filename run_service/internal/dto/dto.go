@@ -48,7 +48,9 @@ type TestResult struct {
 	ExpectedOutput string  `json:"expectedOutput"`
 	ActualOutput   string  `json:"actualOutput"`
 	RuntimeMs      *int    `json:"runtimeMs"`
-	ErrorMessage   *string `json:"errorMessage"`
+	ErrorMessage   *string `json:"errorMessage,omitempty"`
+	ErrorType      *string `json:"errorType,omitempty"`
+	Stderr         *string `json:"stderr,omitempty"`
 }
 
 // RunResponse is the JSON body returned by POST /run.

@@ -134,6 +134,8 @@ func (s *RunService) Run(ctx context.Context, req dto.RunRequest) (*dto.RunRespo
 			ActualOutput:   jr.ActualOutput,
 			RuntimeMs:      jr.RuntimeMs,
 			ErrorMessage:   jr.ErrorMessage,
+			ErrorType:      jr.ErrorType,
+			Stderr:         jr.Stderr,
 		}
 
 		if jr.Status == dto.StatusCompilationError {
