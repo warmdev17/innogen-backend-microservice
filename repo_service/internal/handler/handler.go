@@ -134,7 +134,7 @@ func (h *Handler) GetGithubConnection(w http.ResponseWriter, r *http.Request) {
 		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
-	response.JSON(w, http.StatusOK, resp)
+	response.Success(w, http.StatusOK, resp, "GitHub App connection status retrieved successfully")
 }
 
 // LinkGithubInstallation handles POST /github/installations/link
@@ -163,7 +163,7 @@ func (h *Handler) LinkGithubInstallation(w http.ResponseWriter, r *http.Request)
 		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
-	response.JSON(w, http.StatusOK, resp)
+	response.Success(w, http.StatusOK, resp, "GitHub App installation linked successfully")
 }
 
 // DisconnectInstallation handles POST /github/disconnect
@@ -178,5 +178,5 @@ func (h *Handler) DisconnectInstallation(w http.ResponseWriter, r *http.Request)
 		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
-	response.JSON(w, http.StatusOK, map[string]string{"status": "disconnected"})
+	response.Success(w, http.StatusOK, map[string]string{"status": "disconnected"}, "GitHub App connection disconnected successfully")
 }

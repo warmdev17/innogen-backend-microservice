@@ -63,7 +63,7 @@ func (h *Handler) Submit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusCreated, dto.SubmitResponse{Submission: sub})
+	response.Success(w, http.StatusCreated, dto.SubmitResponse{Submission: sub}, "Submission created successfully")
 }
 
 // GetByID handles GET /submissions/{id}.
@@ -85,7 +85,7 @@ func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, dto.GetSubmissionResponse{Submission: sub})
+	response.Success(w, http.StatusOK, dto.GetSubmissionResponse{Submission: sub}, "Submission retrieved successfully")
 }
 
 // ListMySubmissions handles GET /me/submissions.
@@ -103,7 +103,7 @@ func (h *Handler) ListMySubmissions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, dto.ListSubmissionsResponse{Submissions: items})
+	response.Success(w, http.StatusOK, dto.ListSubmissionsResponse{Submissions: items}, "User submissions retrieved successfully")
 }
 
 // GetLatestForProblem handles GET /me/submissions/{problemId}/latest.
@@ -132,7 +132,7 @@ func (h *Handler) GetLatestForProblem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, dto.LatestSubmissionResponse{Submission: sub})
+	response.Success(w, http.StatusOK, dto.LatestSubmissionResponse{Submission: sub}, "Latest submission retrieved successfully")
 }
 
 // isValidUUID checks if the string is a valid UUID format.

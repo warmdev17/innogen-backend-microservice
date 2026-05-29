@@ -35,7 +35,7 @@ components:
       example:
         status: success
         code: 200
-        message: OK
+        message: "Endpoint specific success message"
         data: {}
 
     ApiError:
@@ -541,7 +541,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   status: ok
                   service: api-gateway
@@ -576,7 +576,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
                   user:
@@ -671,7 +671,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   user:
                     id: 1
@@ -704,7 +704,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   subjects:
                     - id: 1
@@ -746,7 +746,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   subject:
                     id: 1
@@ -783,7 +783,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   sessions:
                     - id: 1
@@ -828,7 +828,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   lessons:
                     - id: 1
@@ -870,7 +870,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   lesson:
                     id: 1
@@ -908,7 +908,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   problems:
                     - id: 1
@@ -980,7 +980,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   problem:
                     id: 1
@@ -1030,7 +1030,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   testCases:
                     - id: 1
@@ -1082,7 +1082,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   status: Accepted
                   passed: 2
@@ -1191,7 +1191,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   submission:
                     id: "550e8400-e29b-41d4-a716-446655440000"
@@ -1228,7 +1228,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   streak:
                     currentStreak: 5
@@ -1267,7 +1267,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   submissions:
                     - id: "550e8400-e29b-41d4-a716-446655440000"
@@ -1329,7 +1329,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   submission:
                     id: "550e8400-e29b-41d4-a716-446655440000"
@@ -1384,7 +1384,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   url: "https://github.com/login/oauth/authorize?client_id=Ov23li...&state=abc123&redirect_uri=http://localhost:8080/github/oauth/callback"
         "401": { $ref: "#/components/responses/Unauthorized" }
@@ -1408,7 +1408,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   connected: true
                   githubUserId: "165092497"
@@ -1439,7 +1439,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   status: disconnected
         "401": { $ref: "#/components/responses/Unauthorized" }
@@ -1468,7 +1468,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   connected: true
                   installationId: "133822192"
@@ -1506,7 +1506,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   linked: true
                   installationId: "133822192"
@@ -1556,7 +1556,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   status: disconnected
         "401": { $ref: "#/components/responses/Unauthorized" }

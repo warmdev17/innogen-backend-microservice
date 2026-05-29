@@ -29,7 +29,7 @@ func (h *OAuthHandler) StartURL(w http.ResponseWriter, r *http.Request) {
 		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
-	response.JSON(w, http.StatusOK, resp)
+	response.Success(w, http.StatusOK, resp, "GitHub OAuth URL generated successfully")
 }
 
 func (h *OAuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
@@ -58,7 +58,7 @@ func (h *OAuthHandler) GetAccount(w http.ResponseWriter, r *http.Request) {
 		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
-	response.JSON(w, http.StatusOK, resp)
+	response.Success(w, http.StatusOK, resp, "GitHub account status retrieved successfully")
 }
 
 func (h *OAuthHandler) Disconnect(w http.ResponseWriter, r *http.Request) {
@@ -72,5 +72,5 @@ func (h *OAuthHandler) Disconnect(w http.ResponseWriter, r *http.Request) {
 		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
-	response.JSON(w, http.StatusOK, map[string]string{"status": "disconnected"})
+	response.Success(w, http.StatusOK, map[string]string{"status": "disconnected"}, "GitHub OAuth account disconnected successfully")
 }

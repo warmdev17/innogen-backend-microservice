@@ -50,5 +50,5 @@ func (h *Handler) Run(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, resp)
+	response.Success(w, http.StatusOK, resp, "Code executed successfully")
 }

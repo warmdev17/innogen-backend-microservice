@@ -46,7 +46,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, resp)
+	response.Success(w, http.StatusOK, resp, "Login successful")
 }
 
 // CurrentUser handles GET /auth/me.
@@ -71,7 +71,7 @@ func (h *Handler) CurrentUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, resp)
+	response.Success(w, http.StatusOK, resp, "Current user retrieved successfully")
 }
 
 // GithubConnect handles GET /auth/github/connect
@@ -147,7 +147,7 @@ func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	response.Success(w, http.StatusOK, resp, "Token refreshed")
+	response.Success(w, http.StatusOK, resp, "Token refreshed successfully")
 }
 
 // Logout handles POST /auth/logout.
@@ -155,7 +155,7 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 	if err := h.svc.Logout(r.Context(), w, r); err != nil {
 		h.log.Error("logout failed", slog.String("error", err.Error()))
 	}
-	response.Success(w, http.StatusOK, nil, "Logged out")
+	response.Success(w, http.StatusOK, nil, "Logout successful")
 }
 
 // GithubStatus handles GET /auth/github/status

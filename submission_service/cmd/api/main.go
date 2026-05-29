@@ -55,8 +55,8 @@ func main() {
 }
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
-	response.JSON(w, http.StatusOK, map[string]string{
+	response.Success(w, http.StatusOK, map[string]string{
 		"status":  "ok",
 		"service": "submission-service",
-	})
+	}, "Service is healthy")
 }

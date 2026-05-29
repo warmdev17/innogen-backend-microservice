@@ -22,5 +22,5 @@ func (h *Handler) GetStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.Success(w, http.StatusOK, stats, "OK")
+	response.Success(w, http.StatusOK, stats, "User stats retrieved successfully")
 }

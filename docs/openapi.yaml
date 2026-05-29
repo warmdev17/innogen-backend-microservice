@@ -35,7 +35,7 @@ components:
       example:
         status: success
         code: 200
-        message: OK
+        message: "Endpoint specific success message"
         data: {}
 
     ApiError:
@@ -377,7 +377,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data: { status: ok, service: api-gateway }
 
   /auth/login:
@@ -519,7 +519,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data: { id: 1, email: admin@example.com, username: admin, fullName: "Admin User", role: admin }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
@@ -538,7 +538,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   subjects:
                     - { id: 1, title: JavaScript, slug: javascript, color: "#f7df1e", languageId: 1 }
@@ -558,7 +558,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data: { subject: { id: 1, title: JavaScript, slug: javascript, color: "#f7df1e", languageId: 1 } }
         '404': { $ref: '#/components/responses/NotFound' }
 
@@ -577,7 +577,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data: { sessions: [{ id: 1, subjectId: 1, title: "Session 01 - Basics", description: "...", orderIndex: 1 }] }
         '404': { $ref: '#/components/responses/NotFound' }
 
@@ -596,7 +596,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data: { lessons: [{ id: 1, subjectSessionId: 1, title: "Lesson 01", contentMd: "...", orderIndex: 1 }] }
         '400': { $ref: '#/components/responses/BadRequest' }
 
@@ -615,7 +615,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data: { lesson: { id: 1, subjectSessionId: 1, title: "Lesson 01", contentMd: "...", orderIndex: 1 } }
 
   /lessons/{id}/problems:
@@ -633,7 +633,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data: { problems: [{ id: 1, slug: sum-two-numbers, title: "Sum Two Numbers", difficulty: Easy, orderIndex: 1, acceptanceRate: 75.5 }] }
   /problems/daily-challenge:
     get:
@@ -679,7 +679,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   problem:
                     id: 1
@@ -711,7 +711,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data: { testCases: [{ id: 1, problemId: 1, inputData: "1 2", expectedOutput: "3", orderIndex: 1 }] }
 
   /run:
@@ -734,7 +734,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   status: Accepted
                   passed: 2
@@ -825,7 +825,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   submission:
                     id: "550e8400-e29b-41d4-a716-446655440000"
@@ -858,7 +858,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   streak:
                     currentStreak: 5
@@ -893,7 +893,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data: { submissions: [{ id: "...", userId: 1, problemId: 1, status: Accepted, passCount: 2, totalTestcases: 2 }] }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
@@ -912,7 +912,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data: { submission: { id: "...", status: Accepted, passCount: 2, totalTestcases: 2 } }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -932,7 +932,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data: { url: "https://github.com/login/oauth/authorize?client_id=..." }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
@@ -951,7 +951,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   connected: true
                   githubUserId: "165092497"
@@ -977,7 +977,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data: { status: disconnected }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
@@ -996,7 +996,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data:
                   connected: true
                   installationId: "133822192"
@@ -1025,7 +1025,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data: { linked: true, installationId: "133822192", githubOwner: "Test-GEM-Support", githubOwnerType: Organization }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404':
@@ -1055,7 +1055,7 @@ paths:
               example:
                 status: success
                 code: 200
-                message: OK
+                message: "Endpoint specific success message"
                 data: { status: disconnected }
         '401': { $ref: '#/components/responses/Unauthorized' }
 

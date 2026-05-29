@@ -33,7 +33,7 @@ func (h *Handler) ListSubjects(w http.ResponseWriter, r *http.Request) {
 		dtos[i] = subjectToDTO(s)
 	}
 
-	response.JSON(w, http.StatusOK, map[string]any{"subjects": dtos})
+	response.Success(w, http.StatusOK, map[string]any{"subjects": dtos}, "Subjects retrieved successfully")
 }
 
 // GetSubject handles GET /subjects/{slug}.
@@ -55,7 +55,7 @@ func (h *Handler) GetSubject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, map[string]any{"subject": subjectToDTO(*subject)})
+	response.Success(w, http.StatusOK, map[string]any{"subject": subjectToDTO(*subject)}, "Subject detail retrieved successfully")
 }
 
 // ListSessions handles GET /subjects/{slug}/sessions.
@@ -89,7 +89,7 @@ func (h *Handler) ListSessions(w http.ResponseWriter, r *http.Request) {
 		dtos[i] = sessionToDTO(s)
 	}
 
-	response.JSON(w, http.StatusOK, map[string]any{"sessions": dtos})
+	response.Success(w, http.StatusOK, map[string]any{"sessions": dtos}, "Subject sessions retrieved successfully")
 }
 
 // ListLessons handles GET /sessions/{id}/lessons.
@@ -113,7 +113,7 @@ func (h *Handler) ListLessons(w http.ResponseWriter, r *http.Request) {
 		dtos[i] = lessonToDTO(l)
 	}
 
-	response.JSON(w, http.StatusOK, map[string]any{"lessons": dtos})
+	response.Success(w, http.StatusOK, map[string]any{"lessons": dtos}, "Session lessons retrieved successfully")
 }
 
 // GetLesson handles GET /lessons/{id}.
@@ -136,7 +136,7 @@ func (h *Handler) GetLesson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, map[string]any{"lesson": lessonToDTO(*lesson)})
+	response.Success(w, http.StatusOK, map[string]any{"lesson": lessonToDTO(*lesson)}, "Lesson detail retrieved successfully")
 }
 
 // ListLessonProblems handles GET /lessons/{id}/problems.
@@ -155,5 +155,5 @@ func (h *Handler) ListLessonProblems(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, map[string]any{"problems": items})
+	response.Success(w, http.StatusOK, map[string]any{"problems": items}, "Lesson problems retrieved successfully")
 }

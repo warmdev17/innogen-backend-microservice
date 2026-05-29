@@ -59,5 +59,5 @@ func (h *WebhookHandler) HandleWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
+	response.Success(w, http.StatusOK, map[string]string{"status": "ok"}, "Success")
 }

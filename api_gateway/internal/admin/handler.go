@@ -72,7 +72,7 @@ func (h *AdminHandler) CreateLanguage(w http.ResponseWriter, r *http.Request) {
 		h.handlePgError(w, err)
 		return
 	}
-	response.JSON(w, http.StatusCreated, map[string]interface{}{"language": entity})
+	response.Success(w, http.StatusCreated, map[string]interface{}{"language": entity}, "Language created successfully")
 }
 
 // UpdateLanguage handles PUT /admin/languages/{id}.
@@ -96,7 +96,7 @@ func (h *AdminHandler) UpdateLanguage(w http.ResponseWriter, r *http.Request) {
 		response.ErrorSimple(w, http.StatusNotFound, "Not found")
 		return
 	}
-	response.JSON(w, http.StatusOK, map[string]interface{}{"language": entity})
+	response.Success(w, http.StatusOK, map[string]interface{}{"language": entity}, "Language detail retrieved successfully")
 }
 
 // ListLanguages handles GET /admin/languages.
@@ -107,7 +107,7 @@ func (h *AdminHandler) ListLanguages(w http.ResponseWriter, r *http.Request) {
 		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
-	response.JSON(w, http.StatusOK, map[string]interface{}{"languages": entities})
+	response.Success(w, http.StatusOK, map[string]interface{}{"languages": entities}, "Languages retrieved successfully")
 }
 
 // GetLanguage handles GET /admin/languages/{id}.
@@ -127,7 +127,7 @@ func (h *AdminHandler) GetLanguage(w http.ResponseWriter, r *http.Request) {
 		response.ErrorSimple(w, http.StatusNotFound, "Not found")
 		return
 	}
-	response.JSON(w, http.StatusOK, map[string]interface{}{"language": entity})
+	response.Success(w, http.StatusOK, map[string]interface{}{"language": entity}, "Language detail retrieved successfully")
 }
 
 // =========================================================================
@@ -154,7 +154,7 @@ func (h *AdminHandler) CreateSubject(w http.ResponseWriter, r *http.Request) {
 		h.handlePgError(w, err)
 		return
 	}
-	response.JSON(w, http.StatusCreated, map[string]interface{}{"subject": entity})
+	response.Success(w, http.StatusCreated, map[string]interface{}{"subject": entity}, "Subject created successfully")
 }
 
 // UpdateSubject handles PUT /admin/subjects/{id}.
@@ -178,7 +178,7 @@ func (h *AdminHandler) UpdateSubject(w http.ResponseWriter, r *http.Request) {
 		response.ErrorSimple(w, http.StatusNotFound, "Not found")
 		return
 	}
-	response.JSON(w, http.StatusOK, map[string]interface{}{"subject": entity})
+	response.Success(w, http.StatusOK, map[string]interface{}{"subject": entity}, "Subject detail retrieved successfully")
 }
 
 // DeleteSubject handles DELETE /admin/subjects/{id}.
@@ -208,7 +208,7 @@ func (h *AdminHandler) ListSubjects(w http.ResponseWriter, r *http.Request) {
 		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
-	response.JSON(w, http.StatusOK, map[string]interface{}{"subjects": entities})
+	response.Success(w, http.StatusOK, map[string]interface{}{"subjects": entities}, "Subjects retrieved successfully")
 }
 
 // GetSubject handles GET /admin/subjects/{id}.
@@ -228,7 +228,7 @@ func (h *AdminHandler) GetSubject(w http.ResponseWriter, r *http.Request) {
 		response.ErrorSimple(w, http.StatusNotFound, "Not found")
 		return
 	}
-	response.JSON(w, http.StatusOK, map[string]interface{}{"subject": entity})
+	response.Success(w, http.StatusOK, map[string]interface{}{"subject": entity}, "Subject detail retrieved successfully")
 }
 
 // =========================================================================
@@ -256,7 +256,7 @@ func (h *AdminHandler) CreateSession(w http.ResponseWriter, r *http.Request) {
 		h.handlePgError(w, err)
 		return
 	}
-	response.JSON(w, http.StatusCreated, map[string]interface{}{"session": entity})
+	response.Success(w, http.StatusCreated, map[string]interface{}{"session": entity}, "Session created successfully")
 }
 
 // UpdateSession handles PUT /admin/sessions/{id}.
@@ -280,7 +280,7 @@ func (h *AdminHandler) UpdateSession(w http.ResponseWriter, r *http.Request) {
 		response.ErrorSimple(w, http.StatusNotFound, "Not found")
 		return
 	}
-	response.JSON(w, http.StatusOK, map[string]interface{}{"session": entity})
+	response.Success(w, http.StatusOK, map[string]interface{}{"session": entity}, "Session detail retrieved successfully")
 }
 
 // DeleteSession handles DELETE /admin/sessions/{id}.
@@ -327,7 +327,7 @@ func (h *AdminHandler) CreateLesson(w http.ResponseWriter, r *http.Request) {
 		h.handlePgError(w, err)
 		return
 	}
-	response.JSON(w, http.StatusCreated, map[string]interface{}{"lesson": entity})
+	response.Success(w, http.StatusCreated, map[string]interface{}{"lesson": entity}, "Lesson created successfully")
 }
 
 // UpdateLesson handles PUT /admin/lessons/{id}.
@@ -351,7 +351,7 @@ func (h *AdminHandler) UpdateLesson(w http.ResponseWriter, r *http.Request) {
 		response.ErrorSimple(w, http.StatusNotFound, "Not found")
 		return
 	}
-	response.JSON(w, http.StatusOK, map[string]interface{}{"lesson": entity})
+	response.Success(w, http.StatusOK, map[string]interface{}{"lesson": entity}, "Lesson detail retrieved successfully")
 }
 
 // DeleteLesson handles DELETE /admin/lessons/{id}.
@@ -409,7 +409,7 @@ func (h *AdminHandler) CreateProblem(w http.ResponseWriter, r *http.Request) {
 		h.handlePgError(w, err)
 		return
 	}
-	response.JSON(w, http.StatusCreated, map[string]interface{}{"problem": entity})
+	response.Success(w, http.StatusCreated, map[string]interface{}{"problem": entity}, "Problem created successfully")
 }
 
 // UpdateProblem handles PUT /admin/problems/{id}.
@@ -440,7 +440,7 @@ func (h *AdminHandler) UpdateProblem(w http.ResponseWriter, r *http.Request) {
 		response.ErrorSimple(w, http.StatusNotFound, "Not found")
 		return
 	}
-	response.JSON(w, http.StatusOK, map[string]interface{}{"problem": entity})
+	response.Success(w, http.StatusOK, map[string]interface{}{"problem": entity}, "Problem detail retrieved successfully")
 }
 
 // DeleteProblem handles DELETE /admin/problems/{id}.
@@ -507,7 +507,7 @@ func (h *AdminHandler) GetProblem(w http.ResponseWriter, r *http.Request) {
 		response.ErrorSimple(w, http.StatusNotFound, "Not found")
 		return
 	}
-	response.JSON(w, http.StatusOK, map[string]interface{}{"problem": entity})
+	response.Success(w, http.StatusOK, map[string]interface{}{"problem": entity}, "Problem detail retrieved successfully")
 }
 
 // =========================================================================
@@ -535,7 +535,7 @@ func (h *AdminHandler) CreateLessonProblem(w http.ResponseWriter, r *http.Reques
 		h.handlePgError(w, err)
 		return
 	}
-	response.JSON(w, http.StatusCreated, map[string]interface{}{"lessonProblem": entity})
+	response.Success(w, http.StatusCreated, map[string]interface{}{"lessonProblem": entity}, "Lesson problem created successfully")
 }
 
 // DeleteLessonProblem handles DELETE /admin/lessons/{lessonId}/problems/{problemId}.
@@ -594,7 +594,7 @@ func (h *AdminHandler) CreateTestCase(w http.ResponseWriter, r *http.Request) {
 		h.handlePgError(w, err)
 		return
 	}
-	response.JSON(w, http.StatusCreated, map[string]interface{}{"testCase": entity})
+	response.Success(w, http.StatusCreated, map[string]interface{}{"testCase": entity}, "Test case created successfully")
 }
 
 // UpdateTestCase handles PUT /admin/test-cases/{id}.
@@ -622,7 +622,7 @@ func (h *AdminHandler) UpdateTestCase(w http.ResponseWriter, r *http.Request) {
 		response.ErrorSimple(w, http.StatusNotFound, "Not found")
 		return
 	}
-	response.JSON(w, http.StatusOK, map[string]interface{}{"testCase": entity})
+	response.Success(w, http.StatusOK, map[string]interface{}{"testCase": entity}, "Test case detail retrieved successfully")
 }
 
 // DeleteTestCase handles DELETE /admin/test-cases/{id}.
@@ -657,7 +657,7 @@ func (h *AdminHandler) ListTestCases(w http.ResponseWriter, r *http.Request) {
 		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
-	response.JSON(w, http.StatusOK, map[string]interface{}{"testCases": entities})
+	response.Success(w, http.StatusOK, map[string]interface{}{"testCases": entities}, "Test cases retrieved successfully")
 }
 
 // =========================================================================
@@ -680,7 +680,7 @@ func (h *AdminHandler) CreateTag(w http.ResponseWriter, r *http.Request) {
 		h.handlePgError(w, err)
 		return
 	}
-	response.JSON(w, http.StatusCreated, map[string]interface{}{"tag": entity})
+	response.Success(w, http.StatusCreated, map[string]interface{}{"tag": entity}, "Problem tag linked successfully")
 }
 
 // ListTags handles GET /admin/tags.
@@ -691,7 +691,7 @@ func (h *AdminHandler) ListTags(w http.ResponseWriter, r *http.Request) {
 		response.ErrorSimple(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
-	response.JSON(w, http.StatusOK, map[string]interface{}{"tags": entities})
+	response.Success(w, http.StatusOK, map[string]interface{}{"tags": entities}, "Problem tags retrieved successfully")
 }
 
 // =========================================================================
@@ -718,7 +718,7 @@ func (h *AdminHandler) CreateProblemTag(w http.ResponseWriter, r *http.Request) 
 		h.handlePgError(w, err)
 		return
 	}
-	response.JSON(w, http.StatusCreated, map[string]interface{}{"status": "created"})
+	response.Success(w, http.StatusOK, map[string]interface{}{"status": "deleted"}, "Resource deleted successfully")
 }
 
 // DeleteProblemTag handles DELETE /admin/problems/{problemId}/tags/{tagId}.

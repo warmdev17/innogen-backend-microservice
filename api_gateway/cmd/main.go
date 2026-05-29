@@ -152,5 +152,5 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 	response.Success(w, http.StatusOK, map[string]string{
 		"status":  "ok",
 		"service": "api-gateway",
-	}, "OK")
+	}, "Service is healthy")
 }

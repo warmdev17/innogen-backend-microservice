@@ -118,7 +118,7 @@ func (h *Handler) GetProblem(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	response.JSON(w, http.StatusOK, resp)
+	response.Success(w, http.StatusOK, resp, "Problem detail retrieved successfully")
 }
 
 // ListTestCases handles GET /problems/{id}/test-cases?visibility=sample.
@@ -157,7 +157,7 @@ func (h *Handler) ListTestCases(w http.ResponseWriter, r *http.Request) {
 		TestCases: tcResponses,
 	}
 
-	response.JSON(w, http.StatusOK, resp)
+	response.Success(w, http.StatusOK, resp, "Sample test cases retrieved successfully")
 }
 
 // DailyChallengeResponse is the response DTO for the daily challenge.
@@ -223,5 +223,5 @@ func (h *Handler) GetDailyChallenge(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	response.Success(w, http.StatusOK, resp, "OK")
+	response.Success(w, http.StatusOK, resp, "Daily challenge retrieved successfully")
 }
