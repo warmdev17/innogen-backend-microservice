@@ -721,8 +721,7 @@ paths:
                 code: 400
                 message: code must not be empty
                 error: VALIDATION_ERROR
-                details:
-                  field: code
+                details: { field: "code" }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
   /submit:
@@ -766,8 +765,7 @@ paths:
                 code: 400
                 message: Code must not be empty
                 error: VALIDATION_ERROR
-                details:
-                  field: code
+                details: { field: "code" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '429':
           description: Spam cooldown
