@@ -533,3 +533,9 @@ VALUES
 ON CONFLICT (piston_alias, piston_version)
     DO NOTHING;
 
+CREATE TABLE daily_challenges (
+    id SERIAL PRIMARY KEY,
+    problem_id INT NOT NULL REFERENCES problems(id),
+    challenge_date DATE UNIQUE NOT NULL DEFAULT CURRENT_DATE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"time"
 
 	"innogen-backend/shared/response"
 )
@@ -157,4 +158,70 @@ func (h *Handler) ListTestCases(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.JSON(w, http.StatusOK, resp)
+}
+
+// DailyChallengeResponse is the response DTO for the daily challenge.
+type DailyChallengeResponse struct {
+	Date    string        `json:"date"`
+	Problem ProblemDetail `json:"problem"`
+}
+
+// GetDailyChallenge handles GET /problems/daily-challenge.
+func (h *Handler) GetDailyChallenge(w http.ResponseWriter, r *http.Request) {
+	problem, err := h.repo.GetDailyChallenge(r.Context())
+	if err != nil {
+		h.log.Error("failed to get daily challenge", "error", err)
+		response.ErrorSimple(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+	if problem == nil {
+		response.ErrorSimple(w, http.StatusNotFound, "No daily challenge available")
+		return
+	}
+
+	testCases, err := h.repo.FindTestCasesByProblemID(r.Context(), problem.ID, "sample")
+	if err != nil {
+		h.log.Error("failed to find sample test cases for daily challenge", "problemID", problem.ID, "error", err)
+		response.ErrorSimple(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	type sampleTestCase struct {
+		InputData      json.RawMessage `json:"inputData"`
+		ExpectedOutput string          `json:"expectedOutput"`
+	}
+
+	samples := make([]sampleTestCase, 0, len(testCases))
+	for _, tc := range testCases {
+		var inputData json.RawMessage
+		if tc.InputData != nil {
+			inputData = json.RawMessage(*tc.InputData)
+		}
+		samples = append(samples, sampleTestCase{
+			InputData:      inputData,
+			ExpectedOutput: tc.ExpectedOutput,
+		})
+	}
+
+	sampleBytes, _ := json.Marshal(samples)
+
+	resp := DailyChallengeResponse{
+		Date: time.Now().UTC().Format(time.DateOnly),
+		Problem: ProblemDetail{
+			ID:              problem.ID,
+			Slug:            problem.Slug,
+			Title:           problem.Title,
+			Difficulty:      problem.Difficulty,
+			ProblemMd:       problem.ProblemMD,
+			TimeLimitMs:     problem.TimeLimitMs,
+			MemoryLimitMb:   problem.MemoryLimitMb,
+			AcceptanceRate:  problem.AcceptanceRate,
+			ExecutionMode:   problem.ExecutionMode,
+			FunctionName:    problem.FunctionName,
+			InitialCode:     problem.InitialCode,
+			SampleTestCases: sampleBytes,
+		},
+	}
+
+	response.Success(w, http.StatusOK, resp, "OK")
 }

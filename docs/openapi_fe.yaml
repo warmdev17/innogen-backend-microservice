@@ -927,7 +927,34 @@ paths:
 
   # ──────────────────────────────────────────────
   # Problems
-  # ──────────────────────────────────────────────
+  # ──────────────────────────────────────────────  /problems/daily-challenge:
+    get:
+      tags: [Problems]
+      summary: Get daily challenge
+      description: Returns today's daily challenge problem. If one hasn't been selected yet today, selects an unused published problem.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiSuccess'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          date:
+                            type: string
+                            format: date
+                          problem:
+                            $ref: '#/components/schemas/ProblemDetail'
+        '404':
+          description: No daily challenge available
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   /problems/{slug}:
     get:
       tags: [Problems]

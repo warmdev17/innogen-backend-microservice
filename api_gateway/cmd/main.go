@@ -112,6 +112,7 @@ func main() {
 	mux.HandleFunc("GET /lessons/{id}/problems", curriculumHandler.ListLessonProblems)
 
 	// Problem routes
+	mux.HandleFunc("GET /problems/daily-challenge", problemHandler.GetDailyChallenge)
 	mux.HandleFunc("GET /problems/{slug}", problemHandler.GetProblem)
 	mux.HandleFunc("GET /problems/{id}/test-cases", problemHandler.ListTestCases)
 
