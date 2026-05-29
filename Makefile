@@ -42,7 +42,7 @@ piston-install:
 	@echo "Installing Node.js 18.15.0 runtime in Piston (timeout 120s)..."
 	@curl -s --max-time 120 -X POST http://localhost:2000/api/v2/packages \
 		-H "Content-Type: application/json" \
-		-d '{"language":"node","version":"18.15.0"}' || echo "  (install skipped or failed - may already be installed)"
+		-d '{"language":"javascript","version":"18.15.0"}' || echo "  (install skipped or failed - may already be installed)"
 	@echo "Done."
 
 seed-dev:

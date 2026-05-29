@@ -522,7 +522,7 @@ CREATE TRIGGER trg_after_submission_update_rate
 -- =========================================================================
 INSERT INTO languages (name, piston_alias, piston_version, file_extension, default_file_name)
 VALUES
-    ('JavaScript', 'node', '18.15.0', '.js', 'solution.js'),
+    ('JavaScript', 'javascript', '18.15.0', '.js', 'solution.js'),
     ('Python 3', 'python', '3.10.0', '.py', 'solution.py'),
     ('C++', 'cpp', '10.2.0', '.cpp', 'solution.cpp')
 ON CONFLICT (piston_alias, piston_version)
