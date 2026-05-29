@@ -1188,6 +1188,40 @@ paths:
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "404": { $ref: "#/components/responses/NotFound" }
+  /me/stats:
+    get:
+      tags: [Submissions]
+      security: [{ bearerAuth: [] }]
+      summary: Get user dashboard stats
+      description: Returns streak, solved count, rank, and activity based on accepted submissions.
+      responses:
+        '200':
+          description: User stats
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiSuccess' }
+              example:
+                status: success
+                code: 200
+                message: OK
+                data:
+                  streak:
+                    currentStreak: 5
+                    maxStreak: 12
+                    lastActiveDate: "2026-05-29"
+                  solvedCount:
+                    total: 34
+                    easy: 20
+                    medium: 12
+                    hard: 2
+                  rank:
+                    currentRank: 142
+                    totalUsers: 1200
+                    rating: 1540
+                  activity:
+                    - date: "2026-05-01"
+                      count: 2
+        '401': { $ref: '#/components/responses/Unauthorized' }
 
   /me/submissions:
     get:

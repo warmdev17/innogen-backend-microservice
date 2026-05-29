@@ -91,3 +91,35 @@ type ListSubmissionsResponse struct {
 type LatestSubmissionResponse struct {
 	Submission *models.Submission `json:"submission"`
 }
+
+// UserStatsResponse wraps the user statistics for GET /me/stats.
+type UserStatsResponse struct {
+	Streak      Streak      `json:"streak"`
+	SolvedCount SolvedCount `json:"solvedCount"`
+	Rank        Rank        `json:"rank"`
+	Activity    []Activity  `json:"activity"`
+}
+
+type Streak struct {
+	CurrentStreak  int     `json:"currentStreak"`
+	MaxStreak      int     `json:"maxStreak"`
+	LastActiveDate *string `json:"lastActiveDate"`
+}
+
+type SolvedCount struct {
+	Total  int `json:"total"`
+	Easy   int `json:"easy"`
+	Medium int `json:"medium"`
+	Hard   int `json:"hard"`
+}
+
+type Rank struct {
+	CurrentRank int `json:"currentRank"`
+	TotalUsers  int `json:"totalUsers"`
+	Rating      int `json:"rating"`
+}
+
+type Activity struct {
+	Date  string `json:"date"`
+	Count int    `json:"count"`
+}

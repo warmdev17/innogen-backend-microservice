@@ -13,4 +13,5 @@ func Register(mux *http.ServeMux, h *handler.Handler) {
 	mux.Handle("GET /submissions/{id}", middleware.XUserID()(http.HandlerFunc(h.GetByID)))
 	mux.Handle("GET /me/submissions", middleware.XUserID()(http.HandlerFunc(h.ListMySubmissions)))
 	mux.Handle("GET /me/submissions/{problemId}/latest", middleware.XUserID()(http.HandlerFunc(h.GetLatestForProblem)))
+	mux.Handle("GET /me/stats", middleware.XUserID()(http.HandlerFunc(h.GetStats)))
 }

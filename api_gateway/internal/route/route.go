@@ -73,6 +73,7 @@ func RegisterProxyRoutes(mux *http.ServeMux, proxies *ProxySet, log *slog.Logger
 	mux.Handle("GET /submissions/{id}", authMW(stripAllAuth(proxies.Submission)))
 	mux.Handle("GET /me/submissions", authMW(stripAllAuth(proxies.Submission)))
 	mux.Handle("GET /me/submissions/{problemId}/latest", authMW(stripAllAuth(proxies.Submission)))
+	mux.Handle("GET /me/stats", authMW(stripAllAuth(proxies.Submission)))
 
 	mux.Handle("GET /repositories", authMW(stripAllAuth(proxies.Repo)))
 	mux.Handle("GET /repositories/{id}/commits", authMW(stripAllAuth(proxies.Repo)))
