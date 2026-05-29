@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: innogen
       POSTGRES_PASSWORD: innogen
     ports:
-      - "5432:5432"
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       - innogen_postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -20,7 +20,7 @@ services:
     image: redis:7
     container_name: innogen-redis
     ports:
-      - "6379:6379"
+      - "${REDIS_HOST_PORT:-6379}:6379"
     volumes:
       - innogen_redis_data:/data
     healthcheck:
@@ -35,7 +35,7 @@ services:
     privileged: true
     restart: unless-stopped
     ports:
-      - "2000:2000"
+      - "${PISTON_HOST_PORT:-2000}:2000"
     volumes:
       - innogen_piston_data:/piston
 
@@ -46,7 +46,7 @@ services:
         SERVICE_PATH: api_gateway/cmd
     container_name: innogen-gateway
     ports:
-      - "8080:8080"
+      - "${API_GATEWAY_HOST_PORT:-8080}:8080"
     environment:
       APP_ENV: production
       DATABASE_URL: postgres://innogen:innogen@postgres:5432/innogen?sslmode=disable
@@ -71,7 +71,7 @@ services:
         SERVICE_PATH: auth_service/cmd
     container_name: innogen-auth
     ports:
-      - "8081:8081"
+      - "${AUTH_SERVICE_HOST_PORT:-8081}:8081"
     environment:
       APP_ENV: production
       DATABASE_URL: postgres://innogen:innogen@postgres:5432/innogen?sslmode=disable
@@ -88,7 +88,7 @@ services:
         SERVICE_PATH: run_service/cmd
     container_name: innogen-runner
     ports:
-      - "8082:8082"
+      - "${RUN_SERVICE_HOST_PORT:-8082}:8082"
     environment:
       APP_ENV: production
       DATABASE_URL: postgres://innogen:innogen@postgres:5432/innogen?sslmode=disable
@@ -105,7 +105,7 @@ services:
         SERVICE_PATH: submission_service/cmd/api
     container_name: innogen-submission
     ports:
-      - "8083:8083"
+      - "${SUBMISSION_SERVICE_HOST_PORT:-8083}:8083"
     environment:
       APP_ENV: production
       DATABASE_URL: postgres://innogen:innogen@postgres:5432/innogen?sslmode=disable
@@ -147,7 +147,7 @@ services:
         SERVICE_PATH: repo_service/cmd
     container_name: innogen-repo
     ports:
-      - "8084:8084"
+      - "${REPO_SERVICE_HOST_PORT:-8084}:8084"
     environment:
       APP_ENV: production
       DATABASE_URL: postgres://innogen:innogen@postgres:5432/innogen?sslmode=disable
