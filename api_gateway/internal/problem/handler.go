@@ -74,6 +74,32 @@ func (h *Handler) GetProblem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	testCases, err := h.repo.FindTestCasesByProblemID(r.Context(), problem.ID, "sample")
+	if err != nil {
+		h.log.Error("failed to find sample test cases", "problemID", problem.ID, "error", err)
+		response.ErrorSimple(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	type sampleTestCase struct {
+		InputData      json.RawMessage `json:"inputData"`
+		ExpectedOutput string          `json:"expectedOutput"`
+	}
+
+	samples := make([]sampleTestCase, 0, len(testCases))
+	for _, tc := range testCases {
+		var inputData json.RawMessage
+		if tc.InputData != nil {
+			inputData = json.RawMessage(*tc.InputData)
+		}
+		samples = append(samples, sampleTestCase{
+			InputData:      inputData,
+			ExpectedOutput: tc.ExpectedOutput,
+		})
+	}
+
+	sampleBytes, _ := json.Marshal(samples)
+
 	resp := ProblemResponse{
 		Problem: ProblemDetail{
 			ID:              problem.ID,
@@ -87,7 +113,7 @@ func (h *Handler) GetProblem(w http.ResponseWriter, r *http.Request) {
 			ExecutionMode:   problem.ExecutionMode,
 			FunctionName:    problem.FunctionName,
 			InitialCode:     problem.InitialCode,
-			SampleTestCases: problem.SampleTestCases,
+			SampleTestCases: sampleBytes,
 		},
 	}
 

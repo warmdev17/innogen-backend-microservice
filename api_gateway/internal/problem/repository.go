@@ -25,7 +25,7 @@ func NewProblemRepository(pool *pgxpool.Pool) *ProblemRepository {
 func (r *ProblemRepository) FindBySlug(ctx context.Context, slug string) (*models.Problem, error) {
 	query := `
 		SELECT id, slug, title, difficulty, problem_md, time_limit_ms, memory_limit_mb,
-		       acceptance_rate, is_published, sample_test_cases, created_at, updated_at
+		       acceptance_rate, is_published, execution_mode, function_name, initial_code, driver_code, solution_file_name, sample_test_cases, created_at, updated_at
 		FROM problems
 		WHERE slug = $1 AND is_published = true
 	`
@@ -34,7 +34,7 @@ func (r *ProblemRepository) FindBySlug(ctx context.Context, slug string) (*model
 	err := r.pool.QueryRow(ctx, query, slug).Scan(
 		&p.ID, &p.Slug, &p.Title, &p.Difficulty, &p.ProblemMD,
 		&p.TimeLimitMs, &p.MemoryLimitMb, &p.AcceptanceRate,
-		&p.IsPublished, &p.SampleTestCases, &p.CreatedAt, &p.UpdatedAt,
+		&p.IsPublished, &p.ExecutionMode, &p.FunctionName, &p.InitialCode, &p.DriverCode, &p.SolutionFileName, &p.SampleTestCases, &p.CreatedAt, &p.UpdatedAt,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -51,7 +51,7 @@ func (r *ProblemRepository) FindBySlug(ctx context.Context, slug string) (*model
 func (r *ProblemRepository) FindByID(ctx context.Context, id int) (*models.Problem, error) {
 	query := `
 		SELECT id, slug, title, difficulty, problem_md, time_limit_ms, memory_limit_mb,
-		       acceptance_rate, is_published, sample_test_cases, created_at, updated_at
+		       acceptance_rate, is_published, execution_mode, function_name, initial_code, driver_code, solution_file_name, sample_test_cases, created_at, updated_at
 		FROM problems
 		WHERE id = $1 AND is_published = true
 	`
@@ -60,7 +60,7 @@ func (r *ProblemRepository) FindByID(ctx context.Context, id int) (*models.Probl
 	err := r.pool.QueryRow(ctx, query, id).Scan(
 		&p.ID, &p.Slug, &p.Title, &p.Difficulty, &p.ProblemMD,
 		&p.TimeLimitMs, &p.MemoryLimitMb, &p.AcceptanceRate,
-		&p.IsPublished, &p.SampleTestCases, &p.CreatedAt, &p.UpdatedAt,
+		&p.IsPublished, &p.ExecutionMode, &p.FunctionName, &p.InitialCode, &p.DriverCode, &p.SolutionFileName, &p.SampleTestCases, &p.CreatedAt, &p.UpdatedAt,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
