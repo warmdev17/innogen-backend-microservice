@@ -926,10 +926,10 @@ paths:
         "400": { $ref: "#/components/responses/BadRequest" }
 
   # ──────────────────────────────────────────────
-  # Problems
-  # ──────────────────────────────────────────────  /problems/daily-challenge:
+  /problems/daily-challenge:
     get:
       tags: [Problems]
+      security: []
       summary: Get daily challenge
       description: Returns today's daily challenge problem. If one hasn't been selected yet today, selects an unused published problem.
       responses:
@@ -952,8 +952,6 @@ paths:
                             $ref: '#/components/schemas/ProblemDetail'
         '404':
           description: No daily challenge available
-        '500':
-          $ref: '#/components/responses/InternalServerError'
 
   /problems/{slug}:
     get:
