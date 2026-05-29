@@ -70,25 +70,35 @@ type UpdateLessonRequest struct {
 
 // --- Problems ---
 type CreateProblemRequest struct {
-	Slug            string          `json:"slug"`
-	Title           string          `json:"title"`
-	Difficulty      string          `json:"difficulty"`
-	ProblemMD       string          `json:"problemMd"`
-	TimeLimitMs     *int            `json:"timeLimitMs"`
-	MemoryLimitMb   *int            `json:"memoryLimitMb"`
-	IsPublished     *bool           `json:"isPublished"`
-	SampleTestCases json.RawMessage `json:"sampleTestCases"`
+	Slug             string          `json:"slug"`
+	Title            string          `json:"title"`
+	Difficulty       string          `json:"difficulty"`
+	ProblemMD        string          `json:"problemMd"`
+	TimeLimitMs      *int            `json:"timeLimitMs"`
+	MemoryLimitMb    *int            `json:"memoryLimitMb"`
+	IsPublished      *bool           `json:"isPublished"`
+	ExecutionMode    *string         `json:"executionMode"`
+	FunctionName     *string         `json:"functionName"`
+	InitialCode      *string         `json:"initialCode"`
+	DriverCode       *string         `json:"driverCode"`
+	SolutionFileName *string         `json:"solutionFileName"`
+	SampleTestCases  json.RawMessage `json:"sampleTestCases"`
 }
 
 type UpdateProblemRequest struct {
-	Slug            *string         `json:"slug"`
-	Title           *string         `json:"title"`
-	Difficulty      *string         `json:"difficulty"`
-	ProblemMD       *string         `json:"problemMd"`
-	TimeLimitMs     *int            `json:"timeLimitMs"`
-	MemoryLimitMb   *int            `json:"memoryLimitMb"`
-	IsPublished     *bool           `json:"isPublished"`
-	SampleTestCases json.RawMessage `json:"sampleTestCases"`
+	Slug             *string         `json:"slug"`
+	Title            *string         `json:"title"`
+	Difficulty       *string         `json:"difficulty"`
+	ProblemMD        *string         `json:"problemMd"`
+	TimeLimitMs      *int            `json:"timeLimitMs"`
+	MemoryLimitMb    *int            `json:"memoryLimitMb"`
+	IsPublished      *bool           `json:"isPublished"`
+	ExecutionMode    *string         `json:"executionMode"`
+	FunctionName     *string         `json:"functionName"`
+	InitialCode      *string         `json:"initialCode"`
+	DriverCode       *string         `json:"driverCode"`
+	SolutionFileName *string         `json:"solutionFileName"`
+	SampleTestCases  json.RawMessage `json:"sampleTestCases"`
 }
 
 // --- Lesson-Problems ---

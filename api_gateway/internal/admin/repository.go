@@ -490,14 +490,16 @@ func (r *AdminRepository) CreateProblem(ctx context.Context, req CreateProblemRe
 	var sampleTCBytes []byte
 
 	err := r.pool.QueryRow(ctx,
-		`INSERT INTO problems (slug, title, difficulty, problem_md, time_limit_ms, memory_limit_mb, is_published, sample_test_cases)
-		 VALUES ($1, $2, $3, $4, COALESCE($5, 1000), COALESCE($6, 128), COALESCE($7, FALSE), $8)
-		 RETURNING id, slug, title, difficulty, problem_md, time_limit_ms, memory_limit_mb, acceptance_rate, is_published, sample_test_cases, created_at, updated_at`,
+		`INSERT INTO problems (slug, title, difficulty, problem_md, time_limit_ms, memory_limit_mb, is_published, execution_mode, function_name, initial_code, driver_code, solution_file_name, sample_test_cases)
+		 VALUES ($1, $2, $3, $4, COALESCE($5, 1000), COALESCE($6, 128), COALESCE($7, FALSE), COALESCE($8, 'function'), $9, $10, $11, $12, $13)
+		 RETURNING id, slug, title, difficulty, problem_md, time_limit_ms, memory_limit_mb, acceptance_rate, is_published, execution_mode, function_name, initial_code, driver_code, solution_file_name, sample_test_cases, created_at, updated_at`,
 		req.Slug, req.Title, req.Difficulty, req.ProblemMD,
-		req.TimeLimitMs, req.MemoryLimitMb, req.IsPublished, req.SampleTestCases,
+		req.TimeLimitMs, req.MemoryLimitMb, req.IsPublished,
+		req.ExecutionMode, req.FunctionName, req.InitialCode, req.DriverCode, req.SolutionFileName, req.SampleTestCases,
 	).Scan(
 		&prob.ID, &prob.Slug, &prob.Title, &prob.Difficulty, &prob.ProblemMD,
 		&prob.TimeLimitMs, &prob.MemoryLimitMb, &prob.AcceptanceRate, &prob.IsPublished,
+		&prob.ExecutionMode, &prob.FunctionName, &prob.InitialCode, &prob.DriverCode, &prob.SolutionFileName,
 		&sampleTCBytes, &prob.CreatedAt, &prob.UpdatedAt,
 	)
 	if err != nil {
@@ -532,6 +534,21 @@ func (r *AdminRepository) UpdateProblem(ctx context.Context, id int, req UpdateP
 	if req.IsPublished != nil {
 		updates["is_published"] = *req.IsPublished
 	}
+	if req.ExecutionMode != nil {
+		updates["execution_mode"] = *req.ExecutionMode
+	}
+	if req.FunctionName != nil {
+		updates["function_name"] = *req.FunctionName
+	}
+	if req.InitialCode != nil {
+		updates["initial_code"] = *req.InitialCode
+	}
+	if req.DriverCode != nil {
+		updates["driver_code"] = *req.DriverCode
+	}
+	if req.SolutionFileName != nil {
+		updates["solution_file_name"] = *req.SolutionFileName
+	}
 	if req.SampleTestCases != nil {
 		updates["sample_test_cases"] = req.SampleTestCases
 	}
@@ -543,7 +560,7 @@ func (r *AdminRepository) UpdateProblem(ctx context.Context, id int, req UpdateP
 	setClause, values := buildSetClause(updates, 2)
 	query := fmt.Sprintf(
 		`UPDATE problems SET %s WHERE id=$1
-		 RETURNING id, slug, title, difficulty, problem_md, time_limit_ms, memory_limit_mb, acceptance_rate, is_published, sample_test_cases, created_at, updated_at`,
+		 RETURNING id, slug, title, difficulty, problem_md, time_limit_ms, memory_limit_mb, acceptance_rate, is_published, execution_mode, function_name, initial_code, driver_code, solution_file_name, sample_test_cases, created_at, updated_at`,
 		setClause,
 	)
 	args := append([]interface{}{id}, values...)
@@ -553,6 +570,7 @@ func (r *AdminRepository) UpdateProblem(ctx context.Context, id int, req UpdateP
 	err := r.pool.QueryRow(ctx, query, args...).Scan(
 		&prob.ID, &prob.Slug, &prob.Title, &prob.Difficulty, &prob.ProblemMD,
 		&prob.TimeLimitMs, &prob.MemoryLimitMb, &prob.AcceptanceRate, &prob.IsPublished,
+		&prob.ExecutionMode, &prob.FunctionName, &prob.InitialCode, &prob.DriverCode, &prob.SolutionFileName,
 		&sampleTCBytes, &prob.CreatedAt, &prob.UpdatedAt,
 	)
 	if err != nil {
@@ -586,7 +604,7 @@ func (r *AdminRepository) FindAllProblems(ctx context.Context, page, limit int) 
 	// Fetch page
 	offset := (page - 1) * limit
 	rows, err := r.pool.Query(ctx,
-		`SELECT id, slug, title, difficulty, problem_md, time_limit_ms, memory_limit_mb, acceptance_rate, is_published, sample_test_cases, created_at, updated_at
+		`SELECT id, slug, title, difficulty, problem_md, time_limit_ms, memory_limit_mb, acceptance_rate, is_published, execution_mode, function_name, initial_code, driver_code, solution_file_name, sample_test_cases, created_at, updated_at
 		 FROM problems ORDER BY id LIMIT $1 OFFSET $2`,
 		limit, offset,
 	)
@@ -602,6 +620,7 @@ func (r *AdminRepository) FindAllProblems(ctx context.Context, page, limit int) 
 		err := rows.Scan(
 			&prob.ID, &prob.Slug, &prob.Title, &prob.Difficulty, &prob.ProblemMD,
 			&prob.TimeLimitMs, &prob.MemoryLimitMb, &prob.AcceptanceRate, &prob.IsPublished,
+			&prob.ExecutionMode, &prob.FunctionName, &prob.InitialCode, &prob.DriverCode, &prob.SolutionFileName,
 			&sampleTCBytes, &prob.CreatedAt, &prob.UpdatedAt,
 		)
 		if err != nil {
@@ -621,11 +640,12 @@ func (r *AdminRepository) FindProblemByID(ctx context.Context, id int) (*models.
 	var prob models.Problem
 	var sampleTCBytes []byte
 	err := r.pool.QueryRow(ctx,
-		`SELECT id, slug, title, difficulty, problem_md, time_limit_ms, memory_limit_mb, acceptance_rate, is_published, sample_test_cases, created_at, updated_at
+		`SELECT id, slug, title, difficulty, problem_md, time_limit_ms, memory_limit_mb, acceptance_rate, is_published, execution_mode, function_name, initial_code, driver_code, solution_file_name, sample_test_cases, created_at, updated_at
 		 FROM problems WHERE id=$1`, id,
 	).Scan(
 		&prob.ID, &prob.Slug, &prob.Title, &prob.Difficulty, &prob.ProblemMD,
 		&prob.TimeLimitMs, &prob.MemoryLimitMb, &prob.AcceptanceRate, &prob.IsPublished,
+		&prob.ExecutionMode, &prob.FunctionName, &prob.InitialCode, &prob.DriverCode, &prob.SolutionFileName,
 		&sampleTCBytes, &prob.CreatedAt, &prob.UpdatedAt,
 	)
 	if err != nil {

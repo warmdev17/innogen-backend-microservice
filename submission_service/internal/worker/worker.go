@@ -152,7 +152,12 @@ func (w *Worker) processJob(ctx context.Context, submissionID string) error {
 			stdin = *tc.InputData
 		}
 
-		pistonResp, err := w.pistonClient.Execute(ctx, lang.PistonAlias, lang.PistonVersion, fileName, sub.Code, stdin, problem.TimeLimitMs)
+		codeToRun := sub.Code
+		if problem.ExecutionMode == "function" && problem.DriverCode != nil {
+			codeToRun = sub.Code + "\n\n" + *problem.DriverCode
+		}
+
+		pistonResp, err := w.pistonClient.Execute(ctx, lang.PistonAlias, lang.PistonVersion, fileName, codeToRun, stdin, problem.TimeLimitMs)
 		if err != nil {
 			internalError = true
 			msg := err.Error()

@@ -165,6 +165,11 @@ CREATE TABLE problems (
     memory_limit_mb int NOT NULL DEFAULT 128,
     acceptance_rate DECIMAL(5, 2) NOT NULL DEFAULT 0,
     is_published boolean NOT NULL DEFAULT FALSE,
+    execution_mode varchar(50) NOT NULL DEFAULT 'function',
+    function_name varchar(255),
+    initial_code text,
+    driver_code text,
+    solution_file_name varchar(255),
     -- Dùng cho nút Run nhanh.
     -- Full testcase vẫn nằm ở bảng test_cases.
     sample_test_cases jsonb NOT NULL DEFAULT '[]'::jsonb,

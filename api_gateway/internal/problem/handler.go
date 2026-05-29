@@ -35,6 +35,9 @@ type ProblemDetail struct {
 	TimeLimitMs     int             `json:"timeLimitMs"`
 	MemoryLimitMb   int             `json:"memoryLimitMb"`
 	AcceptanceRate  float64         `json:"acceptanceRate"`
+	ExecutionMode   string          `json:"executionMode"`
+	FunctionName    *string         `json:"functionName"`
+	InitialCode     *string         `json:"initialCode"`
 	SampleTestCases json.RawMessage `json:"sampleTestCases"`
 }
 
@@ -81,6 +84,9 @@ func (h *Handler) GetProblem(w http.ResponseWriter, r *http.Request) {
 			TimeLimitMs:     problem.TimeLimitMs,
 			MemoryLimitMb:   problem.MemoryLimitMb,
 			AcceptanceRate:  problem.AcceptanceRate,
+			ExecutionMode:   problem.ExecutionMode,
+			FunctionName:    problem.FunctionName,
+			InitialCode:     problem.InitialCode,
 			SampleTestCases: problem.SampleTestCases,
 		},
 	}

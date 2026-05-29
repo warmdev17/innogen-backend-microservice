@@ -57,18 +57,23 @@ type Lesson struct {
 
 // Problem represents a row in the problems table.
 type Problem struct {
-	ID              int             `json:"id"`
-	Slug            string          `json:"slug"`
-	Title           string          `json:"title"`
-	Difficulty      string          `json:"difficulty"`
-	ProblemMD       string          `json:"problemMd"`
-	TimeLimitMs     int             `json:"timeLimitMs"`
-	MemoryLimitMb   int             `json:"memoryLimitMb"`
-	AcceptanceRate  float64         `json:"acceptanceRate"`
-	IsPublished     bool            `json:"isPublished"`
-	SampleTestCases json.RawMessage `json:"sampleTestCases"`
-	CreatedAt       time.Time       `json:"createdAt"`
-	UpdatedAt       time.Time       `json:"updatedAt"`
+	ID               int             `json:"id"`
+	Slug             string          `json:"slug"`
+	Title            string          `json:"title"`
+	Difficulty       string          `json:"difficulty"`
+	ProblemMD        string          `json:"problemMd"`
+	TimeLimitMs      int             `json:"timeLimitMs"`
+	MemoryLimitMb    int             `json:"memoryLimitMb"`
+	AcceptanceRate   float64         `json:"acceptanceRate"`
+	IsPublished      bool            `json:"isPublished"`
+	ExecutionMode    string          `json:"executionMode"`
+	FunctionName     *string         `json:"functionName"`
+	InitialCode      *string         `json:"initialCode"`
+	DriverCode       *string         `json:"driverCode"`
+	SolutionFileName *string         `json:"solutionFileName"`
+	SampleTestCases  json.RawMessage `json:"sampleTestCases"`
+	CreatedAt        time.Time       `json:"createdAt"`
+	UpdatedAt        time.Time       `json:"updatedAt"`
 }
 
 // TestCase represents a row in the test_cases table.

@@ -2,7 +2,9 @@
 package judge
 
 import (
+	"encoding/json"
 	"math"
+	"reflect"
 	"strings"
 
 	"innogen-backend/shared/constants"
@@ -83,6 +85,16 @@ func Evaluate(expectedOutput, compileStderr, runStdout, runStderr string, runCod
 	status := constants.StatusWrongAnswer
 	if actual == expected {
 		status = constants.StatusAccepted
+	} else {
+		// Attempt JSON normalization
+		var actualJSON, expectedJSON any
+		if errA := json.Unmarshal([]byte(actual), &actualJSON); errA == nil {
+			if errE := json.Unmarshal([]byte(expected), &expectedJSON); errE == nil {
+				if reflect.DeepEqual(actualJSON, expectedJSON) {
+					status = constants.StatusAccepted
+				}
+			}
+		}
 	}
 
 	return EvaluateResult{

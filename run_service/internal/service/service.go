@@ -36,12 +36,12 @@ func (s *RunService) Run(ctx context.Context, req dto.RunRequest) (*dto.RunRespo
 		return nil, ErrInvalidInput
 	}
 
-	// Verify problem exists
-	exists, err := s.repo.ProblemExists(ctx, req.ProblemID)
+	// Verify problem exists and get details
+	problem, err := s.repo.GetProblemByID(ctx, req.ProblemID)
 	if err != nil {
 		return nil, err
 	}
-	if !exists {
+	if problem == nil {
 		return nil, ErrProblemNotFound
 	}
 
@@ -85,8 +85,14 @@ func (s *RunService) Run(ctx context.Context, req dto.RunRequest) (*dto.RunRespo
 			stdin = *tc.InputData
 		}
 
+		// Combine code if function mode
+		codeToRun := req.Code
+		if problem.ExecutionMode == "function" && problem.DriverCode != nil {
+			codeToRun = req.Code + "\n\n" + *problem.DriverCode
+		}
+
 		// Call Piston
-		pistonResp, err := s.pistonClient.Execute(ctx, lang.PistonAlias, lang.PistonVersion, fileName, req.Code, stdin, 0)
+		pistonResp, err := s.pistonClient.Execute(ctx, lang.PistonAlias, lang.PistonVersion, fileName, codeToRun, stdin, 0)
 		if err != nil {
 			internalError = true
 			msg := err.Error()

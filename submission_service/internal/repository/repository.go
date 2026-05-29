@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -173,17 +174,19 @@ func (r *SubmissionRepository) LanguageExists(ctx context.Context, id int) (bool
 // Returns nil, nil if not found.
 func (r *SubmissionRepository) GetProblemByID(ctx context.Context, id int) (*models.Problem, error) {
 	p := &models.Problem{}
+	var sampleTCBytes []byte
 	err := r.pool.QueryRow(ctx,
-		`SELECT id, slug, title, difficulty, problem_md, time_limit_ms, memory_limit_mb, acceptance_rate, is_published, sample_test_cases, created_at, updated_at
+		`SELECT id, slug, title, difficulty, problem_md, time_limit_ms, memory_limit_mb, acceptance_rate, is_published, execution_mode, function_name, initial_code, driver_code, solution_file_name, sample_test_cases, created_at, updated_at
          FROM problems WHERE id = $1`, id,
 	).Scan(&p.ID, &p.Slug, &p.Title, &p.Difficulty, &p.ProblemMD, &p.TimeLimitMs, &p.MemoryLimitMb,
-		&p.AcceptanceRate, &p.IsPublished, &p.SampleTestCases, &p.CreatedAt, &p.UpdatedAt)
+		&p.AcceptanceRate, &p.IsPublished, &p.ExecutionMode, &p.FunctionName, &p.InitialCode, &p.DriverCode, &p.SolutionFileName, &sampleTCBytes, &p.CreatedAt, &p.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("repository.GetProblemByID: %w", err)
 	}
+	p.SampleTestCases = json.RawMessage(sampleTCBytes)
 	return p, nil
 }
 

@@ -152,6 +152,17 @@ components:
     ProblemDetail:
       type: object
       properties:
+        executionMode:
+          type: string
+          description: The execution mode (e.g. stdin_stdout or function)
+        functionName:
+          type: string
+          nullable: true
+          description: Name of the function to be implemented
+        initialCode:
+          type: string
+          nullable: true
+          description: Starting code template for the user
         problem: { $ref: '#/components/schemas/Problem' }
 
     TestCase:

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -20,17 +21,23 @@ func New(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
-// ProblemExists checks whether a problem with the given ID exists.
-func (r *Repository) ProblemExists(ctx context.Context, id int) (bool, error) {
-	var exists bool
+// GetProblemByID looks up a problem by its ID.
+func (r *Repository) GetProblemByID(ctx context.Context, id int) (*models.Problem, error) {
+	p := &models.Problem{}
+	var sampleTCBytes []byte
 	err := r.pool.QueryRow(ctx,
-		`SELECT EXISTS(SELECT 1 FROM problems WHERE id = $1)`,
+		`SELECT id, slug, title, difficulty, time_limit_ms, memory_limit_mb, is_published, execution_mode, function_name, initial_code, driver_code, solution_file_name, sample_test_cases
+		 FROM problems WHERE id = $1`,
 		id,
-	).Scan(&exists)
-	if err != nil {
-		return false, fmt.Errorf("repository.ProblemExists: %w", err)
+	).Scan(&p.ID, &p.Slug, &p.Title, &p.Difficulty, &p.TimeLimitMs, &p.MemoryLimitMb, &p.IsPublished, &p.ExecutionMode, &p.FunctionName, &p.InitialCode, &p.DriverCode, &p.SolutionFileName, &sampleTCBytes)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
 	}
-	return exists, nil
+	if err != nil {
+		return nil, fmt.Errorf("repository.GetProblemByID: %w", err)
+	}
+	p.SampleTestCases = json.RawMessage(sampleTCBytes)
+	return p, nil
 }
 
 // GetLanguageByID looks up an active language by its ID.
