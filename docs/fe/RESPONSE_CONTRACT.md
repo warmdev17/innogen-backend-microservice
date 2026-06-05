@@ -41,7 +41,7 @@ Error responses will have an HTTP 4xx or 5xx status code and the following struc
 - **`details`**: Optional field containing additional context, such as a map of field names to validation errors.
 
 ## Frontend Logic Guidelines
-- Use the HTTP status code or the envelope `code` to detect errors vs. successes.
+- **HTTP status code must match `body.code`**. Use the HTTP status code for transport-level handling (e.g., retries, generic error boundaries).
 - Use `status` to definitively verify a successful response envelope.
-- Use the `error` field to programmatically handle specific error types (e.g., redirecting to login on `"UNAUTHORIZED"`).
+- Use the `body.error` field to programmatically handle specific machine-readable app errors (e.g., redirecting to login on `"UNAUTHORIZED"`).
 - Only use `message` for display purposes (toasts, alerts, inline errors), never for conditional logic.

@@ -96,6 +96,11 @@ func JSON(w http.ResponseWriter, status int, data any) {
 	Success(w, status, data, "")
 }
 
+// NoContent writes a 204 No Content response with no body.
+func NoContent(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // DecodeJSON decodes the JSON request body into the provided destination.
 func DecodeJSON(r *http.Request, dst any) error {
 	if r.Body == nil {

@@ -83,7 +83,7 @@ func TestGetDailyChallenge(t *testing.T) {
 		t.Fatal("expected problem for today, got nil")
 	}
 	if prob3.ID == prob1.ID {
-		// Just to log, not strictly an error if there's only 1 published problem in the entire DB, 
+		// Just to log, not strictly an error if there's only 1 published problem in the entire DB,
 		// but since we inserted two test problems, it should pick something else.
 		t.Logf("picked the same problem again, which means fallback triggered or random chose it again if only 1 problem exists")
 	}
